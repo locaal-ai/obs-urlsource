@@ -98,7 +98,7 @@ void curl_loop(struct url_source_data *usd)
 			frame.linesize[0] = width * 4;
 			frame.width = width;
 			frame.height = height;
-			frame.format = VIDEO_FORMAT_BGRX;
+			frame.format = VIDEO_FORMAT_RGBA;
 
 			std::lock_guard<std::mutex> lock(curl_mutex);
 			// Send the frame

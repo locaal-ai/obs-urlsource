@@ -5,13 +5,16 @@ const QString template_text = R"(
 <html>
   <head>
     <style>
-      body {
+      p {
+				background-color: transparent;
         color: #FFFFFF;
+				max-width: 640px;
+				font-size: 48px;
       }
     </style>
   </head>
   <body>
-    <h1>{text}</h1>
+    <p>{text}</p>
   </body>
 </html>
 )";
@@ -33,10 +36,15 @@ void render_text_with_qtextdocument(std::string &text, uint32_t &width, uint32_t
 
 	QPixmap pixmap(textDocument.size().toSize());
 	pixmap.fill(Qt::transparent);
-	QPainter painter(&pixmap);
+	QPainter painter;
+	painter.begin(&pixmap);
+	painter.setCompositionMode(QPainter::CompositionMode_Source);
 
 	// render text
 	textDocument.drawContents(&painter);
+
+	painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+	painter.end();
 
 	// save pixmap to buffer
 	QImage image = pixmap.toImage();
