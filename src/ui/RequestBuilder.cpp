@@ -144,53 +144,55 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	QLineEdit *outputJSONPathLineEdit = new QLineEdit;
 	outputJSONPathLineEdit->setText(QString::fromStdString(request_data->output_json_path));
+  outputJSONPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "JSON");
 	formOutputParsing->addRow("JSON Pointer", outputJSONPathLineEdit);
 	QLineEdit *outputXPathLineEdit = new QLineEdit;
 	outputXPathLineEdit->setText(QString::fromStdString(request_data->output_xpath));
+  outputXPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "XML" ||
+                                  outputTypeComboBox->currentText() == "HTML");
 	formOutputParsing->addRow("XPath", outputXPathLineEdit);
-	formOutputParsing->setRowVisible(outputXPathLineEdit, false);
 	QLineEdit *outputRegexLineEdit = new QLineEdit;
 	outputRegexLineEdit->setText(QString::fromStdString(request_data->output_regex));
+  outputRegexLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	formOutputParsing->addRow("Regex", outputRegexLineEdit);
-	formOutputParsing->setRowVisible(outputRegexLineEdit, false);
 	QLineEdit *outputRegexFlagsLineEdit = new QLineEdit;
 	outputRegexFlagsLineEdit->setText(QString::fromStdString(request_data->output_regex_flags));
+  outputRegexFlagsLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	formOutputParsing->addRow("Regex flags", outputRegexFlagsLineEdit);
-	formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, false);
 	QLineEdit *outputRegexGroupLineEdit = new QLineEdit;
 	outputRegexGroupLineEdit->setText(QString::fromStdString(request_data->output_regex_group));
+  outputRegexGroupLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	formOutputParsing->addRow("Regex group", outputRegexGroupLineEdit);
-	formOutputParsing->setRowVisible(outputRegexGroupLineEdit, false);
 
 	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this, [=]() {
 		if (outputTypeComboBox->currentText() == "JSON") {
-			// Show the JSONPath input, hide others
-			formOutputParsing->setRowVisible(outputJSONPathLineEdit, true);
-			formOutputParsing->setRowVisible(outputXPathLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexGroupLineEdit, false);
+			// Enable JSONPath input, disable others
+			outputJSONPathLineEdit->setEnabled(true);
+			outputXPathLineEdit->setEnabled(false);
+			outputRegexLineEdit->setEnabled(false);
+			outputRegexFlagsLineEdit->setEnabled(false);
+			outputRegexGroupLineEdit->setEnabled(false);
 		}
 
 		// If XML or HTML is selected as the output type, show the XPath input
 		if (outputTypeComboBox->currentText() == "XML" ||
 		    outputTypeComboBox->currentText() == "HTML") {
-			// Show the XPath input, hide others
-			formOutputParsing->setRowVisible(outputJSONPathLineEdit, false);
-			formOutputParsing->setRowVisible(outputXPathLineEdit, true);
-			formOutputParsing->setRowVisible(outputRegexLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexGroupLineEdit, false);
+			// Enable XPath input, diable others
+			outputJSONPathLineEdit->setEnabled(false);
+			outputXPathLineEdit->setEnabled(true);
+			outputRegexLineEdit->setEnabled(false);
+			outputRegexFlagsLineEdit->setEnabled(false);
+			outputRegexGroupLineEdit->setEnabled(false);
 		}
 
 		// If text is selected as the output type, show the regex input
 		if (outputTypeComboBox->currentText() == "Text") {
-			// Show the regex input, hide others
-			formOutputParsing->setRowVisible(outputJSONPathLineEdit, false);
-			formOutputParsing->setRowVisible(outputXPathLineEdit, false);
-			formOutputParsing->setRowVisible(outputRegexLineEdit, true);
-			formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, true);
-			formOutputParsing->setRowVisible(outputRegexGroupLineEdit, true);
+			// enable regex input, disable others
+			outputJSONPathLineEdit->setEnabled(false);
+			outputXPathLineEdit->setEnabled(false);
+			outputRegexLineEdit->setEnabled(true);
+			outputRegexFlagsLineEdit->setEnabled(true);
+			outputRegexGroupLineEdit->setEnabled(true);
 		}
 	});
 

@@ -6,7 +6,6 @@ const QString template_text = R"(
   <head>
     <style>
       body {
-        background-color: #00000000;
         color: #FFFFFF;
       }
     </style>

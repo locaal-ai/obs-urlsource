@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 #include <cstddef>
 #include <string>
+#include <regex>
 #include <util/base.h>
 #include <nlohmann/json.hpp>
 
@@ -94,6 +95,40 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			// Return the whole JSON object
 			response.body_parsed = json.dump();
 		}
+	} else if (request_data->output_type == "XML" || request_data->output_type == "HTML") {
+		// Parse the response as XML
+	} else if (request_data->output_type == "Text") {
+		if (request_data->output_regex == "") {
+			// Return the whole response body
+			response.body_parsed = responseBody;
+		} else {
+			// Parse the response as a regex
+			std::regex regex(request_data->output_regex,
+					 std::regex_constants::ECMAScript |
+						 std::regex_constants::optimize);
+			std::smatch match;
+			if (std::regex_search(responseBody, match, regex)) {
+				if (match.size() > 1) {
+					response.body_parsed = match[1].str();
+				} else {
+					response.body_parsed = match[0].str();
+				}
+			} else {
+				obs_log(LOG_INFO, "Failed to match regex");
+				// Return an error response
+				struct request_data_handler_response responseFail;
+				responseFail.error_message = "Failed to match regex";
+				responseFail.status_code = -1;
+				return responseFail;
+			}
+		}
+	} else {
+		obs_log(LOG_INFO, "Invalid output type");
+		// Return an error response
+		struct request_data_handler_response responseFail;
+		responseFail.error_message = "Invalid output type";
+		responseFail.status_code = -1;
+		return responseFail;
 	}
 
 	// Return the response
