@@ -1,28 +1,8 @@
-# OBS Plugin Template
+# URL/API Source - OBS Plugin
 
 ## Introduction
 
-The plugin template is meant to be used as a starting point for OBS Studio plugin development. It includes:
-
-* Boilerplate plugin source code
-* A CMake project file
-* GitHub Actions workflows and repository actions
-
-## Set Up
-
-The plugin project is set up using the included `buildspec.json` file. The following fields should be customized for an actual plugin:
-
-* `name`: The plugin name
-* `version`: The plugin version
-* `author`: Actual name or nickname of the plugin's author
-* `website`: URL of a website associated with the plugin
-* `email`: Contact email address associated with the plugin
-* `uuids`
-    * `macosPackage`: Unique (**!**) identifier for the macOS plugin package
-    * `macosInstaller`: Unique (**!**) identifier for the macOS plugin installer
-    * `windowsApp`: Unique (**!**) identifier for the Windows plugin installer
-
-These values are read and processed automatically by the CMake build scripts, so no further adjustments in other files are needed.
+The URL/API Source plugin is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text.
 
 ### Platform Configuration
 
