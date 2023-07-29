@@ -20,6 +20,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "ui/text-render-helper.h"
 #include "request-data.h"
 #include "plugin-support.h"
+#include "url-source.h"
 
 #include <stdlib.h>
 #include <util/threading.h>
@@ -42,13 +43,13 @@ struct url_source_data {
 
 std::mutex curl_mutex;
 
-static const char *url_source_name(void *unused)
+const char *url_source_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);
 	return "URL Source";
 }
 
-static void url_source_destroy(void *data)
+void url_source_destroy(void *data)
 {
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 
@@ -124,7 +125,7 @@ void save_request_info_on_settings(obs_data_t *settings,
 	obs_data_set_string(settings, "url", request_data->url.c_str());
 }
 
-static void *url_source_create(obs_data_t *settings, obs_source_t *source)
+void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct url_source_data *usd =
 		reinterpret_cast<struct url_source_data *>(bzalloc(sizeof(struct url_source_data)));
@@ -152,7 +153,7 @@ static void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	return usd;
 }
 
-static void url_source_update(void *data, obs_data_t *settings)
+void url_source_update(void *data, obs_data_t *settings)
 {
 	obs_log(LOG_INFO, "Updating URL Source");
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
@@ -162,7 +163,7 @@ static void url_source_update(void *data, obs_data_t *settings)
 	save_request_info_on_settings(settings, &(usd->request_data));
 }
 
-static void url_source_defaults(obs_data_t *s)
+void url_source_defaults(obs_data_t *s)
 {
 	// Default request data
 	struct url_source_request_data request_data;
@@ -197,7 +198,7 @@ bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *butt
 	return true;
 }
 
-static obs_properties_t *url_source_properties(void *data)
+obs_properties_t *url_source_properties(void *data)
 {
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 
@@ -215,16 +216,3 @@ static obs_properties_t *url_source_properties(void *data)
 
 	return ppts;
 }
-
-static uint32_t url_source_size(void *data)
-{
-	UNUSED_PARAMETER(data);
-	return 32;
-}
-
-struct obs_source_info url_source {
-	.id = "url_source", .type = OBS_SOURCE_TYPE_INPUT, .output_flags = OBS_SOURCE_ASYNC_VIDEO,
-	.get_name = url_source_name, .create = url_source_create, .destroy = url_source_destroy,
-	.get_defaults = url_source_defaults, .get_properties = url_source_properties,
-	.update = url_source_update
-};

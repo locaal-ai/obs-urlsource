@@ -40,6 +40,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libcurl)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c src/url-source.cpp src/ui/RequestBuilder.cpp
-                                             src/request-data.cpp src/ui/text-render-helper.cpp)
+                                             src/request-data.cpp src/ui/text-render-helper.cpp src/url-source-info.c)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})

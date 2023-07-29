@@ -137,7 +137,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 std::string serialize_request_data(url_source_request_data *request_data)
 {
-	obs_log(LOG_INFO, "Serializing request data");
 	// Serialize the request data to a string using JSON
 	nlohmann::json json;
 	json["url"] = request_data->url;
@@ -161,7 +160,6 @@ std::string serialize_request_data(url_source_request_data *request_data)
 
 url_source_request_data unserialize_request_data(std::string serialized_request_data)
 {
-	obs_log(LOG_INFO, "Unserializing request data");
 	// Unserialize the request data from a string using JSON
 	nlohmann::json json;
 	try {
