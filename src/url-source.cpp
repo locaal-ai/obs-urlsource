@@ -16,17 +16,17 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
+#include "ui/RequestBuilder.h"
+#include "ui/text-render-helper.h"
+#include "request-data.h"
+#include "plugin-support.h"
+
 #include <stdlib.h>
 #include <util/threading.h>
 #include <util/platform.h>
 #include <graphics/graphics.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
-
-#include "ui/RequestBuilder.h"
-#include "ui/text-render-helper.h"
-#include "request-data.h"
-#include "plugin-support.h"
 
 struct url_source_data {
 	obs_source_t *source;
@@ -181,7 +181,7 @@ static obs_properties_t *url_source_properties(void *data)
 			// Open the Request Builder dialog
 			RequestBuilder *builder = new RequestBuilder(
 				&(button_usd->request_data),
-				[=]() {
+				[&button_usd]() {
 					// Update the request data from the settings
 					obs_data_t *settings =
 						obs_source_get_settings(button_usd->source);
