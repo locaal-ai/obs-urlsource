@@ -113,6 +113,17 @@ void curl_loop(struct url_source_data *usd)
 	obs_log(LOG_INFO, "Stopping URL Source thread");
 }
 
+void save_request_info_on_settings(obs_data_t *settings,
+				   struct url_source_request_data *request_data)
+{
+	// serialize request data
+	std::string serialized_request_data = serialize_request_data(request_data);
+	// Save on settings
+	obs_data_set_string(settings, "request_data", serialized_request_data.c_str());
+	// Update the URL input string
+	obs_data_set_string(settings, "url", request_data->url.c_str());
+}
+
 static void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct url_source_data *usd =
@@ -127,10 +138,8 @@ static void *url_source_create(obs_data_t *settings, obs_source_t *source)
 		usd->request_data.method = "GET";
 		usd->request_data.output_type = "json";
 		usd->request_data.output_json_path = "fact";
-		// serialize request data
-		serialized_request_data = serialize_request_data(&(usd->request_data));
-		// Save new data on settings
-		obs_data_set_string(settings, "request_data", serialized_request_data.c_str());
+
+		save_request_info_on_settings(settings, &(usd->request_data));
 	} else {
 		// Unserialize request data
 		usd->request_data = unserialize_request_data(serialized_request_data);
@@ -150,18 +159,49 @@ static void url_source_update(void *data, obs_data_t *settings)
 	// Update the request data from the settings
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 
-	// serialize request data
-	std::string serialized_request_data = serialize_request_data(&(usd->request_data));
-	// Save on settings
-	obs_data_set_string(settings, "request_data", serialized_request_data.c_str());
+	save_request_info_on_settings(settings, &(usd->request_data));
 }
 
 static void url_source_defaults(obs_data_t *s)
 {
-	// Default URL input string
-	obs_data_set_default_string(s, "url", "https://catfact.ninja/fact");
+	// Default request data
+	struct url_source_request_data request_data;
+	request_data.url = "https://catfact.ninja/fact";
+	request_data.method = "GET";
+	request_data.output_type = "json";
+	request_data.output_json_path = "fact";
+
+	// serialize request data
+	std::string serialized_request_data = serialize_request_data(&request_data);
+	obs_data_set_default_string(s, "request_data", serialized_request_data.c_str());
+	obs_data_set_default_string(s, "url", request_data.url.c_str());
+
 	// Default update timer setting in milliseconds
-	obs_data_set_default_int(s, "update_timer", 100);
+	obs_data_set_default_int(s, "update_timer", 1000);
+}
+
+bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
+{
+	struct url_source_data *button_usd =
+		reinterpret_cast<struct url_source_data *>(button_data);
+	// Open the Request Builder dialog
+	RequestBuilder *builder = new RequestBuilder(
+		&(button_usd->request_data),
+		[&button_usd]() {
+			// Update the request data from the settings
+			obs_data_t *settings = obs_source_get_settings(button_usd->source);
+			// serialize request data
+			std::string serialized_request_data =
+				serialize_request_data(&(button_usd->request_data));
+			// Save on settings
+			obs_data_set_string(settings, "request_data",
+					    serialized_request_data.c_str());
+			// Update the URL input string
+			obs_data_set_string(settings, "url", button_usd->request_data.url.c_str());
+		},
+		(QWidget *)obs_frontend_get_main_window());
+	builder->show();
+	return true;
 }
 
 static obs_properties_t *url_source_properties(void *data)
@@ -174,33 +214,8 @@ static obs_properties_t *url_source_properties(void *data)
 	// Disable the URL input since it's setup via the Request Builder dialog
 	obs_property_set_enabled(urlprop, false);
 
-	obs_properties_add_button2(
-		ppts, "button", "Setup Request",
-		[](obs_properties_t *, obs_property_t *, void *button_data) {
-			struct url_source_data *button_usd =
-				reinterpret_cast<struct url_source_data *>(button_data);
-			// Open the Request Builder dialog
-			RequestBuilder *builder = new RequestBuilder(
-				&(button_usd->request_data),
-				[&button_usd]() {
-					// Update the request data from the settings
-					obs_data_t *settings =
-						obs_source_get_settings(button_usd->source);
-					// serialize request data
-					std::string serialized_request_data =
-						serialize_request_data(&(button_usd->request_data));
-					// Save on settings
-					obs_data_set_string(settings, "request_data",
-							    serialized_request_data.c_str());
-					// Update the URL input string
-					obs_data_set_string(settings, "url",
-							    button_usd->request_data.url.c_str());
-				},
-				(QWidget *)obs_frontend_get_main_window());
-			builder->show();
-			return true;
-		},
-		usd);
+	obs_properties_add_button2(ppts, "button", "Setup Request", setup_request_button_click,
+				   usd);
 
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 10000, 100);
