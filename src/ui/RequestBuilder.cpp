@@ -249,6 +249,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseDialog->setWindowTitle("Response");
 		QVBoxLayout *responseLayout = new QVBoxLayout;
 		responseDialog->setLayout(responseLayout);
+		responseDialog->setMinimumWidth(500);
+		responseDialog->setMinimumHeight(300);
 		responseDialog->show();
 		// Add scroll area for the response body
 		QScrollArea *responseBodyScrollArea = new QScrollArea;

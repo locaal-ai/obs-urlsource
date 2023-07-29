@@ -182,7 +182,8 @@ static void url_source_defaults(obs_data_t *s)
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
 {
-	struct url_source_data *button_usd = reinterpret_cast<struct url_source_data *>(button_data);
+	struct url_source_data *button_usd =
+		reinterpret_cast<struct url_source_data *>(button_data);
 	// Open the Request Builder dialog
 	RequestBuilder *builder = new RequestBuilder(
 		&(button_usd->request_data),
