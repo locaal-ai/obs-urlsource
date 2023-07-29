@@ -108,11 +108,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
 	connect(methodComboBox, &QComboBox::currentTextChanged, this, [=]() {
 		// If method is not GET, show the body input
-		if (methodComboBox->currentText() != "GET") {
-			formLayout->setRowVisible(bodyLineEdit, true);
-		} else {
-			formLayout->setRowVisible(bodyLineEdit, false);
-		}
+    bodyLineEdit->setEnabled(methodComboBox->currentText() != "GET");
 	});
 
 	// Headers
@@ -124,7 +120,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	bodyLineEdit->setPlaceholderText("Body");
 	formLayout->addRow("Body:", bodyLineEdit);
 	// Hide if method is GET
-	formLayout->setRowVisible(bodyLineEdit, request_data->method == "POST");
+	bodyLineEdit->setEnabled(request_data->method == "POST");
 
 	// Output parsing options
 	QGroupBox *outputGroupBox = new QGroupBox("Output Parsing");
