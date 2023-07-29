@@ -182,22 +182,14 @@ static void url_source_defaults(obs_data_t *s)
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
 {
-	struct url_source_data *button_usd =
-		reinterpret_cast<struct url_source_data *>(button_data);
+	struct url_source_data *button_usd = reinterpret_cast<struct url_source_data *>(button_data);
 	// Open the Request Builder dialog
 	RequestBuilder *builder = new RequestBuilder(
 		&(button_usd->request_data),
-		[&button_usd]() {
+		[button_usd]() {
 			// Update the request data from the settings
 			obs_data_t *settings = obs_source_get_settings(button_usd->source);
-			// serialize request data
-			std::string serialized_request_data =
-				serialize_request_data(&(button_usd->request_data));
-			// Save on settings
-			obs_data_set_string(settings, "request_data",
-					    serialized_request_data.c_str());
-			// Update the URL input string
-			obs_data_set_string(settings, "url", button_usd->request_data.url.c_str());
+			save_request_info_on_settings(settings, &(button_usd->request_data));
 		},
 		(QWidget *)obs_frontend_get_main_window());
 	builder->show();
