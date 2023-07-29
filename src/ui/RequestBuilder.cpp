@@ -1,6 +1,4 @@
 
-#include <obs.h>
-
 #include "RequestBuilder.h"
 
 class KeyValueWidget : public QWidget {

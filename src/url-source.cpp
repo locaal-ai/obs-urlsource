@@ -27,6 +27,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <graphics/graphics.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <thread>
 
 struct url_source_data {
 	obs_source_t *source;
@@ -127,8 +128,8 @@ static void *url_source_create(obs_data_t *settings, obs_source_t *source)
 		usd->request_data.output_type = "json";
 		usd->request_data.output_json_path = "fact";
 		// serialize request data
-		std::string serialized_request_data = serialize_request_data(&(usd->request_data));
-		// Save on settings
+		serialized_request_data = serialize_request_data(&(usd->request_data));
+		// Save new data on settings
 		obs_data_set_string(settings, "request_data", serialized_request_data.c_str());
 	} else {
 		// Unserialize request data
