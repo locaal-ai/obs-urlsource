@@ -29,12 +29,10 @@ struct request_data_handler_response {
 	std::string error_message;
 };
 
-struct request_data_handler_response
-request_data_handler(url_source_request_data *request_data);
+struct request_data_handler_response request_data_handler(url_source_request_data *request_data);
 
 std::string serialize_request_data(url_source_request_data *request_data);
 
-url_source_request_data
-unserialize_request_data(std::string serialized_request_data);
+url_source_request_data unserialize_request_data(std::string serialized_request_data);
 
 #endif // REQUEST_DATA_H

@@ -26,8 +26,7 @@ extern struct obs_source_info url_source;
 
 bool obs_module_load(void)
 {
-	obs_log(LOG_INFO, "plugin loaded successfully (version %s)",
-		PLUGIN_VERSION);
+	obs_log(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	obs_register_source(&url_source);
 	return true;
 }

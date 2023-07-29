@@ -24,12 +24,11 @@ const QString template_text = R"(
   * @param height Output height
   * @param data Output buffer, user must free
   */
-void render_text_with_qtextdocument(std::string &text, uint32_t &width,
-				    uint32_t &height, uint8_t **data)
+void render_text_with_qtextdocument(std::string &text, uint32_t &width, uint32_t &height,
+				    uint8_t **data)
 {
 	// apply response in template
-	QString html = QString(template_text)
-			       .replace("{text}", QString::fromStdString(text));
+	QString html = QString(template_text).replace("{text}", QString::fromStdString(text));
 	QTextDocument textDocument;
 	textDocument.setHtml(html);
 
