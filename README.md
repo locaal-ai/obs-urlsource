@@ -15,9 +15,9 @@ The URL/API Source plugin is a plugin for [OBS Studio](https://obsproject.com) t
 
 ![urlsource-short](https://github.com/royshil/obs-urlsource/assets/441170/2ac5c8c6-9a6f-4300-b231-41b968d6fccc)
 
-Check out our other plugin [Background Removal](https://github.com/royshil/obs-backgroundremoval) for OBS Studio that removes background from webcam without a green screen.
-
-🚧 Check out our experimental [CleanStream](https://github.com/royshil/obs-cleanstream) OBS plugin for real-time filler word (uh,um) and profanity removal from live audio stream 🚧
+Check out our other plugins:
+- [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
+- 🚧 Experimental 🚧 [CleanStream](https://github.com/royshil/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream 
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 
