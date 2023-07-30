@@ -15,9 +15,26 @@ The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that all
 
 ![urlsource-short](https://github.com/royshil/obs-urlsource/assets/441170/2ac5c8c6-9a6f-4300-b231-41b968d6fccc)
 
+Features:
+- HTTP request types: GET, POST
+- Request headers (for e.g. API Key or Auth token)
+- Request body for POST
+- Output parsing: JSON via JSONPointer, XML/HTML via XPath and Regex
+- Update timer for live streaming data
+- Test of the request to find the right parsing
+
+Coming soon:
+- Authentication (Basic, Digest, OAuth)
+- Websocket support
+- More output parsing options (JSONPath, CSS selectors, etc.)
+- More request types (PUT, DELETE, PATCH)
+- More output formats (XML, HTML, CSV, etc.)
+- More output types (Image, Video, Audio, etc.)
+- Output styling (font, color, etc.)
+
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
-- 🚧 Experimental 🚧 [CleanStream](https://github.com/royshil/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream 
+- 🚧 Experimental 🚧 [CleanStream](https://github.com/royshil/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 

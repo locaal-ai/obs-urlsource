@@ -37,6 +37,9 @@ endif()
 include(cmake/BuildMyCurl.cmake)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libcurl)
 
+include(cmake/BuildPugiXML.cmake)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libpugixml)
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c src/url-source.cpp src/ui/RequestBuilder.cpp

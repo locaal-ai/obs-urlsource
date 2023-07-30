@@ -155,7 +155,6 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 
 void url_source_update(void *data, obs_data_t *settings)
 {
-	obs_log(LOG_INFO, "Updating URL Source");
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 	// Update the request data from the settings
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
@@ -169,7 +168,7 @@ void url_source_defaults(obs_data_t *s)
 	struct url_source_request_data request_data;
 	request_data.url = "https://catfact.ninja/fact";
 	request_data.method = "GET";
-	request_data.output_type = "json";
+	request_data.output_type = "JSON";
 	request_data.output_json_path = "fact";
 
 	// serialize request data

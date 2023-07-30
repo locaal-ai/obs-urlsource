@@ -7,6 +7,7 @@
 #include <regex>
 #include <util/base.h>
 #include <nlohmann/json.hpp>
+#include <pugixml.hpp>
 
 static const std::string USER_AGENT = std::string(PLUGIN_NAME) + "/" + std::string(PLUGIN_VERSION);
 
@@ -14,6 +15,108 @@ std::size_t writeFunctionStdString(void *ptr, std::size_t size, size_t nmemb, st
 {
 	data->append(static_cast<char *>(ptr), size * nmemb);
 	return size * nmemb;
+}
+
+struct request_data_handler_response parse_regex(const std::string &responseBody,
+						 struct request_data_handler_response response,
+						 url_source_request_data *request_data)
+{
+	if (request_data->output_regex == "") {
+		// Return the whole response body
+		response.body_parsed = responseBody;
+	} else {
+		// Parse the response as a regex
+		std::regex regex(request_data->output_regex,
+				 std::regex_constants::ECMAScript | std::regex_constants::optimize);
+		std::smatch match;
+		if (std::regex_search(responseBody, match, regex)) {
+			if (match.size() > 1) {
+				response.body_parsed = match[1].str();
+			} else {
+				response.body_parsed = match[0].str();
+			}
+		} else {
+			obs_log(LOG_INFO, "Failed to match regex");
+			// Return an error response
+			struct request_data_handler_response responseFail;
+			responseFail.error_message = "Failed to match regex";
+			responseFail.status_code = -1;
+			return responseFail;
+		}
+	}
+	return response;
+}
+
+struct request_data_handler_response parse_xml(const std::string &responseBody,
+					       struct request_data_handler_response response,
+					       url_source_request_data *request_data)
+{
+	// Parse the response as XML using pugixml
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_string(responseBody.c_str());
+	if (!result) {
+		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
+		// Return an error response
+		struct request_data_handler_response responseFail;
+		responseFail.error_message = result.description();
+		responseFail.status_code = -1;
+		return responseFail;
+	}
+	// Get the output value
+	if (request_data->output_xpath != "") {
+		pugi::xpath_node_set nodes = doc.select_nodes(request_data->output_xpath.c_str());
+		if (nodes.size() > 0) {
+			response.body_parsed = nodes[0].node().text().get();
+		} else {
+			obs_log(LOG_INFO, "Failed to get XML value");
+			// Return an error response
+			struct request_data_handler_response responseFail;
+			responseFail.error_message = "Failed to get XML value";
+			responseFail.status_code = -1;
+			return responseFail;
+		}
+	} else {
+		// Return the whole XML object
+		response.body_parsed = responseBody;
+	}
+	return response;
+}
+
+struct request_data_handler_response parse_json(const std::string &responseBody,
+						struct request_data_handler_response response,
+						url_source_request_data *request_data)
+{
+	// Parse the response as JSON
+	nlohmann::json json;
+	try {
+		json = nlohmann::json::parse(responseBody);
+	} catch (nlohmann::json::parse_error &e) {
+		obs_log(LOG_INFO, "Failed to parse JSON response: %s", e.what());
+		// Return an error response
+		struct request_data_handler_response responseFail;
+		responseFail.error_message = e.what();
+		responseFail.status_code = -1;
+		return responseFail;
+	}
+	// Get the output value
+	if (request_data->output_json_path != "") {
+		try {
+			response.body_parsed = json.at(nlohmann::json::json_pointer(
+							       request_data->output_json_path))
+						       .get<std::string>();
+		} catch (nlohmann::json::exception &e) {
+			obs_log(LOG_INFO, "Failed to get JSON value: %s", e.what());
+			// Return an error response
+			struct request_data_handler_response responseFail;
+			responseFail.error_message = e.what();
+			responseFail.status_code = -1;
+			return responseFail;
+		}
+	} else {
+		// Return the whole JSON object
+		response.body_parsed = json.dump();
+	}
+	return response;
 }
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
@@ -64,64 +167,11 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 	// Parse the response
 	if (request_data->output_type == "JSON") {
-		// Parse the response as JSON
-		nlohmann::json json;
-		try {
-			json = nlohmann::json::parse(responseBody);
-		} catch (nlohmann::json::parse_error &e) {
-			obs_log(LOG_INFO, "Failed to parse JSON response: %s", e.what());
-			// Return an error response
-			struct request_data_handler_response responseFail;
-			responseFail.error_message = e.what();
-			responseFail.status_code = -1;
-			return responseFail;
-		}
-		// Get the output value
-		if (request_data->output_json_path != "") {
-			try {
-				response.body_parsed =
-					json.at(nlohmann::json::json_pointer(
-							request_data->output_json_path))
-						.get<std::string>();
-			} catch (nlohmann::json::exception &e) {
-				obs_log(LOG_INFO, "Failed to get JSON value: %s", e.what());
-				// Return an error response
-				struct request_data_handler_response responseFail;
-				responseFail.error_message = e.what();
-				responseFail.status_code = -1;
-				return responseFail;
-			}
-		} else {
-			// Return the whole JSON object
-			response.body_parsed = json.dump();
-		}
+		response = parse_json(responseBody, response, request_data);
 	} else if (request_data->output_type == "XML" || request_data->output_type == "HTML") {
-		// Parse the response as XML
+		response = parse_xml(responseBody, response, request_data);
 	} else if (request_data->output_type == "Text") {
-		if (request_data->output_regex == "") {
-			// Return the whole response body
-			response.body_parsed = responseBody;
-		} else {
-			// Parse the response as a regex
-			std::regex regex(request_data->output_regex,
-					 std::regex_constants::ECMAScript |
-						 std::regex_constants::optimize);
-			std::smatch match;
-			if (std::regex_search(responseBody, match, regex)) {
-				if (match.size() > 1) {
-					response.body_parsed = match[1].str();
-				} else {
-					response.body_parsed = match[0].str();
-				}
-			} else {
-				obs_log(LOG_INFO, "Failed to match regex");
-				// Return an error response
-				struct request_data_handler_response responseFail;
-				responseFail.error_message = "Failed to match regex";
-				responseFail.status_code = -1;
-				return responseFail;
-			}
-		}
+		response = parse_regex(responseBody, response, request_data);
 	} else {
 		obs_log(LOG_INFO, "Invalid output type");
 		// Return an error response
