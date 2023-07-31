@@ -6,10 +6,7 @@ const QString template_text = R"(
   <head>
     <style>
       p {
-				background-color: transparent;
-        color: #FFFFFF;
-				max-width: 640px;
-				font-size: 48px;
+				{css_props}
       }
     </style>
   </head>
@@ -25,14 +22,18 @@ const QString template_text = R"(
   * @param width Output width
   * @param height Output height
   * @param data Output buffer, user must free
+	* @param css_props CSS properties to apply to the text
   */
-void render_text_with_qtextdocument(std::string &text, uint32_t &width, uint32_t &height,
-				    uint8_t **data)
+void render_text_with_qtextdocument(const std::string &text, uint32_t &width, uint32_t &height,
+				    uint8_t **data, const std::string &css_props)
 {
 	// apply response in template
-	QString html = QString(template_text).replace("{text}", QString::fromStdString(text));
+	QString html = QString(template_text)
+			       .replace("{text}", QString::fromStdString(text))
+			       .replace("{css_props}", QString::fromStdString(css_props));
 	QTextDocument textDocument;
 	textDocument.setHtml(html);
+	textDocument.setTextWidth(640);
 
 	QPixmap pixmap(textDocument.size().toSize());
 	pixmap.fill(Qt::transparent);
