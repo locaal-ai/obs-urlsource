@@ -10,11 +10,15 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(pugixml_build INSTALL_DIR)
 
-set(pugixml_DIR
-    ${INSTALL_DIR}/lib/cmake/pugixml
-    CACHE PATH "Path to internally built pugixmlConfig.cmake")
-find_package(pugixml REQUIRED CONFIG PATHS ${pugixml_DIR} NO_DEFAULT_PATH)
+message(STATUS "pugixml will be installed to ${INSTALL_DIR}")
+
+add_library(pugixml STATIC IMPORTED)
+set_target_properties(
+  pugixml
+  PROPERTIES IMPORTED_LOCATION
+             ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pugixml${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 add_library(libpugixml INTERFACE)
 add_dependencies(libpugixml pugixml_build)
-target_link_libraries(libpugixml INTERFACE pugixml::static)
+target_link_libraries(libpugixml INTERFACE pugixml)
+set_target_properties(libpugixml PROPERTIES INTERFACE_INCLUDE_DIRECTORIES  ${INSTALL_DIR}/include)
