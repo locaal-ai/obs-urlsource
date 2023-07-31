@@ -127,6 +127,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	layout->addWidget(outputGroupBox);
 
 	QFormLayout *formOutputParsing = new QFormLayout;
+	formOutputParsing->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 	outputGroupBox->setLayout(formOutputParsing);
 
 	// Output type: Text, JSON, XML, HTML
@@ -135,29 +136,35 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	outputTypeComboBox->addItem("JSON");
 	outputTypeComboBox->addItem("XML");
 	outputTypeComboBox->addItem("HTML");
-	outputTypeComboBox->setCurrentIndex(1); // JSON is the default
+	outputTypeComboBox->setCurrentIndex(
+		outputTypeComboBox->findText(QString::fromStdString(request_data->output_type)));
 	formOutputParsing->addRow("Content-Type", outputTypeComboBox);
 
 	QLineEdit *outputJSONPathLineEdit = new QLineEdit;
 	outputJSONPathLineEdit->setText(QString::fromStdString(request_data->output_json_path));
 	outputJSONPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "JSON");
+	outputJSONPathLineEdit->setPlaceholderText("JSON Pointer");
 	formOutputParsing->addRow("JSON Pointer", outputJSONPathLineEdit);
 	QLineEdit *outputXPathLineEdit = new QLineEdit;
 	outputXPathLineEdit->setText(QString::fromStdString(request_data->output_xpath));
 	outputXPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "XML" ||
 					outputTypeComboBox->currentText() == "HTML");
+	outputXPathLineEdit->setPlaceholderText("XPath");
 	formOutputParsing->addRow("XPath", outputXPathLineEdit);
 	QLineEdit *outputRegexLineEdit = new QLineEdit;
 	outputRegexLineEdit->setText(QString::fromStdString(request_data->output_regex));
 	outputRegexLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
+	outputRegexLineEdit->setPlaceholderText("Regex");
 	formOutputParsing->addRow("Regex", outputRegexLineEdit);
 	QLineEdit *outputRegexFlagsLineEdit = new QLineEdit;
 	outputRegexFlagsLineEdit->setText(QString::fromStdString(request_data->output_regex_flags));
 	outputRegexFlagsLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
+	outputRegexFlagsLineEdit->setPlaceholderText("Regex flags");
 	formOutputParsing->addRow("Regex flags", outputRegexFlagsLineEdit);
 	QLineEdit *outputRegexGroupLineEdit = new QLineEdit;
 	outputRegexGroupLineEdit->setText(QString::fromStdString(request_data->output_regex_group));
 	outputRegexGroupLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
+	outputRegexGroupLineEdit->setPlaceholderText("Regex group");
 	formOutputParsing->addRow("Regex group", outputRegexGroupLineEdit);
 
 	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this, [=]() {
