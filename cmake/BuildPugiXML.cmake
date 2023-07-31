@@ -12,11 +12,16 @@ ExternalProject_Get_Property(pugixml_build INSTALL_DIR)
 
 message(STATUS "pugixml will be installed to ${INSTALL_DIR}")
 
+# find the library
+set(pugixml_lib_filename ${CMAKE_STATIC_LIBRARY_PREFIX}pugixml${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(pugixml_lib_location ${INSTALL_DIR}/lib/${pugixml_lib_filename})
+
+message(STATUS "pugixml library expected at ${pugixml_lib_location}")
+
 add_library(pugixml STATIC IMPORTED)
 set_target_properties(
   pugixml
-  PROPERTIES IMPORTED_LOCATION
-             ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pugixml${CMAKE_STATIC_LIBRARY_SUFFIX})
+  PROPERTIES IMPORTED_LOCATION ${pugixml_lib_location})
 
 add_library(libpugixml INTERFACE)
 add_dependencies(libpugixml pugixml_build)
