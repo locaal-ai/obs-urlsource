@@ -114,17 +114,19 @@ void curl_loop(struct url_source_data *usd)
 			uint32_t height = 0;
 			uint8_t *renderBuffer = nullptr;
 
-      // prepare the text from the template
-      std::string text = usd->output_text_template;
-      // if the template is empty use the response body
-      if (text.empty()) {
-        text = response.body_parsed;
-      } else {
-        // attempt to replace {output} with the response body
-        text = std::regex_replace(text, std::regex("\\{output\\}"), response.body_parsed);
-      }
-      // render the text
-			render_text_with_qtextdocument(text, width, height, &renderBuffer, usd->css_props);
+			// prepare the text from the template
+			std::string text = usd->output_text_template;
+			// if the template is empty use the response body
+			if (text.empty()) {
+				text = response.body_parsed;
+			} else {
+				// attempt to replace {output} with the response body
+				text = std::regex_replace(text, std::regex("\\{output\\}"),
+							  response.body_parsed);
+			}
+			// render the text
+			render_text_with_qtextdocument(text, width, height, &renderBuffer,
+						       usd->css_props);
 			// Update the frame
 			frame.data[0] = renderBuffer;
 			frame.linesize[0] = width * 4;
@@ -243,9 +245,7 @@ void url_source_defaults(obs_data_t *s)
 		"background-color: transparent;\ncolor: #FFFFFF;\nfont-size: 48px;");
 
 	// Default Template
-	obs_data_set_default_string(
-		s, "template",
-		"{output}");
+	obs_data_set_default_string(s, "template", "{output}");
 }
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
