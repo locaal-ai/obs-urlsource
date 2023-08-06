@@ -33,6 +33,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <mutex>
 #include <chrono>
 #include <memory>
+#include <regex>
 
 struct url_source_data {
 	obs_source_t *source;
@@ -40,6 +41,7 @@ struct url_source_data {
 	struct request_data_handler_response response;
 	uint32_t update_timer_ms = 1000;
 	std::string css_props;
+	std::string output_text_template;
 
 	// Use std for thread and mutex
 	std::unique_ptr<std::mutex> curl_mutex;
@@ -111,8 +113,18 @@ void curl_loop(struct url_source_data *usd)
 			uint32_t width = 0;
 			uint32_t height = 0;
 			uint8_t *renderBuffer = nullptr;
-			render_text_with_qtextdocument(response.body_parsed, width, height,
-						       &renderBuffer, usd->css_props);
+
+      // prepare the text from the template
+      std::string text = usd->output_text_template;
+      // if the template is empty use the response body
+      if (text.empty()) {
+        text = response.body_parsed;
+      } else {
+        // attempt to replace {output} with the response body
+        text = std::regex_replace(text, std::regex("\\{output\\}"), response.body_parsed);
+      }
+      // render the text
+			render_text_with_qtextdocument(text, width, height, &renderBuffer, usd->css_props);
 			// Update the frame
 			frame.data[0] = renderBuffer;
 			frame.linesize[0] = width * 4;
@@ -176,6 +188,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->css_props = obs_data_get_string(settings, "css_props");
+	usd->output_text_template = obs_data_get_string(settings, "template");
 
 	// initialize the mutex
 	usd->curl_mutex = std::unique_ptr<std::mutex>(new std::mutex());
@@ -202,6 +215,7 @@ void url_source_update(void *data, obs_data_t *settings)
 	// Update the request data from the settings
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->css_props = obs_data_get_string(settings, "css_props");
+	usd->output_text_template = obs_data_get_string(settings, "template");
 
 	save_request_info_on_settings(settings, &(usd->request_data));
 }
@@ -227,6 +241,11 @@ void url_source_defaults(obs_data_t *s)
 	obs_data_set_default_string(
 		s, "css_props",
 		"background-color: transparent;\ncolor: #FFFFFF;\nfont-size: 48px;");
+
+	// Default Template
+	obs_data_set_default_string(
+		s, "template",
+		"{output}");
 }
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
@@ -262,8 +281,11 @@ obs_properties_t *url_source_properties(void *data)
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 10000, 100);
 
-	// Update timer setting in milliseconds
+	// CSS properties for styling the text
 	obs_properties_add_text(ppts, "css_props", "CSS Properties", OBS_TEXT_MULTILINE);
+
+	// Output template
+	obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_DEFAULT);
 
 	return ppts;
 }
