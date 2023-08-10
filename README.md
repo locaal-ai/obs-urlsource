@@ -38,6 +38,8 @@ Features:
 - Output parsing: JSON via JSONPointer, XML/HTML via XPath and Regex
 - Update timer for live streaming data
 - Test of the request to find the right parsing
+- Output styling (font, color, etc.)
+- Image output (via URL)
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
@@ -45,8 +47,7 @@ Coming soon:
 - More output parsing options (JSONPath, CSS selectors, etc.)
 - More request types (PUT, DELETE, PATCH)
 - More output formats (XML, HTML, CSV, etc.)
-- More output types (Image, Video, Audio, etc.)
-- Output styling (font, color, etc.)
+- More output types (Video, Audio, etc.)
 
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
