@@ -11,7 +11,7 @@
 
 ## Introduction
 
-The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/)
+The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/). Blog post https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/
 
 ### Usage Tutorial
 Watch a short tutorial on how to use and setup the URL/API source on your OBS scene.
