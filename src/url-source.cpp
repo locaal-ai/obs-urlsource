@@ -23,8 +23,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "url-source.h"
 
 #include <stdlib.h>
-#include <util/threading.h>
-#include <util/platform.h>
 #include <graphics/graphics.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
@@ -49,6 +47,13 @@ struct url_source_data {
 	std::unique_ptr<std::condition_variable> curl_thread_cv;
 	bool curl_thread_run = false;
 };
+
+inline uint64_t get_time_ns(void)
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+		       std::chrono::system_clock::now().time_since_epoch())
+		.count();
+}
 
 const char *url_source_name(void *unused)
 {
@@ -84,10 +89,11 @@ void url_source_destroy(void *data)
 void curl_loop(struct url_source_data *usd)
 {
 	obs_log(LOG_INFO, "Starting URL Source thread, update timer: %d", usd->update_timer_ms);
-	uint64_t cur_time = os_gettime_ns();
+	uint64_t cur_time = get_time_ns();
 	uint64_t start_time = cur_time;
 
 	struct obs_source_frame frame = {};
+	frame.format = VIDEO_FORMAT_BGRA;
 
 	while (true) {
 		{
@@ -98,7 +104,7 @@ void curl_loop(struct url_source_data *usd)
 		}
 
 		// time the request
-		uint64_t request_start_time_ns = os_gettime_ns();
+		uint64_t request_start_time_ns = get_time_ns();
 
 		// Send the request
 		struct request_data_handler_response response =
@@ -107,7 +113,7 @@ void curl_loop(struct url_source_data *usd)
 			obs_log(LOG_INFO, "Failed to send request: %s",
 				response.error_message.c_str());
 		} else {
-			cur_time = os_gettime_ns();
+			cur_time = get_time_ns();
 			frame.timestamp = cur_time - start_time;
 
 			uint32_t width = 0;
@@ -132,7 +138,6 @@ void curl_loop(struct url_source_data *usd)
 			frame.linesize[0] = width * 4;
 			frame.width = width;
 			frame.height = height;
-			frame.format = VIDEO_FORMAT_BGRA;
 
 			// Send the frame
 			obs_source_output_video(usd->source, &frame);
@@ -142,7 +147,7 @@ void curl_loop(struct url_source_data *usd)
 		}
 
 		// time the request
-		const uint64_t request_end_time_ns = os_gettime_ns();
+		const uint64_t request_end_time_ns = get_time_ns();
 		const uint64_t request_time_ns = request_end_time_ns - request_start_time_ns;
 		const int64_t sleep_time_ms =
 			(int64_t)(usd->update_timer_ms) - (int64_t)(request_time_ns / 1000000);

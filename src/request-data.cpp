@@ -101,9 +101,17 @@ struct request_data_handler_response parse_json(const std::string &responseBody,
 	// Get the output value
 	if (request_data->output_json_path != "") {
 		try {
-			response.body_parsed = json.at(nlohmann::json::json_pointer(
+			const auto value = json.at(nlohmann::json::json_pointer(
 							       request_data->output_json_path))
-						       .get<std::string>();
+						       .get<nlohmann::json>();
+			response.body_parsed = value.dump();
+			// remove potential prefix and postfix quotes, conversion from string
+			if (response.body_parsed.size() > 1 &&
+			    response.body_parsed.front() == '"' &&
+			    response.body_parsed.back() == '"') {
+				response.body_parsed =
+					response.body_parsed.substr(1, response.body_parsed.size() - 2);
+			}
 		} catch (nlohmann::json::exception &e) {
 			obs_log(LOG_INFO, "Failed to get JSON value: %s", e.what());
 			// Return an error response
