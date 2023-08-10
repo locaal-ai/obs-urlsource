@@ -17,6 +17,14 @@ std::size_t writeFunctionStdString(void *ptr, std::size_t size, size_t nmemb, st
 	return size * nmemb;
 }
 
+std::size_t writeFunctionUint8Vector(void *ptr, std::size_t size, size_t nmemb,
+				     std::vector<uint8_t> *data)
+{
+	data->insert(data->end(), static_cast<uint8_t *>(ptr),
+		     static_cast<uint8_t *>(ptr) + size * nmemb);
+	return size * nmemb;
+}
+
 struct request_data_handler_response parse_regex(const std::string &responseBody,
 						 struct request_data_handler_response response,
 						 url_source_request_data *request_data)
@@ -247,4 +255,67 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	}
 
 	return request_data;
+}
+
+// Fetch image from url and get bytes
+std::vector<uint8_t> fetch_image(std::string url)
+{
+	// Build the request with libcurl
+	CURL *curl = curl_easy_init();
+	if (!curl) {
+		obs_log(LOG_INFO, "Failed to initialize curl");
+		// Return an error response
+		std::vector<uint8_t> responseFail;
+		return responseFail;
+	}
+	CURLcode code;
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionUint8Vector);
+
+	std::vector<uint8_t> responseBody;
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+
+	// Send the request
+	code = curl_easy_perform(curl);
+	curl_easy_cleanup(curl);
+	if (code != CURLE_OK) {
+		obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
+		// Return an error response
+		std::vector<uint8_t> responseFail;
+		return responseFail;
+	}
+
+	return responseBody;
+}
+
+// BASE64_CHARS
+static const std::string BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+					"abcdefghijklmnopqrstuvwxyz"
+					"0123456789+/";
+
+// encode bytes to base64
+std::string base64_encode(const std::vector<uint8_t> &bytes)
+{
+	std::string encoded;
+	encoded.resize(((bytes.size() + 2) / 3) * 4);
+	auto it = encoded.begin();
+	for (size_t i = 0; i < bytes.size(); i += 3) {
+		size_t group = 0;
+		group |= (size_t)bytes[i] << 16;
+		if (i + 1 < bytes.size()) {
+			group |= (size_t)bytes[i + 1] << 8;
+		}
+		if (i + 2 < bytes.size()) {
+			group |= (size_t)bytes[i + 2];
+		}
+		for (size_t j = 0; j < 4; j++) {
+			if (i * 8 / 6 + j < encoded.size()) {
+				*it++ = BASE64_CHARS[(group >> 6 * (3 - j)) & 0x3f];
+			} else {
+				*it++ = '=';
+			}
+		}
+	}
+	return encoded;
 }
