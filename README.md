@@ -48,6 +48,7 @@ Coming soon:
 - More request types (PUT, DELETE, PATCH)
 - More output formats (XML, HTML, CSV, etc.)
 - More output types (Video, Audio, etc.)
+- Output to OBS sources (Text, Image, etc.)
 
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
