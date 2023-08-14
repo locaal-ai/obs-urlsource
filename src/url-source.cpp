@@ -160,7 +160,8 @@ void curl_loop(struct url_source_data *usd)
 							  response.body_parsed);
 			}
 
-			if (usd->text_source_name != nullptr && strcmp(usd->text_source_name, "none") != 0) {
+			if (usd->text_source_name != nullptr &&
+			    strcmp(usd->text_source_name, "none") != 0) {
 				// If a text source is selected - use it for rendering
 				usd->setTextCallback(text);
 
@@ -177,7 +178,7 @@ void curl_loop(struct url_source_data *usd)
 			} else {
 				// render the text with QTextDocument
 				render_text_with_qtextdocument(text, width, height, &renderBuffer,
-										usd->css_props);
+							       usd->css_props);
 				// Update the frame
 				frame.data[0] = renderBuffer;
 				frame.linesize[0] = width * 4;
@@ -240,7 +241,6 @@ void acquire_weak_text_source_ref(struct url_source_data *usd)
 		obs_log(LOG_ERROR, "text source '%s' not found", usd->text_source_name);
 	}
 }
-
 
 void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
@@ -307,7 +307,6 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 		obs_source_update(target, text_settings);
 		obs_source_release(target);
 	};
-
 
 	return usd;
 }
