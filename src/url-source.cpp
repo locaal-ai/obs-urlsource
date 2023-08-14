@@ -42,6 +42,13 @@ struct url_source_data {
 	std::string output_text_template;
 	bool output_is_image_url = false;
 
+	// Text source to output the text to
+	obs_weak_source_t *text_source;
+	char *text_source_name;
+	std::unique_ptr<std::mutex> text_source_mutex;
+	// Callback to set the text in the output text source
+	std::function<void(const std::string &str)> setTextCallback;
+
 	// Use std for thread and mutex
 	std::unique_ptr<std::mutex> curl_mutex;
 	std::thread curl_thread;
@@ -83,6 +90,16 @@ void url_source_destroy(void *data)
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 
 	stop_and_join_curl_thread(usd);
+
+	if (usd->text_source_name) {
+		bfree(usd->text_source_name);
+		usd->text_source_name = nullptr;
+	}
+
+	if (usd->text_source) {
+		obs_weak_source_release(usd->text_source);
+		usd->text_source = nullptr;
+	}
 
 	bfree(usd);
 }
@@ -142,20 +159,37 @@ void curl_loop(struct url_source_data *usd)
 				text = std::regex_replace(text, std::regex("\\{output\\}"),
 							  response.body_parsed);
 			}
-			// render the text
-			render_text_with_qtextdocument(text, width, height, &renderBuffer,
-						       usd->css_props);
-			// Update the frame
-			frame.data[0] = renderBuffer;
-			frame.linesize[0] = width * 4;
-			frame.width = width;
-			frame.height = height;
 
-			// Send the frame
-			obs_source_output_video(usd->source, &frame);
+			if (usd->text_source_name != nullptr && strcmp(usd->text_source_name, "none") != 0) {
+				// If a text source is selected - use it for rendering
+				usd->setTextCallback(text);
 
-			// Free the render buffer
-			bfree(renderBuffer);
+				// Update the frame with an empty buffer of 1x1 pixels
+				renderBuffer = (uint8_t *)bzalloc(4);
+				frame.data[0] = renderBuffer;
+				frame.linesize[0] = 4;
+				frame.width = 1;
+				frame.height = 1;
+
+				// Send the frame
+				obs_source_output_video(usd->source, &frame);
+				bfree(renderBuffer);
+			} else {
+				// render the text with QTextDocument
+				render_text_with_qtextdocument(text, width, height, &renderBuffer,
+										usd->css_props);
+				// Update the frame
+				frame.data[0] = renderBuffer;
+				frame.linesize[0] = width * 4;
+				frame.width = width;
+				frame.height = height;
+
+				// Send the frame
+				obs_source_output_video(usd->source, &frame);
+
+				// Free the render buffer
+				bfree(renderBuffer);
+			}
 		}
 
 		// time the request
@@ -184,6 +218,30 @@ void save_request_info_on_settings(obs_data_t *settings,
 	obs_data_set_string(settings, "url", request_data->url.c_str());
 }
 
+void acquire_weak_text_source_ref(struct url_source_data *usd)
+{
+	if (!usd->text_source_name) {
+		obs_log(LOG_ERROR, "text_source_name is null");
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+
+	// acquire a weak ref to the new text source
+	obs_source_t *source = obs_get_source_by_name(usd->text_source_name);
+	if (source) {
+		usd->text_source = obs_source_get_weak_source(source);
+		obs_source_release(source);
+		if (!usd->text_source) {
+			obs_log(LOG_ERROR, "failed to get weak source for text source %s",
+				usd->text_source_name);
+		}
+	} else {
+		obs_log(LOG_ERROR, "text source '%s' not found", usd->text_source_name);
+	}
+}
+
+
 void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct url_source_data *usd =
@@ -211,6 +269,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->output_text_template = obs_data_get_string(settings, "template");
 
 	// initialize the mutex
+	usd->text_source_mutex = std::unique_ptr<std::mutex>(new std::mutex());
 	usd->curl_mutex = std::unique_ptr<std::mutex>(new std::mutex());
 	usd->curl_thread_cv =
 		std::unique_ptr<std::condition_variable>(new std::condition_variable());
@@ -224,6 +283,32 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 		usd->curl_thread_run = false;
 	}
 
+	// set the callback to set the text in the output text source (subtitles)
+	usd->setTextCallback = [usd](const std::string &str) {
+		if (!usd->text_source) {
+			// attempt to acquire a weak ref to the text source if it's yet available
+			acquire_weak_text_source_ref(usd);
+		}
+
+		std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+
+		obs_weak_source_t *text_source = usd->text_source;
+		if (!text_source) {
+			obs_log(LOG_ERROR, "text_source is null");
+			return;
+		}
+		auto target = obs_weak_source_get_source(text_source);
+		if (!target) {
+			obs_log(LOG_ERROR, "text_source target is null");
+			return;
+		}
+		auto text_settings = obs_source_get_settings(target);
+		obs_data_set_string(text_settings, "text", str.c_str());
+		obs_source_update(target, text_settings);
+		obs_source_release(target);
+	};
+
+
 	return usd;
 }
 
@@ -235,6 +320,39 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
 	usd->css_props = obs_data_get_string(settings, "css_props");
 	usd->output_text_template = obs_data_get_string(settings, "template");
+
+	// update the text source
+	const char *text_source_name = obs_data_get_string(settings, "text_sources");
+	obs_weak_source_t *old_weak_text_source = NULL;
+
+	if (strcmp(text_source_name, "none") == 0 || strcmp(text_source_name, "(null)") == 0) {
+		// new selected text source is not valid, release the old one
+		if (usd->text_source) {
+			std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+			old_weak_text_source = usd->text_source;
+			usd->text_source = nullptr;
+		}
+		if (usd->text_source_name) {
+			bfree(usd->text_source_name);
+			usd->text_source_name = nullptr;
+		}
+	} else {
+		// new selected text source is valid, check if it's different from the old one
+		if (usd->text_source_name == nullptr ||
+		    strcmp(text_source_name, usd->text_source_name) != 0) {
+			// new text source is different from the old one, release the old one
+			if (usd->text_source) {
+				std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+				old_weak_text_source = usd->text_source;
+				usd->text_source = nullptr;
+			}
+			usd->text_source_name = bstrdup(text_source_name);
+		}
+	}
+
+	if (old_weak_text_source) {
+		obs_weak_source_release(old_weak_text_source);
+	}
 
 	save_request_info_on_settings(settings, &(usd->request_data));
 }
@@ -252,6 +370,8 @@ void url_source_defaults(obs_data_t *s)
 	std::string serialized_request_data = serialize_request_data(&request_data);
 	obs_data_set_default_string(s, "request_data", serialized_request_data.c_str());
 	obs_data_set_default_string(s, "url", request_data.url.c_str());
+
+	obs_data_set_default_string(s, "text_sources", "none");
 
 	// Default update timer setting in milliseconds
 	obs_data_set_default_int(s, "update_timer", 1000);
@@ -285,6 +405,20 @@ bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *butt
 	return true;
 }
 
+bool add_sources_to_list(void *list_property, obs_source_t *source)
+{
+	auto source_id = obs_source_get_id(source);
+	if (strcmp(source_id, "text_ft2_source_v2") != 0 &&
+	    strcmp(source_id, "text_gdiplus_v2") != 0) {
+		return true;
+	}
+
+	obs_property_t *sources = (obs_property_t *)list_property;
+	const char *name = obs_source_get_name(source);
+	obs_property_list_add_string(sources, name, name);
+	return true;
+}
+
 obs_properties_t *url_source_properties(void *data)
 {
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
@@ -300,6 +434,14 @@ obs_properties_t *url_source_properties(void *data)
 
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 10000, 100);
+
+	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources",
+							  "Output text source", OBS_COMBO_TYPE_LIST,
+							  OBS_COMBO_FORMAT_STRING);
+	// Add a "none" option
+	obs_property_list_add_string(sources, "None / Internal rendering", "none");
+	// Add the sources
+	obs_enum_sources(add_sources_to_list, sources);
 
 	// Is Image URL boolean checkbox
 	obs_properties_add_bool(ppts, "is_image_url", "Output is image URL (fetch and show image)");
