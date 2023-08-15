@@ -432,7 +432,7 @@ obs_properties_t *url_source_properties(void *data)
 				   usd);
 
 	// Update timer setting in milliseconds
-	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 10000, 100);
+	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 1000000, 100);
 
 	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources",
 							  "Output text source", OBS_COMBO_TYPE_LIST,
