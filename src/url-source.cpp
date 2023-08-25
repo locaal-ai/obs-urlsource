@@ -273,8 +273,8 @@ void curl_loop(struct url_source_data *usd)
 
 			if (usd->text_source_name != nullptr &&
 			    strcmp(usd->text_source_name, "none") != 0 &&
-					strcmp(usd->text_source_name, "(null)") != 0 &&
-	    		strcmp(usd->text_source_name, "") != 0) {
+			    strcmp(usd->text_source_name, "(null)") != 0 &&
+			    strcmp(usd->text_source_name, "") != 0) {
 				// If a text source is selected - use it for rendering
 				setTextCallback(text, usd);
 
