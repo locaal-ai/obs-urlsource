@@ -21,16 +21,16 @@ struct url_source_request_data {
 	// default constructor
 	url_source_request_data()
 	{
-		url = "";
-		method = "GET";
-		body = "";
+		url = std::string("");
+		method = std::string("GET");
+		body = std::string("");
 		headers = {};
-		output_type = "text";
-		output_json_path = "";
-		output_xpath = "";
-		output_regex = "";
-		output_regex_flags = "";
-		output_regex_group = "0";
+		output_type = std::string("text");
+		output_json_path = std::string("");
+		output_xpath = std::string("");
+		output_regex = std::string("");
+		output_regex_flags = std::string("");
+		output_regex_group = std::string("0");
 	}
 
 	// Copy constructor should duplicate all data
