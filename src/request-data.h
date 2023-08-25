@@ -5,18 +5,64 @@
 #include <vector>
 
 struct url_source_request_data {
-	std::string url = "";
-	std::string method = "GET";
-	std::string body = "";
+	std::string url;
+	std::string method;
+	std::string body;
 	// Request headers
-	std::vector<std::pair<std::string, std::string>> headers = {};
+	std::vector<std::pair<std::string, std::string>> headers;
 	// Output parsing options
-	std::string output_type = "text";
-	std::string output_json_path = "";
-	std::string output_xpath = "";
-	std::string output_regex = "";
-	std::string output_regex_flags = "";
-	std::string output_regex_group = "0";
+	std::string output_type;
+	std::string output_json_path;
+	std::string output_xpath;
+	std::string output_regex;
+	std::string output_regex_flags;
+	std::string output_regex_group;
+
+	// default constructor
+	url_source_request_data()
+	{
+		url = "";
+		method = "GET";
+		body = "";
+		headers = {};
+		output_type = "text";
+		output_json_path = "";
+		output_xpath = "";
+		output_regex = "";
+		output_regex_flags = "";
+		output_regex_group = "0";
+	}
+
+	// Copy constructor should duplicate all data
+	url_source_request_data(const url_source_request_data &other)
+	{
+		url = std::string(other.url);
+		method = std::string(other.method);
+		body = std::string(other.body);
+		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
+		output_type = std::string(other.output_type);
+		output_json_path = std::string(other.output_json_path);
+		output_xpath = std::string(other.output_xpath);
+		output_regex = std::string(other.output_regex);
+		output_regex_flags = std::string(other.output_regex_flags);
+		output_regex_group = std::string(other.output_regex_group);
+	}
+
+	// Copy assignment operator should duplicate all data
+	url_source_request_data &operator=(const url_source_request_data &other)
+	{
+		url = std::string(other.url);
+		method = std::string(other.method);
+		body = std::string(other.body);
+		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
+		output_type = std::string(other.output_type);
+		output_json_path = std::string(other.output_json_path);
+		output_xpath = std::string(other.output_xpath);
+		output_regex = std::string(other.output_regex);
+		output_regex_flags = std::string(other.output_regex_flags);
+		output_regex_group = std::string(other.output_regex_group);
+		return *this;
+	}
 };
 
 struct request_data_handler_response {
