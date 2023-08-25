@@ -5,18 +5,18 @@
 #include <vector>
 
 struct url_source_request_data {
-	std::string url;
-	std::string method;
-	std::string body;
+	std::string url = "";
+	std::string method = "GET";
+	std::string body = "";
 	// Request headers
-	std::vector<std::pair<std::string, std::string>> headers;
+	std::vector<std::pair<std::string, std::string>> headers = {};
 	// Output parsing options
-	std::string output_type;
-	std::string output_json_path;
-	std::string output_xpath;
-	std::string output_regex;
-	std::string output_regex_flags;
-	std::string output_regex_group;
+	std::string output_type = "text";
+	std::string output_json_path = "";
+	std::string output_xpath = "";
+	std::string output_regex = "";
+	std::string output_regex_flags = "";
+	std::string output_regex_group = "0";
 };
 
 struct request_data_handler_response {
