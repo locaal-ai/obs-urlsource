@@ -8,6 +8,10 @@ struct url_source_request_data {
 	std::string url;
 	std::string method;
 	std::string body;
+    // SSL options
+    std::string ssl_client_cert_file;
+    std::string ssl_client_key_file;
+    std::string ssl_client_key_pass;
 	// Request headers
 	std::vector<std::pair<std::string, std::string>> headers;
 	// Output parsing options
