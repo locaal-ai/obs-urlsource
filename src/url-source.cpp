@@ -333,6 +333,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	struct url_source_data *usd =
 		reinterpret_cast<struct url_source_data *>(bzalloc(sizeof(struct url_source_data)));
 	usd->source = source;
+    usd->request_data = url_source_request_data();
 
 	usd->frame.data[0] = nullptr;
 
@@ -340,10 +341,10 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	std::string serialized_request_data = obs_data_get_string(settings, "request_data");
 	if (serialized_request_data.empty()) {
 		// Default request data
-		usd->request_data.url = "https://catfact.ninja/fact";
-		usd->request_data.method = "GET";
-		usd->request_data.output_type = "json";
-		usd->request_data.output_json_path = "fact";
+		usd->request_data.url = std::string("https://catfact.ninja/fact");
+		usd->request_data.method = std::string("GET");
+		usd->request_data.output_type = std::string("json");
+		usd->request_data.output_json_path = std::string("/fact");
 
 		save_request_info_on_settings(settings, &(usd->request_data));
 	} else {
@@ -353,9 +354,9 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
-	usd->css_props = obs_data_get_string(settings, "css_props");
-	usd->output_text_template = obs_data_get_string(settings, "template");
-	usd->output_regex = obs_data_get_string(settings, "output_regex");
+	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
+	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
+	usd->output_regex = std::string(obs_data_get_string(settings, "output_regex"));
 
 	// initialize the mutex
 	usd->text_source_mutex = new std::mutex();
