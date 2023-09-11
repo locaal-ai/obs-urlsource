@@ -162,23 +162,24 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 	}
 
-    if (request_data->method == "POST") {
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_data->body.c_str());
-    } else if (request_data->method == "GET") {
-        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-    }
+	if (request_data->method == "POST") {
+		curl_easy_setopt(curl, CURLOPT_POST, 1L);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_data->body.c_str());
+	} else if (request_data->method == "GET") {
+		curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+	}
 
-    // SSL options
-    if (request_data->ssl_client_cert_file != "") {
-        curl_easy_setopt(curl, CURLOPT_SSLCERT, request_data->ssl_client_cert_file.c_str());
-    }
-    if (request_data->ssl_client_key_file != "") {
-        curl_easy_setopt(curl, CURLOPT_SSLKEY, request_data->ssl_client_key_file.c_str());
-    }
-    if (request_data->ssl_client_key_pass != "") {
-        curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, request_data->ssl_client_key_pass.c_str());
-    }
+	// SSL options
+	if (request_data->ssl_client_cert_file != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLCERT, request_data->ssl_client_cert_file.c_str());
+	}
+	if (request_data->ssl_client_key_file != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLKEY, request_data->ssl_client_key_file.c_str());
+	}
+	if (request_data->ssl_client_key_pass != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD,
+				 request_data->ssl_client_key_pass.c_str());
+	}
 
 	std::string responseBody;
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
@@ -226,11 +227,11 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["url"] = request_data->url;
 	json["method"] = request_data->method;
 	json["body"] = request_data->body;
-    // SSL options
-    json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
-    json["ssl_client_key_file"] = request_data->ssl_client_key_file;
-    json["ssl_client_key_pass"] = request_data->ssl_client_key_pass;
-    // Output parsing options
+	// SSL options
+	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
+	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
+	json["ssl_client_key_pass"] = request_data->ssl_client_key_pass;
+	// Output parsing options
 	json["output_type"] = request_data->output_type;
 	json["output_json_path"] = request_data->output_json_path;
 	json["output_xpath"] = request_data->output_xpath;
@@ -264,17 +265,17 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	request_data.url = json["url"].get<std::string>();
 	request_data.method = json["method"].get<std::string>();
 	request_data.body = json["body"].get<std::string>();
-    // SSL options
-    if (json.contains("ssl_client_cert_file")) {
-        request_data.ssl_client_cert_file = json["ssl_client_cert_file"].get<std::string>();
-    }
-    if (json.contains("ssl_client_key_file")) {
-        request_data.ssl_client_key_file = json["ssl_client_key_file"].get<std::string>();
-    }
-    if (json.contains("ssl_client_key_pass")) {
-        request_data.ssl_client_key_pass = json["ssl_client_key_pass"].get<std::string>();
-    }
-    // Output parsing options
+	// SSL options
+	if (json.contains("ssl_client_cert_file")) {
+		request_data.ssl_client_cert_file = json["ssl_client_cert_file"].get<std::string>();
+	}
+	if (json.contains("ssl_client_key_file")) {
+		request_data.ssl_client_key_file = json["ssl_client_key_file"].get<std::string>();
+	}
+	if (json.contains("ssl_client_key_pass")) {
+		request_data.ssl_client_key_pass = json["ssl_client_key_pass"].get<std::string>();
+	}
+	// Output parsing options
 	request_data.output_type = json["output_type"].get<std::string>();
 	request_data.output_json_path = json["output_json_path"].get<std::string>();
 	request_data.output_xpath = json["output_xpath"].get<std::string>();
