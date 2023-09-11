@@ -3,8 +3,7 @@ include(ExternalProject)
 if(APPLE)
   set(PUGIXML_CMAKE_PLATFORM_OPTIONS -DCMAKE_OSX_ARCHITECTURES=x86_64$<SEMICOLON>arm64)
 else()
-  set(PUGIXML_CMAKE_PLATFORM_OPTIONS ""
-  )
+  set(PUGIXML_CMAKE_PLATFORM_OPTIONS "")
 endif()
 
 ExternalProject_Add(
