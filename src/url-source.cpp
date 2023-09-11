@@ -333,7 +333,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	struct url_source_data *usd =
 		reinterpret_cast<struct url_source_data *>(bzalloc(sizeof(struct url_source_data)));
 	usd->source = source;
-    usd->request_data = url_source_request_data();
+	usd->request_data = url_source_request_data();
 
 	usd->frame.data[0] = nullptr;
 
