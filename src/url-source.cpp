@@ -266,8 +266,8 @@ void acquire_weak_text_source_ref(struct url_source_data *usd)
 
 void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
-	struct url_source_data *usd =
-		reinterpret_cast<struct url_source_data *>(bzalloc(sizeof(struct url_source_data)));
+	void *p = bzalloc(sizeof(struct url_source_data));
+	struct url_source_data *usd = new (p) url_source_data;
 	usd->source = source;
 
 	// get request data from settings
