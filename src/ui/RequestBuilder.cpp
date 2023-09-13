@@ -122,7 +122,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	sslLayout->addLayout(sslCertFileLayout);
 	QLineEdit *sslCertFileLineEdit = new QLineEdit;
 	sslCertFileLineEdit->setPlaceholderText("SSL certificate file");
-    sslCertFileLineEdit->setText(QString::fromStdString(request_data->ssl_client_cert_file));
+	sslCertFileLineEdit->setText(QString::fromStdString(request_data->ssl_client_cert_file));
 	sslCertFileLayout->addWidget(sslCertFileLineEdit);
 	QPushButton *sslCertFileButton = new QPushButton("...");
 	sslCertFileLayout->addWidget(sslCertFileButton);
@@ -142,7 +142,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	sslLayout->addLayout(sslKeyFileLayout);
 	QLineEdit *sslKeyFileLineEdit = new QLineEdit;
 	sslKeyFileLineEdit->setPlaceholderText("SSL key file");
-    sslKeyFileLineEdit->setText(QString::fromStdString(request_data->ssl_client_key_file));
+	sslKeyFileLineEdit->setText(QString::fromStdString(request_data->ssl_client_key_file));
 	sslKeyFileLayout->addWidget(sslKeyFileLineEdit);
 	QPushButton *sslKeyFileButton = new QPushButton("...");
 	sslKeyFileLayout->addWidget(sslKeyFileButton);
@@ -159,13 +159,13 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// SSL key password
 	QLineEdit *sslKeyPasswordLineEdit = new QLineEdit;
 	sslKeyPasswordLineEdit->setPlaceholderText("SSL key password");
-    sslKeyPasswordLineEdit->setText(QString::fromStdString(request_data->ssl_client_key_pass));
+	sslKeyPasswordLineEdit->setText(QString::fromStdString(request_data->ssl_client_key_pass));
 	sslLayout->addWidget(sslKeyPasswordLineEdit);
 
-    // Verify peer checkbox
-    QCheckBox *verifyPeerCheckBox = new QCheckBox("Verify peer");
-    verifyPeerCheckBox->setChecked(request_data->ssl_verify_peer);
-    sslLayout->addWidget(verifyPeerCheckBox);
+	// Verify peer checkbox
+	QCheckBox *verifyPeerCheckBox = new QCheckBox("Verify peer");
+	verifyPeerCheckBox->setChecked(request_data->ssl_verify_peer);
+	sslLayout->addWidget(verifyPeerCheckBox);
 
 	// Headers
 	KeyValueListWidget *headersWidget = new KeyValueListWidget;
@@ -283,8 +283,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		request_data_for_saving->ssl_client_key_pass =
 			sslKeyPasswordLineEdit->text().toStdString();
 
-        // Save the verify peer option
-        request_data_for_saving->ssl_verify_peer = verifyPeerCheckBox->isChecked();
+		// Save the verify peer option
+		request_data_for_saving->ssl_verify_peer = verifyPeerCheckBox->isChecked();
 
 		// Save the headers
 		get_key_value_as_pairs_from_key_value_list_widget(headersWidget,
