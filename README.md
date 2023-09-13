@@ -11,7 +11,7 @@
 
 ## Introduction
 
-The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/). Blog post https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/
+The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
 
 ### Usage Tutorial
 Watch a short tutorial on how to use and setup the URL/API source on your OBS scene.
@@ -38,17 +38,18 @@ Features:
 - Output parsing: JSON via JSONPointer, XML/HTML via XPath and Regex
 - Update timer for live streaming data
 - Test of the request to find the right parsing
-- Output styling (font, color, etc.)
+- Output styling (font, color, etc.) and formatting (via regex post processing)
 - Image output (via URL)
+- Output to external Text Source
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
 - Websocket support
 - More output parsing options (JSONPath, CSS selectors, etc.)
-- More request types (PUT, DELETE, PATCH)
+- More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
 - More output formats (XML, HTML, CSV, etc.)
 - More output types (Video, Audio, etc.)
-- Output to OBS sources (Text, Image, etc.)
+- Output to OBS sources (Image, etc.)
 
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
