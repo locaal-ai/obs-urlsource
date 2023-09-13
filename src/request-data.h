@@ -17,6 +17,52 @@ struct url_source_request_data {
 	std::string output_regex;
 	std::string output_regex_flags;
 	std::string output_regex_group;
+
+	// default constructor
+	url_source_request_data()
+	{
+		url = std::string("");
+		method = std::string("GET");
+		body = std::string("");
+		headers = {};
+		output_type = std::string("text");
+		output_json_path = std::string("");
+		output_xpath = std::string("");
+		output_regex = std::string("");
+		output_regex_flags = std::string("");
+		output_regex_group = std::string("0");
+	}
+
+	// Copy constructor should duplicate all data
+	url_source_request_data(const url_source_request_data &other)
+	{
+		url = std::string(other.url);
+		method = std::string(other.method);
+		body = std::string(other.body);
+		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
+		output_type = std::string(other.output_type);
+		output_json_path = std::string(other.output_json_path);
+		output_xpath = std::string(other.output_xpath);
+		output_regex = std::string(other.output_regex);
+		output_regex_flags = std::string(other.output_regex_flags);
+		output_regex_group = std::string(other.output_regex_group);
+	}
+
+	// Copy assignment operator should duplicate all data
+	url_source_request_data &operator=(const url_source_request_data &other)
+	{
+		url = std::string(other.url);
+		method = std::string(other.method);
+		body = std::string(other.body);
+		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
+		output_type = std::string(other.output_type);
+		output_json_path = std::string(other.output_json_path);
+		output_xpath = std::string(other.output_xpath);
+		output_regex = std::string(other.output_regex);
+		output_regex_flags = std::string(other.output_regex_flags);
+		output_regex_group = std::string(other.output_regex_group);
+		return *this;
+	}
 };
 
 struct request_data_handler_response {

@@ -42,18 +42,17 @@ struct url_source_data {
 	std::string output_text_template;
 	bool output_is_image_url = false;
 	std::string output_regex;
+	struct obs_source_frame frame;
 
 	// Text source to output the text to
-	obs_weak_source_t *text_source;
-	char *text_source_name;
-	std::unique_ptr<std::mutex> text_source_mutex;
-	// Callback to set the text in the output text source
-	std::function<void(const std::string &str)> setTextCallback;
+	obs_weak_source_t *text_source = nullptr;
+	char *text_source_name = nullptr;
+	std::mutex *text_source_mutex = nullptr;
 
 	// Use std for thread and mutex
-	std::unique_ptr<std::mutex> curl_mutex;
+	std::mutex *curl_mutex = nullptr;
 	std::thread curl_thread;
-	std::unique_ptr<std::condition_variable> curl_thread_cv;
+	std::condition_variable *curl_thread_cv = nullptr;
 	bool curl_thread_run = false;
 };
 
@@ -73,7 +72,7 @@ const char *url_source_name(void *unused)
 void stop_and_join_curl_thread(struct url_source_data *usd)
 {
 	{
-		std::lock_guard<std::mutex> lock(*(usd->curl_mutex.get()));
+		std::lock_guard<std::mutex> lock(*usd->curl_mutex);
 		if (!usd->curl_thread_run) {
 			// Thread is already stopped
 			return;
@@ -102,8 +101,93 @@ void url_source_destroy(void *data)
 		usd->text_source = nullptr;
 	}
 
+	if (usd->text_source_mutex) {
+		delete usd->text_source_mutex;
+		usd->text_source_mutex = nullptr;
+	}
+
+	if (usd->curl_mutex) {
+		delete usd->curl_mutex;
+		usd->curl_mutex = nullptr;
+	}
+
+	if (usd->curl_thread_cv) {
+		delete usd->curl_thread_cv;
+		usd->curl_thread_cv = nullptr;
+	}
+
+	if (usd->frame.data[0] != nullptr) {
+		bfree(usd->frame.data[0]);
+		usd->frame.data[0] = nullptr;
+	}
+
 	bfree(usd);
 }
+
+void acquire_weak_text_source_ref(struct url_source_data *usd)
+{
+	if (!usd->text_source_name) {
+		obs_log(LOG_ERROR, "text_source_name is null");
+		return;
+	}
+
+	if (strcmp(usd->text_source_name, "none") == 0 ||
+	    strcmp(usd->text_source_name, "(null)") == 0 ||
+	    strcmp(usd->text_source_name, "") == 0) {
+		// text source is not selected
+		return;
+	}
+
+	if (!usd->text_source_mutex) {
+		obs_log(LOG_ERROR, "text_source_mutex is null");
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+
+	// acquire a weak ref to the new text source
+	obs_source_t *source = obs_get_source_by_name(usd->text_source_name);
+	if (source) {
+		usd->text_source = obs_source_get_weak_source(source);
+		obs_source_release(source);
+		if (!usd->text_source) {
+			obs_log(LOG_ERROR, "failed to get weak source for text source %s",
+				usd->text_source_name);
+		}
+	} else {
+		obs_log(LOG_ERROR, "text source '%s' not found", usd->text_source_name);
+	}
+}
+
+void setTextCallback(const std::string &str, struct url_source_data *usd)
+{
+	if (!usd->text_source_mutex) {
+		obs_log(LOG_ERROR, "text_source_mutex is null");
+		return;
+	}
+
+	if (!usd->text_source) {
+		// attempt to acquire a weak ref to the text source if it's yet available
+		acquire_weak_text_source_ref(usd);
+	}
+
+	std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
+
+	obs_weak_source_t *text_source = usd->text_source;
+	if (!text_source) {
+		obs_log(LOG_ERROR, "text_source is null");
+		return;
+	}
+	auto target = obs_weak_source_get_source(text_source);
+	if (!target) {
+		obs_log(LOG_ERROR, "text_source target is null");
+		return;
+	}
+	auto text_settings = obs_source_get_settings(target);
+	obs_data_set_string(text_settings, "text", str.c_str());
+	obs_source_update(target, text_settings);
+	obs_source_release(target);
+};
 
 void curl_loop(struct url_source_data *usd)
 {
@@ -111,12 +195,11 @@ void curl_loop(struct url_source_data *usd)
 	uint64_t cur_time = get_time_ns();
 	uint64_t start_time = cur_time;
 
-	struct obs_source_frame frame = {};
-	frame.format = VIDEO_FORMAT_BGRA;
+	usd->frame.format = VIDEO_FORMAT_BGRA;
 
 	while (true) {
 		{
-			std::lock_guard<std::mutex> lock(*(usd->curl_mutex.get()));
+			std::lock_guard<std::mutex> lock(*(usd->curl_mutex));
 			if (!usd->curl_thread_run) {
 				break;
 			}
@@ -133,7 +216,7 @@ void curl_loop(struct url_source_data *usd)
 				response.error_message.c_str());
 		} else {
 			cur_time = get_time_ns();
-			frame.timestamp = cur_time - start_time;
+			usd->frame.timestamp = cur_time - start_time;
 
 			uint32_t width = 0;
 			uint32_t height = 0;
@@ -182,36 +265,40 @@ void curl_loop(struct url_source_data *usd)
 				}
 			}
 
+			if (usd->frame.data[0] != nullptr) {
+				// Free the old render buffer
+				bfree(usd->frame.data[0]);
+				usd->frame.data[0] = nullptr;
+			}
+
 			if (usd->text_source_name != nullptr &&
-			    strcmp(usd->text_source_name, "none") != 0) {
+			    strcmp(usd->text_source_name, "none") != 0 &&
+			    strcmp(usd->text_source_name, "(null)") != 0 &&
+			    strcmp(usd->text_source_name, "") != 0) {
 				// If a text source is selected - use it for rendering
-				usd->setTextCallback(text);
+				setTextCallback(text, usd);
 
 				// Update the frame with an empty buffer of 1x1 pixels
 				renderBuffer = (uint8_t *)bzalloc(4);
-				frame.data[0] = renderBuffer;
-				frame.linesize[0] = 4;
-				frame.width = 1;
-				frame.height = 1;
+				usd->frame.data[0] = renderBuffer;
+				usd->frame.linesize[0] = 4;
+				usd->frame.width = 1;
+				usd->frame.height = 1;
 
 				// Send the frame
-				obs_source_output_video(usd->source, &frame);
-				bfree(renderBuffer);
+				obs_source_output_video(usd->source, &usd->frame);
 			} else {
 				// render the text with QTextDocument
 				render_text_with_qtextdocument(text, width, height, &renderBuffer,
 							       usd->css_props);
 				// Update the frame
-				frame.data[0] = renderBuffer;
-				frame.linesize[0] = width * 4;
-				frame.width = width;
-				frame.height = height;
+				usd->frame.data[0] = renderBuffer;
+				usd->frame.linesize[0] = width * 4;
+				usd->frame.width = width;
+				usd->frame.height = height;
 
 				// Send the frame
-				obs_source_output_video(usd->source, &frame);
-
-				// Free the render buffer
-				bfree(renderBuffer);
+				obs_source_output_video(usd->source, &usd->frame);
 			}
 		}
 
@@ -221,7 +308,7 @@ void curl_loop(struct url_source_data *usd)
 		const int64_t sleep_time_ms =
 			(int64_t)(usd->update_timer_ms) - (int64_t)(request_time_ns / 1000000);
 		if (sleep_time_ms > 0) {
-			std::unique_lock<std::mutex> lock(*(usd->curl_mutex.get()));
+			std::unique_lock<std::mutex> lock(*(usd->curl_mutex));
 			// Sleep for n ns as per the update timer for the remaining time
 			usd->curl_thread_cv->wait_for(lock,
 						      std::chrono::milliseconds(sleep_time_ms));
@@ -241,43 +328,23 @@ void save_request_info_on_settings(obs_data_t *settings,
 	obs_data_set_string(settings, "url", request_data->url.c_str());
 }
 
-void acquire_weak_text_source_ref(struct url_source_data *usd)
-{
-	if (!usd->text_source_name) {
-		obs_log(LOG_ERROR, "text_source_name is null");
-		return;
-	}
-
-	std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
-
-	// acquire a weak ref to the new text source
-	obs_source_t *source = obs_get_source_by_name(usd->text_source_name);
-	if (source) {
-		usd->text_source = obs_source_get_weak_source(source);
-		obs_source_release(source);
-		if (!usd->text_source) {
-			obs_log(LOG_ERROR, "failed to get weak source for text source %s",
-				usd->text_source_name);
-		}
-	} else {
-		obs_log(LOG_ERROR, "text source '%s' not found", usd->text_source_name);
-	}
-}
-
 void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	void *p = bzalloc(sizeof(struct url_source_data));
 	struct url_source_data *usd = new (p) url_source_data;
 	usd->source = source;
+	usd->request_data = url_source_request_data();
+
+	usd->frame.data[0] = nullptr;
 
 	// get request data from settings
 	std::string serialized_request_data = obs_data_get_string(settings, "request_data");
 	if (serialized_request_data.empty()) {
 		// Default request data
-		usd->request_data.url = "https://catfact.ninja/fact";
-		usd->request_data.method = "GET";
-		usd->request_data.output_type = "json";
-		usd->request_data.output_json_path = "fact";
+		usd->request_data.url = std::string("https://catfact.ninja/fact");
+		usd->request_data.method = std::string("GET");
+		usd->request_data.output_type = std::string("json");
+		usd->request_data.output_json_path = std::string("/fact");
 
 		save_request_info_on_settings(settings, &(usd->request_data));
 	} else {
@@ -287,49 +354,26 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
-	usd->css_props = obs_data_get_string(settings, "css_props");
-	usd->output_text_template = obs_data_get_string(settings, "template");
-	usd->output_regex = obs_data_get_string(settings, "output_regex");
+	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
+	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
+	usd->output_regex = std::string(obs_data_get_string(settings, "output_regex"));
 
 	// initialize the mutex
-	usd->text_source_mutex = std::unique_ptr<std::mutex>(new std::mutex());
-	usd->curl_mutex = std::unique_ptr<std::mutex>(new std::mutex());
-	usd->curl_thread_cv =
-		std::unique_ptr<std::condition_variable>(new std::condition_variable());
+	usd->text_source_mutex = new std::mutex();
+	usd->curl_mutex = new std::mutex();
+	usd->curl_thread_cv = new std::condition_variable();
+	usd->text_source_name = bstrdup(obs_data_get_string(settings, "text_sources"));
+	usd->text_source = nullptr;
 
 	if (obs_source_active(source) && obs_source_showing(source)) {
 		// start the thread
 		usd->curl_thread_run = true;
-		usd->curl_thread = std::thread(curl_loop, usd);
+		std::thread new_curl_thread(curl_loop, usd);
+		usd->curl_thread.swap(new_curl_thread);
 	} else {
 		// thread should not be running
 		usd->curl_thread_run = false;
 	}
-
-	// set the callback to set the text in the output text source (subtitles)
-	usd->setTextCallback = [usd](const std::string &str) {
-		if (!usd->text_source) {
-			// attempt to acquire a weak ref to the text source if it's yet available
-			acquire_weak_text_source_ref(usd);
-		}
-
-		std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
-
-		obs_weak_source_t *text_source = usd->text_source;
-		if (!text_source) {
-			obs_log(LOG_ERROR, "text_source is null");
-			return;
-		}
-		auto target = obs_weak_source_get_source(text_source);
-		if (!target) {
-			obs_log(LOG_ERROR, "text_source target is null");
-			return;
-		}
-		auto text_settings = obs_source_get_settings(target);
-		obs_data_set_string(text_settings, "text", str.c_str());
-		obs_source_update(target, text_settings);
-		obs_source_release(target);
-	};
 
 	return usd;
 }
@@ -345,10 +389,11 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->output_regex = obs_data_get_string(settings, "output_regex");
 
 	// update the text source
-	const char *text_source_name = obs_data_get_string(settings, "text_sources");
+	const char *new_text_source_name = obs_data_get_string(settings, "text_sources");
 	obs_weak_source_t *old_weak_text_source = NULL;
 
-	if (strcmp(text_source_name, "none") == 0 || strcmp(text_source_name, "(null)") == 0) {
+	if (strcmp(new_text_source_name, "none") == 0 ||
+	    strcmp(new_text_source_name, "(null)") == 0) {
 		// new selected text source is not valid, release the old one
 		if (usd->text_source) {
 			std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
@@ -362,14 +407,14 @@ void url_source_update(void *data, obs_data_t *settings)
 	} else {
 		// new selected text source is valid, check if it's different from the old one
 		if (usd->text_source_name == nullptr ||
-		    strcmp(text_source_name, usd->text_source_name) != 0) {
+		    strcmp(new_text_source_name, usd->text_source_name) != 0) {
 			// new text source is different from the old one, release the old one
 			if (usd->text_source) {
 				std::lock_guard<std::mutex> lock(*usd->text_source_mutex);
 				old_weak_text_source = usd->text_source;
 				usd->text_source = nullptr;
 			}
-			usd->text_source_name = bstrdup(text_source_name);
+			usd->text_source_name = bstrdup(new_text_source_name);
 		}
 	}
 
@@ -489,7 +534,7 @@ void url_source_activate(void *data)
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 	// Start the thread
 	{
-		std::lock_guard<std::mutex> lock(*(usd->curl_mutex.get()));
+		std::lock_guard<std::mutex> lock(*(usd->curl_mutex));
 		if (usd->curl_thread_run) {
 			// Thread is already running
 			return;
