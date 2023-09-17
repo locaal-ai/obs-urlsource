@@ -120,6 +120,11 @@ struct request_data_handler_response parse_json(const std::string &responseBody,
 				response.body_parsed = response.body_parsed.substr(
 					1, response.body_parsed.size() - 2);
 			}
+			// remove escaped double or single quotes
+			response.body_parsed = std::regex_replace(response.body_parsed,
+								  std::regex("\\\\\""), "\"");
+			response.body_parsed =
+				std::regex_replace(response.body_parsed, std::regex("\\\\'"), "'");
 		} catch (nlohmann::json::exception &e) {
 			obs_log(LOG_INFO, "Failed to get JSON value: %s", e.what());
 			// Return an error response
