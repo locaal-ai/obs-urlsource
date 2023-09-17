@@ -38,6 +38,7 @@ struct url_source_data {
 	struct url_source_request_data request_data;
 	struct request_data_handler_response response;
 	uint32_t update_timer_ms = 1000;
+	bool run_while_not_visible = false;
 	std::string css_props;
 	std::string output_text_template;
 	bool output_is_image_url = false;
@@ -302,7 +303,7 @@ void curl_loop(struct url_source_data *usd)
 			}
 		}
 
-		// time the request
+		// time the request, calculate the remaining time and sleep
 		const uint64_t request_end_time_ns = get_time_ns();
 		const uint64_t request_time_ns = request_end_time_ns - request_start_time_ns;
 		const int64_t sleep_time_ms =
@@ -383,6 +384,7 @@ void url_source_update(void *data, obs_data_t *settings)
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 	// Update the request data from the settings
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
+	usd->run_while_not_visible = obs_data_get_bool(settings, "run_while_not_visible");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
 	usd->css_props = obs_data_get_string(settings, "css_props");
 	usd->output_text_template = obs_data_get_string(settings, "template");
@@ -443,6 +445,8 @@ void url_source_defaults(obs_data_t *s)
 
 	// Default update timer setting in milliseconds
 	obs_data_set_default_int(s, "update_timer", 1000);
+
+	obs_data_set_default_bool(s, "run_while_not_visible", false);
 
 	// Is Image URL default false
 	obs_data_set_default_bool(s, "is_image_url", false);
@@ -506,6 +510,9 @@ obs_properties_t *url_source_properties(void *data)
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 1000000, 100);
 
+	// Run timer while not visible
+	obs_properties_add_bool(ppts, "run_while_not_visible", "Run while not visible?");
+
 	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources",
 							  "Output text source", OBS_COMBO_TYPE_LIST,
 							  OBS_COMBO_FORMAT_STRING);
@@ -547,6 +554,8 @@ void url_source_activate(void *data)
 void url_source_deactivate(void *data)
 {
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
-	// Stop the thread
-	stop_and_join_curl_thread(usd);
+	if (!usd->run_while_not_visible) {
+		// Stop the thread
+		stop_and_join_curl_thread(usd);
+	}
 }
