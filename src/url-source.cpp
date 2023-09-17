@@ -354,6 +354,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	}
 
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
+	usd->run_while_not_visible = obs_data_get_bool(settings, "run_while_not_visible");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
 	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
 	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
