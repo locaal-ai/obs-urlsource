@@ -280,9 +280,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// add a checkbox to disable the request if the OBS text source is empty
 	QCheckBox *obsTextSourceEnabledCheckBox = new QCheckBox("Skip empty");
 	obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
+	QCheckBox *obsTextSourceSkipSameCheckBox = new QCheckBox("Skip same");
+	obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
 	// add to urlRequestLayout with horizontal layout
 	obsTextSourceLayout->addWidget(obsTextSourceComboBox);
 	obsTextSourceLayout->addWidget(obsTextSourceEnabledCheckBox);
+	obsTextSourceLayout->addWidget(obsTextSourceSkipSameCheckBox);
 	// add to urlRequestLayout as a row
 	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceLayout);
 	// add a tooltip to explain the dynamic input
@@ -401,6 +404,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		}
 		request_data_for_saving->obs_text_source_skip_if_empty =
 			obsTextSourceEnabledCheckBox->isChecked();
+		request_data_for_saving->obs_text_source_skip_if_same =
+			obsTextSourceSkipSameCheckBox->isChecked();
 
 		// Save the SSL certificate file
 		request_data_for_saving->ssl_client_cert_file =

@@ -216,6 +216,17 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 						return response;
 					}
 				}
+				if (request_data->obs_text_source_skip_if_same) {
+					if (request_data->last_obs_text_source_value == text) {
+						// Return an error response
+						response.error_message =
+							"OBS text source value is the same as last time, skipping was requested";
+						response.status_code =
+							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+						return response;
+					}
+					request_data->last_obs_text_source_value = text;
+				}
 				// Replace the {input} placeholder with the source text
 				request_body_allocated = std::regex_replace(
 					request_body_allocated, std::regex("\\{input\\}"), text);

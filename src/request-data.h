@@ -15,6 +15,9 @@ struct url_source_request_data {
 	std::string body;
 	std::string obs_text_source;
 	bool obs_text_source_skip_if_empty;
+	bool obs_text_source_skip_if_same;
+	std::string last_obs_text_source_value;
+
 	// SSL options
 	std::string ssl_client_cert_file;
 	std::string ssl_client_key_file;
@@ -39,6 +42,8 @@ struct url_source_request_data {
 		body = std::string("");
 		obs_text_source = std::string("");
 		obs_text_source_skip_if_empty = false;
+		obs_text_source_skip_if_same = false;
+		last_obs_text_source_value = std::string("");
 		headers = {};
 		output_type = std::string("text");
 		output_json_path = std::string("");
@@ -57,6 +62,8 @@ struct url_source_request_data {
 		body = std::string(other.body);
 		obs_text_source = std::string(other.obs_text_source);
 		obs_text_source_skip_if_empty = other.obs_text_source_skip_if_empty;
+		obs_text_source_skip_if_same = other.obs_text_source_skip_if_same;
+		last_obs_text_source_value = std::string(other.last_obs_text_source_value);
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
@@ -75,6 +82,8 @@ struct url_source_request_data {
 		body = std::string(other.body);
 		obs_text_source = std::string(other.obs_text_source);
 		obs_text_source_skip_if_empty = other.obs_text_source_skip_if_empty;
+		obs_text_source_skip_if_same = other.obs_text_source_skip_if_same;
+		last_obs_text_source_value = std::string(other.last_obs_text_source_value);
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
