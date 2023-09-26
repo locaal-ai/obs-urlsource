@@ -6,8 +6,6 @@
 
 #include "plugin-support.h"
 
-#include <obs-module.h>
-
 #pragma once
 
 class CollapseButton : public QToolButton {
@@ -39,8 +37,6 @@ public:
 		animation_->setEasingCurve(QEasingCurve::InOutQuad);
 		animation_->setDuration(300);
 		// log content->geometry().height()
-		obs_log(LOG_INFO, "content->geometry().height() = %d",
-			content->geometry().height());
 		animation_->setEndValue(content->geometry().height() + 10);
 		connect(animation_, &QPropertyAnimation::finished, [=]() { parent->adjustSize(); });
 		animator_.addAnimation(animation_);

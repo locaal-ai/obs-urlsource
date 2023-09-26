@@ -303,6 +303,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["body"] = request_data->body;
 	json["obs_text_source"] = request_data->obs_text_source;
 	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
+	json["obs_text_source_skip_if_same"] = request_data->obs_text_source_skip_if_same;
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
 	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
@@ -327,6 +328,8 @@ std::string serialize_request_data(url_source_request_data *request_data)
 url_source_request_data unserialize_request_data(std::string serialized_request_data)
 {
 	// Unserialize the request data from a string using JSON
+	// throughout this function we use .contains() to check if a key exists to avoid
+	// exceptions
 	nlohmann::json json;
 	try {
 		json = nlohmann::json::parse(serialized_request_data);
@@ -339,14 +342,14 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 
 	url_source_request_data request_data;
 	request_data.url = json["url"].get<std::string>();
-	if (json.contains("url_or_file")) { // backwards compatibility
+	if (json.contains("url_or_file")) {
 		request_data.url_or_file = json["url_or_file"].get<std::string>();
 	} else {
 		request_data.url_or_file = "url";
 	}
 	request_data.method = json["method"].get<std::string>();
 	request_data.body = json["body"].get<std::string>();
-	if (json.contains("obs_text_source")) { // backwards compatibility
+	if (json.contains("obs_text_source")) {
 		request_data.obs_text_source = json["obs_text_source"].get<std::string>();
 	} else {
 		request_data.obs_text_source = "";
@@ -356,6 +359,12 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 			json["obs_text_source_skip_if_empty"].get<bool>();
 	} else {
 		request_data.obs_text_source_skip_if_empty = false;
+	}
+	if (json.contains("obs_text_source_skip_if_same")) {
+		request_data.obs_text_source_skip_if_same =
+			json["obs_text_source_skip_if_same"].get<bool>();
+	} else {
+		request_data.obs_text_source_skip_if_same = false;
 	}
 
 	// SSL options

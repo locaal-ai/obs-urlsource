@@ -252,7 +252,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	CollapseButton *advancedOptionsCollapseButton = new CollapseButton(this);
 	advancedOptionsCollapseButton->setText("SSL options");
-	advancedOptionsCollapseButton->setContent(sslGroupBox, this);
 
 	/* --- End SSL options --- */
 
@@ -263,7 +262,9 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->addRow("Headers:", headersWidget);
 
 	// Dynamic data from OBS text source
+	QWidget *obsTextSourceWidget = new QWidget;
 	QHBoxLayout *obsTextSourceLayout = new QHBoxLayout;
+	obsTextSourceWidget->setLayout(obsTextSourceLayout);
 	// Add a dropdown to select a OBS text source or None
 	QComboBox *obsTextSourceComboBox = new QComboBox;
 	obsTextSourceComboBox->addItem("None");
@@ -287,7 +288,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	obsTextSourceLayout->addWidget(obsTextSourceEnabledCheckBox);
 	obsTextSourceLayout->addWidget(obsTextSourceSkipSameCheckBox);
 	// add to urlRequestLayout as a row
-	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceLayout);
+	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceWidget);
 	// add a tooltip to explain the dynamic input
 	obsTextSourceComboBox->setToolTip(
 		"Select a OBS text source to use its current text in the request body as `{input}`.");
@@ -303,7 +304,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// If method is not GET, show the body input
 		set_form_row_visibility(urlRequestLayout, bodyLineEdit,
 					methodComboBox->currentText() != "GET");
-		set_form_row_visibility(urlRequestLayout, obsTextSourceComboBox,
+		set_form_row_visibility(urlRequestLayout, obsTextSourceWidget,
 					methodComboBox->currentText() != "GET");
 		this->adjustSize();
 	};
@@ -316,6 +317,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->addWidget(advancedOptionsCollapseButton);
 	sslGroupBox->adjustSize();
 	urlRequestLayout->addWidget(sslGroupBox);
+	advancedOptionsCollapseButton->setContent(sslGroupBox, this);
 
 	// ------------ Output parsing options --------------
 	QGroupBox *outputGroupBox = new QGroupBox("Output Parsing", this);
