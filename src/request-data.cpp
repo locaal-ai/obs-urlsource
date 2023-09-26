@@ -201,14 +201,16 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 		// SSL options
 		if (request_data->ssl_client_cert_file != "") {
-			curl_easy_setopt(curl, CURLOPT_SSLCERT, request_data->ssl_client_cert_file.c_str());
+			curl_easy_setopt(curl, CURLOPT_SSLCERT,
+					 request_data->ssl_client_cert_file.c_str());
 		}
 		if (request_data->ssl_client_key_file != "") {
-			curl_easy_setopt(curl, CURLOPT_SSLKEY, request_data->ssl_client_key_file.c_str());
+			curl_easy_setopt(curl, CURLOPT_SSLKEY,
+					 request_data->ssl_client_key_file.c_str());
 		}
 		if (request_data->ssl_client_key_pass != "") {
 			curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD,
-					request_data->ssl_client_key_pass.c_str());
+					 request_data->ssl_client_key_pass.c_str());
 		}
 		if (!request_data->ssl_verify_peer) {
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);

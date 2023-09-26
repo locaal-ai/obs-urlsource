@@ -503,13 +503,14 @@ obs_properties_t *url_source_properties(void *data)
 
 	obs_properties_t *ppts = obs_properties_create();
 	// URL input string
-	obs_property_t *urlprop = obs_properties_add_text(ppts, "url", "URL / File", OBS_TEXT_DEFAULT);
+	obs_property_t *urlprop =
+		obs_properties_add_text(ppts, "url", "URL / File", OBS_TEXT_DEFAULT);
 	// Disable the URL input since it's setup via the Request Builder dialog
 	obs_property_set_enabled(urlprop, false);
 
 	// Add button to open the Request Builder dialog
-	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source", setup_request_button_click,
-				   usd);
+	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source",
+				   setup_request_button_click, usd);
 
 	// Add file search input
 	obs_properties_add_path(ppts, "local_file_source", "File", OBS_PATH_FILE, nullptr, nullptr);

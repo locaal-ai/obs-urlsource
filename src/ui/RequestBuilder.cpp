@@ -161,7 +161,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
 	connect(methodComboBox, &QComboBox::currentTextChanged, this, [=]() {
 		// If method is not GET, show the body input
-		urlRequestLayout->setRowVisible(bodyLineEdit, methodComboBox->currentText() != "GET");
+		urlRequestLayout->setRowVisible(bodyLineEdit,
+						methodComboBox->currentText() != "GET");
 		this->adjustSize();
 	});
 	// add a label and the method dropdown to the url request options group with horizontal layout
@@ -285,20 +286,30 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	outputRegexGroupLineEdit->setPlaceholderText("Regex group");
 	formOutputParsing->addRow("Regex group", outputRegexGroupLineEdit);
 
-	formOutputParsing->setRowVisible(outputJSONPathLineEdit, outputTypeComboBox->currentText() == "JSON");
-	formOutputParsing->setRowVisible(outputXPathLineEdit, outputTypeComboBox->currentText() == "XML" ||
-					outputTypeComboBox->currentText() == "HTML");
-	formOutputParsing->setRowVisible(outputRegexLineEdit, outputTypeComboBox->currentText() == "Text");
-	formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, outputTypeComboBox->currentText() == "Text");
-	formOutputParsing->setRowVisible(outputRegexGroupLineEdit, outputTypeComboBox->currentText() == "Text");
+	formOutputParsing->setRowVisible(outputJSONPathLineEdit,
+					 outputTypeComboBox->currentText() == "JSON");
+	formOutputParsing->setRowVisible(outputXPathLineEdit,
+					 outputTypeComboBox->currentText() == "XML" ||
+						 outputTypeComboBox->currentText() == "HTML");
+	formOutputParsing->setRowVisible(outputRegexLineEdit,
+					 outputTypeComboBox->currentText() == "Text");
+	formOutputParsing->setRowVisible(outputRegexFlagsLineEdit,
+					 outputTypeComboBox->currentText() == "Text");
+	formOutputParsing->setRowVisible(outputRegexGroupLineEdit,
+					 outputTypeComboBox->currentText() == "Text");
 
 	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this, [=]() {
-		formOutputParsing->setRowVisible(outputJSONPathLineEdit, outputTypeComboBox->currentText() == "JSON");
-		formOutputParsing->setRowVisible(outputXPathLineEdit, outputTypeComboBox->currentText() == "XML" ||
-						outputTypeComboBox->currentText() == "HTML");
-		formOutputParsing->setRowVisible(outputRegexLineEdit, outputTypeComboBox->currentText() == "Text");
-		formOutputParsing->setRowVisible(outputRegexFlagsLineEdit, outputTypeComboBox->currentText() == "Text");
-		formOutputParsing->setRowVisible(outputRegexGroupLineEdit, outputTypeComboBox->currentText() == "Text");
+		formOutputParsing->setRowVisible(outputJSONPathLineEdit,
+						 outputTypeComboBox->currentText() == "JSON");
+		formOutputParsing->setRowVisible(
+			outputXPathLineEdit, outputTypeComboBox->currentText() == "XML" ||
+						     outputTypeComboBox->currentText() == "HTML");
+		formOutputParsing->setRowVisible(outputRegexLineEdit,
+						 outputTypeComboBox->currentText() == "Text");
+		formOutputParsing->setRowVisible(outputRegexFlagsLineEdit,
+						 outputTypeComboBox->currentText() == "Text");
+		formOutputParsing->setRowVisible(outputRegexGroupLineEdit,
+						 outputTypeComboBox->currentText() == "Text");
 		// adjust the size of the dialog to fit the content
 		this->adjustSize();
 	});
@@ -313,8 +324,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	auto saveSettingsToRequestData = [=](url_source_request_data *request_data_for_saving) {
 		// Save the request settings to the request_data struct
 		request_data_for_saving->url = urlLineEdit->text().toStdString();
-		request_data_for_saving->url_or_file =
-			urlRadioButton->isChecked() ? "url" : "file";
+		request_data_for_saving->url_or_file = urlRadioButton->isChecked() ? "url" : "file";
 		request_data_for_saving->method = methodComboBox->currentText().toStdString();
 		request_data_for_saving->body = bodyLineEdit->text().toStdString();
 
