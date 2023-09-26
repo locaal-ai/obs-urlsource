@@ -213,8 +213,10 @@ void curl_loop(struct url_source_data *usd)
 		struct request_data_handler_response response =
 			request_data_handler(&(usd->request_data));
 		if (response.status_code != 200) {
-			obs_log(LOG_INFO, "Failed to send request: %s",
-				response.error_message.c_str());
+			if (response.status_code != URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
+				obs_log(LOG_INFO, "Failed to send request: %s",
+					response.error_message.c_str());
+			}
 		} else {
 			cur_time = get_time_ns();
 			usd->frame.timestamp = cur_time - start_time;

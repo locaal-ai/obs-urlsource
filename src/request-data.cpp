@@ -9,6 +9,7 @@
 #include <util/base.h>
 #include <nlohmann/json.hpp>
 #include <pugixml.hpp>
+#include <obs-module.h>
 
 static const std::string USER_AGENT = std::string(PLUGIN_NAME) + "/" + std::string(PLUGIN_VERSION);
 
@@ -48,7 +49,7 @@ struct request_data_handler_response parse_regex(struct request_data_handler_res
 			// Return an error response
 			struct request_data_handler_response responseFail;
 			responseFail.error_message = "Failed to match regex";
-			responseFail.status_code = -1;
+			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 			return responseFail;
 		}
 	}
@@ -66,7 +67,7 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 		// Return an error response
 		struct request_data_handler_response responseFail;
 		responseFail.error_message = result.description();
-		responseFail.status_code = -1;
+		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 		return responseFail;
 	}
 	// Get the output value
@@ -79,7 +80,7 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 			// Return an error response
 			struct request_data_handler_response responseFail;
 			responseFail.error_message = "Failed to get XML value";
-			responseFail.status_code = -1;
+			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 			return responseFail;
 		}
 	} else {
@@ -101,7 +102,7 @@ struct request_data_handler_response parse_json(struct request_data_handler_resp
 		// Return an error response
 		struct request_data_handler_response responseFail;
 		responseFail.error_message = e.what();
-		responseFail.status_code = -1;
+		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 		return responseFail;
 	}
 	// Get the output value
@@ -127,7 +128,7 @@ struct request_data_handler_response parse_json(struct request_data_handler_resp
 			// Return an error response
 			struct request_data_handler_response responseFail;
 			responseFail.error_message = e.what();
-			responseFail.status_code = -1;
+			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 			return responseFail;
 		}
 	} else {
@@ -149,7 +150,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			obs_log(LOG_INFO, "Failed to open file");
 			// Return an error response
 			response.error_message = "Failed to open file";
-			response.status_code = -1;
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
 		std::string responseBody((std::istreambuf_iterator<char>(file)),
@@ -165,7 +166,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			obs_log(LOG_INFO, "URL is empty");
 			// Return an error response
 			response.error_message = "URL is empty";
-			response.status_code = -1;
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
 		// Build the request with libcurl
@@ -174,7 +175,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			obs_log(LOG_INFO, "Failed to initialize curl");
 			// Return an error response
 			response.error_message = "Failed to initialize curl";
-			response.status_code = -1;
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
 		CURLcode code;
@@ -192,9 +193,36 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		}
 
+		std::string request_body_allocated; // this is needed here, out of the if scope below
+
 		if (request_data->method == "POST") {
 			curl_easy_setopt(curl, CURLOPT_POST, 1L);
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_data->body.c_str());
+			request_body_allocated = request_data->body;
+			// If dynamic data source is set, replace the {input} placeholder with the source text
+			if (request_data->obs_text_source != "") {
+				// Get text from OBS text source
+				obs_data_t *sourceSettings =
+					obs_source_get_settings(obs_get_source_by_name(
+						request_data->obs_text_source.c_str()));
+				const char *text = obs_data_get_string(sourceSettings, "text");
+				obs_data_release(sourceSettings);
+				if (request_data->obs_text_source_skip_if_empty) {
+					if (text == NULL || text[0] == '\0') {
+						// Return an error response
+						response.error_message =
+							"OBS text source is empty, skipping was requested";
+						response.status_code =
+							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+						return response;
+					}
+				}
+				// Replace the {input} placeholder with the source text
+				request_body_allocated = std::regex_replace(
+					request_body_allocated, std::regex("\\{input\\}"), text);
+			}
+			response.request_body = request_body_allocated;
+			// allocate memory for the request body
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body_allocated.c_str());
 		} else if (request_data->method == "GET") {
 			curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 		}
@@ -226,7 +254,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
 			// Return an error response
 			response.error_message = curl_easy_strerror(code);
-			response.status_code = -1;
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
 
@@ -246,7 +274,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		// Return an error response
 		struct request_data_handler_response responseFail;
 		responseFail.error_message = "Invalid output type";
-		responseFail.status_code = -1;
+		responseFail.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 		return responseFail;
 	}
 
@@ -262,6 +290,8 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["url_or_file"] = request_data->url_or_file;
 	json["method"] = request_data->method;
 	json["body"] = request_data->body;
+	json["obs_text_source"] = request_data->obs_text_source;
+	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
 	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
@@ -305,6 +335,18 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	}
 	request_data.method = json["method"].get<std::string>();
 	request_data.body = json["body"].get<std::string>();
+	if (json.contains("obs_text_source")) { // backwards compatibility
+		request_data.obs_text_source = json["obs_text_source"].get<std::string>();
+	} else {
+		request_data.obs_text_source = "";
+	}
+	if (json.contains("obs_text_source_skip_if_empty")) {
+		request_data.obs_text_source_skip_if_empty =
+			json["obs_text_source_skip_if_empty"].get<bool>();
+	} else {
+		request_data.obs_text_source_skip_if_empty = false;
+	}
+
 	// SSL options
 	if (json.contains("ssl_client_cert_file")) {
 		request_data.ssl_client_cert_file = json["ssl_client_cert_file"].get<std::string>();

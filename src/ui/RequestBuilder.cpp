@@ -2,6 +2,8 @@
 #include "RequestBuilder.h"
 #include "CollapseButton.h"
 
+#include <obs-module.h>
+
 class KeyValueWidget : public QWidget {
 public:
 	KeyValueWidget(QWidget *parent = nullptr) : QWidget(parent)
@@ -42,6 +44,8 @@ public:
 			// Add a new key-value widget
 			KeyValueWidget *keyValueWidget = new KeyValueWidget(this);
 			listLayout->insertWidget(listLayout->count() - 1, keyValueWidget);
+			// adjust the size of the widget to fit the content
+			adjustSize();
 		});
 	}
 
@@ -57,6 +61,8 @@ public:
 			valueLineEdit->setText(QString::fromStdString(pair.second));
 			listLayout->insertWidget(listLayout->count() - 1, keyValueWidget);
 		}
+		// adjust the size of the widget to fit the content
+		adjustSize();
 	}
 };
 
@@ -73,6 +79,35 @@ void get_key_value_as_pairs_from_key_value_list_widget(
 		pairs.push_back(std::make_pair(keyLineEdit->text().toStdString(),
 					       valueLineEdit->text().toStdString()));
 	}
+}
+
+void set_form_row_visibility(QFormLayout *layout, QWidget *widget, bool visible)
+{
+	for (int i = 0; i < layout->rowCount(); i++) {
+		if (layout->itemAt(i, QFormLayout::FieldRole)->widget() == widget) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+			layout->setRowVisible(i, visible);
+#else
+			layout->itemAt(i, QFormLayout::LabelRole)->widget()->setVisible(visible);
+			layout->itemAt(i, QFormLayout::FieldRole)->widget()->setVisible(visible);
+#endif
+			return;
+		}
+	}
+}
+
+bool add_sources_to_qcombobox(void *list, obs_source_t *obs_source)
+{
+	const auto source_id = obs_source_get_id(obs_source);
+	if (strcmp(source_id, "text_ft2_source_v2") != 0 &&
+	    strcmp(source_id, "text_gdiplus_v2") != 0) {
+		return true;
+	}
+
+	const char *name = obs_source_get_name(obs_source);
+	QComboBox *comboList = (QComboBox *)list;
+	comboList->addItem(name);
+	return true;
 }
 
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
@@ -150,21 +185,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 	layout->addWidget(urlRequestOptionsGroup);
 
-	// Body - used later
-	QLineEdit *bodyLineEdit = new QLineEdit;
-
 	// Method select from dropdown: GET, POST, PUT, DELETE, PATCH
 	QComboBox *methodComboBox = new QComboBox;
 	methodComboBox->addItem("GET");
 	methodComboBox->addItem("POST");
 	// set value from request_data
 	methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
-	connect(methodComboBox, &QComboBox::currentTextChanged, this, [=]() {
-		// If method is not GET, show the body input
-		urlRequestLayout->setRowVisible(bodyLineEdit,
-						methodComboBox->currentText() != "GET");
-		this->adjustSize();
-	});
 	// add a label and the method dropdown to the url request options group with horizontal layout
 	urlRequestLayout->addRow("Method:", methodComboBox);
 
@@ -226,9 +252,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	CollapseButton *advancedOptionsCollapseButton = new CollapseButton(this);
 	advancedOptionsCollapseButton->setText("SSL options");
-	urlRequestLayout->addWidget(advancedOptionsCollapseButton);
-	sslGroupBox->adjustSize();
-	urlRequestLayout->addWidget(sslGroupBox);
 	advancedOptionsCollapseButton->setContent(sslGroupBox, this);
 
 	/* --- End SSL options --- */
@@ -239,15 +262,59 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// add headers widget to urlRequestLayout with label
 	urlRequestLayout->addRow("Headers:", headersWidget);
 
+	// Dynamic data from OBS text source
+	QHBoxLayout *obsTextSourceLayout = new QHBoxLayout;
+	// Add a dropdown to select a OBS text source or None
+	QComboBox *obsTextSourceComboBox = new QComboBox;
+	obsTextSourceComboBox->addItem("None");
+	// populate list of OBS text sources
+	obs_enum_sources(add_sources_to_qcombobox, obsTextSourceComboBox);
+	// Select the current OBS text source, if any
+	int itemIdx = obsTextSourceComboBox->findText(
+		QString::fromStdString(request_data->obs_text_source));
+	if (itemIdx != -1) {
+		obsTextSourceComboBox->setCurrentIndex(itemIdx);
+	} else {
+		obsTextSourceComboBox->setCurrentIndex(0);
+	}
+	// add a checkbox to disable the request if the OBS text source is empty
+	QCheckBox *obsTextSourceEnabledCheckBox = new QCheckBox("Skip empty");
+	obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
+	// add to urlRequestLayout with horizontal layout
+	obsTextSourceLayout->addWidget(obsTextSourceComboBox);
+	obsTextSourceLayout->addWidget(obsTextSourceEnabledCheckBox);
+	// add to urlRequestLayout as a row
+	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceLayout);
+	// add a tooltip to explain the dynamic input
+	obsTextSourceComboBox->setToolTip(
+		"Select a OBS text source to use its current text in the request body as `{input}`.");
+
 	// Body
+	QLineEdit *bodyLineEdit = new QLineEdit;
 	bodyLineEdit->setPlaceholderText("Body");
 	bodyLineEdit->setText(QString::fromStdString(request_data->body));
 	// add to urlRequestLayout with horizontal layout
 	urlRequestLayout->addRow("Body:", bodyLineEdit);
-	// Hide if method is GET
-	urlRequestLayout->setRowVisible(bodyLineEdit, request_data->method == "POST");
 
-	// Output parsing options
+	auto setVisibilityOfBody = [=]() {
+		// If method is not GET, show the body input
+		set_form_row_visibility(urlRequestLayout, bodyLineEdit,
+					methodComboBox->currentText() != "GET");
+		set_form_row_visibility(urlRequestLayout, obsTextSourceComboBox,
+					methodComboBox->currentText() != "GET");
+		this->adjustSize();
+	};
+
+	setVisibilityOfBody();
+
+	// Method select from dropdown change
+	connect(methodComboBox, &QComboBox::currentTextChanged, this, setVisibilityOfBody);
+
+	urlRequestLayout->addWidget(advancedOptionsCollapseButton);
+	sslGroupBox->adjustSize();
+	urlRequestLayout->addWidget(sslGroupBox);
+
+	// ------------ Output parsing options --------------
 	QGroupBox *outputGroupBox = new QGroupBox("Output Parsing", this);
 	layout->addWidget(outputGroupBox);
 
@@ -286,33 +353,32 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	outputRegexGroupLineEdit->setPlaceholderText("Regex group");
 	formOutputParsing->addRow("Regex group", outputRegexGroupLineEdit);
 
-	formOutputParsing->setRowVisible(outputJSONPathLineEdit,
-					 outputTypeComboBox->currentText() == "JSON");
-	formOutputParsing->setRowVisible(outputXPathLineEdit,
-					 outputTypeComboBox->currentText() == "XML" ||
-						 outputTypeComboBox->currentText() == "HTML");
-	formOutputParsing->setRowVisible(outputRegexLineEdit,
-					 outputTypeComboBox->currentText() == "Text");
-	formOutputParsing->setRowVisible(outputRegexFlagsLineEdit,
-					 outputTypeComboBox->currentText() == "Text");
-	formOutputParsing->setRowVisible(outputRegexGroupLineEdit,
-					 outputTypeComboBox->currentText() == "Text");
+	auto setVisibilityOfOutputParsingOptions = [=]() {
+		// Hide all output parsing options
+		set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputXPathLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, false);
 
-	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this, [=]() {
-		formOutputParsing->setRowVisible(outputJSONPathLineEdit,
-						 outputTypeComboBox->currentText() == "JSON");
-		formOutputParsing->setRowVisible(
-			outputXPathLineEdit, outputTypeComboBox->currentText() == "XML" ||
-						     outputTypeComboBox->currentText() == "HTML");
-		formOutputParsing->setRowVisible(outputRegexLineEdit,
-						 outputTypeComboBox->currentText() == "Text");
-		formOutputParsing->setRowVisible(outputRegexFlagsLineEdit,
-						 outputTypeComboBox->currentText() == "Text");
-		formOutputParsing->setRowVisible(outputRegexGroupLineEdit,
-						 outputTypeComboBox->currentText() == "Text");
-		// adjust the size of the dialog to fit the content
-		this->adjustSize();
-	});
+		// Show the output parsing options for the selected output type
+		if (outputTypeComboBox->currentText() == "JSON") {
+			set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, true);
+		} else if (outputTypeComboBox->currentText() == "XML" ||
+			   outputTypeComboBox->currentText() == "HTML") {
+			set_form_row_visibility(formOutputParsing, outputXPathLineEdit, true);
+		} else if (outputTypeComboBox->currentText() == "Text") {
+			set_form_row_visibility(formOutputParsing, outputRegexLineEdit, true);
+			set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, true);
+			set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, true);
+		}
+	};
+
+	// Show the output parsing options for the selected output type
+	setVisibilityOfOutputParsingOptions();
+	// Respond to changes in the output type
+	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this,
+		setVisibilityOfOutputParsingOptions);
 
 	// Add an error message label, hidden by default, color red
 	QLabel *errorMessageLabel = new QLabel("Error message");
@@ -327,6 +393,14 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		request_data_for_saving->url_or_file = urlRadioButton->isChecked() ? "url" : "file";
 		request_data_for_saving->method = methodComboBox->currentText().toStdString();
 		request_data_for_saving->body = bodyLineEdit->text().toStdString();
+		if (obsTextSourceComboBox->currentText() != "None") {
+			request_data_for_saving->obs_text_source =
+				obsTextSourceComboBox->currentText().toStdString();
+		} else {
+			request_data_for_saving->obs_text_source = "";
+		}
+		request_data_for_saving->obs_text_source_skip_if_empty =
+			obsTextSourceEnabledCheckBox->isChecked();
 
 		// Save the SSL certificate file
 		request_data_for_saving->ssl_client_cert_file =
@@ -392,6 +466,26 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseDialog->raise();
 		responseDialog->activateWindow();
 		responseDialog->setModal(true);
+
+		// if there's a request body, add it to the dialog
+		if (response.request_body != "") {
+			QGroupBox *requestBodyGroupBox = new QGroupBox("Request Body");
+			responseLayout->addWidget(requestBodyGroupBox);
+			QVBoxLayout *requestBodyLayout = new QVBoxLayout;
+			requestBodyGroupBox->setLayout(requestBodyLayout);
+			// Add scroll area for the request body
+			QScrollArea *requestBodyScrollArea = new QScrollArea;
+			QLabel *requestLabel =
+				new QLabel(QString::fromStdString(response.request_body));
+			// Wrap the text
+			requestLabel->setWordWrap(true);
+			// Set the label as the scroll area's widget
+			requestBodyScrollArea->setWidget(requestLabel);
+			requestBodyLayout->addWidget(requestBodyScrollArea);
+		}
+
+		QGroupBox *responseBodyGroupBox = new QGroupBox("Response Body");
+		responseBodyGroupBox->setLayout(new QVBoxLayout);
 		// Add scroll area for the response body
 		QScrollArea *responseBodyScrollArea = new QScrollArea;
 		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body));
@@ -399,7 +493,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseLabel->setWordWrap(true);
 		// Set the label as the scroll area's widget
 		responseBodyScrollArea->setWidget(responseLabel);
-		responseLayout->addWidget(responseBodyScrollArea);
+		responseBodyGroupBox->layout()->addWidget(responseBodyScrollArea);
+		responseLayout->addWidget(responseBodyGroupBox);
 
 		// If there's a parsed output, add it to the dialog in a QGroupBox
 		if (response.body_parsed != "") {
