@@ -6,6 +6,7 @@
 
 struct url_source_request_data {
 	std::string url;
+	std::string url_or_file;
 	std::string method;
 	std::string body;
 	// SSL options
@@ -27,6 +28,7 @@ struct url_source_request_data {
 	url_source_request_data()
 	{
 		url = std::string("");
+		url_or_file = std::string("url");
 		method = std::string("GET");
 		body = std::string("");
 		headers = {};
@@ -42,6 +44,7 @@ struct url_source_request_data {
 	url_source_request_data(const url_source_request_data &other)
 	{
 		url = std::string(other.url);
+		url_or_file = std::string(other.url_or_file);
 		method = std::string(other.method);
 		body = std::string(other.body);
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
@@ -57,6 +60,7 @@ struct url_source_request_data {
 	url_source_request_data &operator=(const url_source_request_data &other)
 	{
 		url = std::string(other.url);
+		url_or_file = std::string(other.url_or_file);
 		method = std::string(other.method);
 		body = std::string(other.body);
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);

@@ -343,6 +343,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	if (serialized_request_data.empty()) {
 		// Default request data
 		usd->request_data.url = std::string("https://catfact.ninja/fact");
+		usd->request_data.url_or_file = std::string("url");
 		usd->request_data.method = std::string("GET");
 		usd->request_data.output_type = std::string("json");
 		usd->request_data.output_json_path = std::string("/fact");
@@ -433,9 +434,10 @@ void url_source_defaults(obs_data_t *s)
 	// Default request data
 	struct url_source_request_data request_data;
 	request_data.url = "https://catfact.ninja/fact";
+	request_data.url_or_file = "url";
 	request_data.method = "GET";
 	request_data.output_type = "JSON";
-	request_data.output_json_path = "fact";
+	request_data.output_json_path = "/fact";
 
 	// serialize request data
 	std::string serialized_request_data = serialize_request_data(&request_data);
@@ -501,12 +503,18 @@ obs_properties_t *url_source_properties(void *data)
 
 	obs_properties_t *ppts = obs_properties_create();
 	// URL input string
-	obs_property_t *urlprop = obs_properties_add_text(ppts, "url", "URL", OBS_TEXT_DEFAULT);
+	obs_property_t *urlprop = obs_properties_add_text(ppts, "url", "URL / File", OBS_TEXT_DEFAULT);
 	// Disable the URL input since it's setup via the Request Builder dialog
 	obs_property_set_enabled(urlprop, false);
 
-	obs_properties_add_button2(ppts, "button", "Setup Request", setup_request_button_click,
+	// Add button to open the Request Builder dialog
+	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source", setup_request_button_click,
 				   usd);
+
+	// Add file search input
+	obs_properties_add_path(ppts, "local_file_source", "File", OBS_PATH_FILE, nullptr, nullptr);
+	// hide the file search input by default
+	obs_property_set_visible(obs_properties_get(ppts, "local_file_source"), false);
 
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 1000000, 100);
