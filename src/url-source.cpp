@@ -514,11 +514,6 @@ obs_properties_t *url_source_properties(void *data)
 	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source",
 				   setup_request_button_click, usd);
 
-	// Add file search input
-	obs_properties_add_path(ppts, "local_file_source", "File", OBS_PATH_FILE, nullptr, nullptr);
-	// hide the file search input by default
-	obs_property_set_visible(obs_properties_get(ppts, "local_file_source"), false);
-
 	// Update timer setting in milliseconds
 	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 1000000, 100);
 
