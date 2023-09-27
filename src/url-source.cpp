@@ -44,6 +44,7 @@ struct url_source_data {
 	bool output_is_image_url = false;
 	std::string output_regex;
 	struct obs_source_frame frame;
+	bool send_to_stream = false;
 
 	// Text source to output the text to
 	obs_weak_source_t *text_source = nullptr;
@@ -223,7 +224,6 @@ void curl_loop(struct url_source_data *usd)
 
 			uint32_t width = 0;
 			uint32_t height = 0;
-			uint8_t *renderBuffer = nullptr;
 
 			// If output regex is set - use it to format the output in response.body_parsed
 			if (!usd->output_regex.empty()) {
@@ -268,6 +268,17 @@ void curl_loop(struct url_source_data *usd)
 				}
 			}
 
+			if (usd->send_to_stream && !usd->output_is_image_url) {
+				// Send the output to the current stream as caption, if it's not an image and a stream is open
+				obs_output_t *streaming_output =
+					obs_frontend_get_streaming_output();
+				if (streaming_output) {
+					obs_output_output_caption_text1(
+						streaming_output, response.body_parsed.c_str());
+					obs_output_release(streaming_output);
+				}
+			}
+
 			if (usd->frame.data[0] != nullptr) {
 				// Free the old render buffer
 				bfree(usd->frame.data[0]);
@@ -282,8 +293,7 @@ void curl_loop(struct url_source_data *usd)
 				setTextCallback(text, usd);
 
 				// Update the frame with an empty buffer of 1x1 pixels
-				renderBuffer = (uint8_t *)bzalloc(4);
-				usd->frame.data[0] = renderBuffer;
+				usd->frame.data[0] = (uint8_t *)bzalloc(4);
 				usd->frame.linesize[0] = 4;
 				usd->frame.width = 1;
 				usd->frame.height = 1;
@@ -291,6 +301,7 @@ void curl_loop(struct url_source_data *usd)
 				// Send the frame
 				obs_source_output_video(usd->source, &usd->frame);
 			} else {
+				uint8_t *renderBuffer = nullptr;
 				// render the text with QTextDocument
 				render_text_with_qtextdocument(text, width, height, &renderBuffer,
 							       usd->css_props);
@@ -362,6 +373,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
 	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
 	usd->output_regex = std::string(obs_data_get_string(settings, "output_regex"));
+	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 
 	// initialize the mutex
 	usd->text_source_mutex = new std::mutex();
@@ -393,6 +405,7 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->css_props = obs_data_get_string(settings, "css_props");
 	usd->output_text_template = obs_data_get_string(settings, "template");
 	usd->output_regex = obs_data_get_string(settings, "output_regex");
+	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 
 	// update the text source
 	const char *new_text_source_name = obs_data_get_string(settings, "text_sources");
@@ -447,6 +460,8 @@ void url_source_defaults(obs_data_t *s)
 	obs_data_set_default_string(s, "url", request_data.url.c_str());
 
 	obs_data_set_default_string(s, "text_sources", "none");
+
+	obs_data_set_default_bool(s, "send_to_stream", false);
 
 	// Default update timer setting in milliseconds
 	obs_data_set_default_int(s, "update_timer", 1000);
@@ -527,6 +542,9 @@ obs_properties_t *url_source_properties(void *data)
 	obs_property_list_add_string(sources, "None / Internal rendering", "none");
 	// Add the sources
 	obs_enum_sources(add_sources_to_list, sources);
+
+	obs_properties_add_bool(ppts, "send_to_stream",
+				"Send output to current stream as captions");
 
 	// Is Image URL boolean checkbox
 	obs_properties_add_bool(ppts, "is_image_url", "Output is image URL (fetch and show image)");
