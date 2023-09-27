@@ -1,5 +1,8 @@
 
 #include "RequestBuilder.h"
+#include "CollapseButton.h"
+
+#include <obs-module.h>
 
 class KeyValueWidget : public QWidget {
 public:
@@ -41,6 +44,8 @@ public:
 			// Add a new key-value widget
 			KeyValueWidget *keyValueWidget = new KeyValueWidget(this);
 			listLayout->insertWidget(listLayout->count() - 1, keyValueWidget);
+			// adjust the size of the widget to fit the content
+			adjustSize();
 		});
 	}
 
@@ -56,6 +61,8 @@ public:
 			valueLineEdit->setText(QString::fromStdString(pair.second));
 			listLayout->insertWidget(listLayout->count() - 1, keyValueWidget);
 		}
+		// adjust the size of the widget to fit the content
+		adjustSize();
 	}
 };
 
@@ -74,12 +81,43 @@ void get_key_value_as_pairs_from_key_value_list_widget(
 	}
 }
 
+void set_form_row_visibility(QFormLayout *layout, QWidget *widget, bool visible)
+{
+	for (int i = 0; i < layout->rowCount(); i++) {
+		if (layout->itemAt(i, QFormLayout::FieldRole)->widget() == widget) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+			layout->setRowVisible(i, visible);
+#else
+			layout->itemAt(i, QFormLayout::LabelRole)->widget()->setVisible(visible);
+			layout->itemAt(i, QFormLayout::FieldRole)->widget()->setVisible(visible);
+#endif
+			return;
+		}
+	}
+}
+
+bool add_sources_to_qcombobox(void *list, obs_source_t *obs_source)
+{
+	const auto source_id = obs_source_get_id(obs_source);
+	if (strcmp(source_id, "text_ft2_source_v2") != 0 &&
+	    strcmp(source_id, "text_gdiplus_v2") != 0) {
+		return true;
+	}
+
+	const char *name = obs_source_get_name(obs_source);
+	QComboBox *comboList = (QComboBox *)list;
+	comboList->addItem(name);
+	return true;
+}
+
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			       std::function<void()> update_handler, QWidget *parent)
 	: QDialog(parent), layout(new QVBoxLayout)
 {
 	setWindowTitle("HTTP Request Builder");
 	setLayout(layout);
+	// Make modal
+	setModal(true);
 
 	// set a minimum width for the dialog
 	setMinimumWidth(500);
@@ -89,31 +127,76 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// expand the form layout to fill the parent horizontally
 	formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
-	// URL
+	// radio buttons to choose URL or File
+	QHBoxLayout *urlOrFileLayout = new QHBoxLayout;
+	formLayout->addRow("Source:", urlOrFileLayout);
+	QRadioButton *urlRadioButton = new QRadioButton("URL");
+	urlOrFileLayout->addWidget(urlRadioButton);
+	QRadioButton *fileRadioButton = new QRadioButton("File");
+	urlOrFileLayout->addWidget(fileRadioButton);
+	// mark selected radio button from request_data
+	if (request_data->url_or_file == "url") {
+		urlRadioButton->setChecked(true);
+	} else {
+		fileRadioButton->setChecked(true);
+	}
+
+	// URL or file path
+	QHBoxLayout *urlOrFileInputLayout = new QHBoxLayout;
+	formLayout->addRow("URL/File", urlOrFileInputLayout);
+
 	QLineEdit *urlLineEdit = new QLineEdit;
-	urlLineEdit->setPlaceholderText("URL");
-	formLayout->addRow("URL:", urlLineEdit);
+	urlLineEdit->setPlaceholderText("URL/File");
 	// set value from request_data
 	urlLineEdit->setText(QString::fromStdString(request_data->url));
+	urlOrFileInputLayout->addWidget(urlLineEdit);
+	// add file selector button if file is selected
+	QPushButton *urlOrFileButton = new QPushButton("...");
+	urlOrFileInputLayout->addWidget(urlOrFileButton);
+	// set value from request_data
+	urlOrFileButton->setEnabled(request_data->url_or_file == "file");
 
-	// Body - used later
-	QLineEdit *bodyLineEdit = new QLineEdit;
+	QGroupBox *urlRequestOptionsGroup = new QGroupBox("URL Request Options", this);
+
+	// URL or file dialog
+	connect(urlOrFileButton, &QPushButton::clicked, this, [=]() {
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "",
+								tr("All Files (*.*)"));
+		if (fileName != "") {
+			urlLineEdit->setText(fileName);
+		}
+	});
+
+	urlRequestOptionsGroup->setVisible(request_data->url_or_file == "url");
+
+	auto toggleFileUrlButtons = [=]() {
+		urlOrFileButton->setEnabled(fileRadioButton->isChecked());
+		// hide the urlRequestOptionsGroup if file is selected
+		urlRequestOptionsGroup->setVisible(urlRadioButton->isChecked());
+		// adjust the size of the dialog to fit the content
+		this->adjustSize();
+	};
+	// show file selector button if file is selected
+	connect(fileRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
+	connect(urlRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
+
+	QFormLayout *urlRequestLayout = new QFormLayout;
+	urlRequestOptionsGroup->setLayout(urlRequestLayout);
+	urlRequestLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+	layout->addWidget(urlRequestOptionsGroup);
 
 	// Method select from dropdown: GET, POST, PUT, DELETE, PATCH
 	QComboBox *methodComboBox = new QComboBox;
 	methodComboBox->addItem("GET");
 	methodComboBox->addItem("POST");
-	formLayout->addRow("Method:", methodComboBox);
 	// set value from request_data
 	methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
-	connect(methodComboBox, &QComboBox::currentTextChanged, this, [=]() {
-		// If method is not GET, show the body input
-		bodyLineEdit->setEnabled(methodComboBox->currentText() != "GET");
-	});
+	// add a label and the method dropdown to the url request options group with horizontal layout
+	urlRequestLayout->addRow("Method:", methodComboBox);
 
-	// Authentication via SSL certificates
-	QGroupBox *sslGroupBox = new QGroupBox("SSL");
-	layout->addWidget(sslGroupBox);
+	/* --- Authentication via SSL certificates --- */
+
+	QGroupBox *sslGroupBox = new QGroupBox("SSL", this);
 	QVBoxLayout *sslLayout = new QVBoxLayout;
 	sslGroupBox->setLayout(sslLayout);
 
@@ -167,19 +250,77 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	verifyPeerCheckBox->setChecked(request_data->ssl_verify_peer);
 	sslLayout->addWidget(verifyPeerCheckBox);
 
+	CollapseButton *advancedOptionsCollapseButton = new CollapseButton(this);
+	advancedOptionsCollapseButton->setText("SSL options");
+
+	/* --- End SSL options --- */
+
 	// Headers
 	KeyValueListWidget *headersWidget = new KeyValueListWidget;
 	headersWidget->populateFromPairs(request_data->headers);
-	formLayout->addRow("Headers:", headersWidget);
+	// add headers widget to urlRequestLayout with label
+	urlRequestLayout->addRow("Headers:", headersWidget);
+
+	// Dynamic data from OBS text source
+	QWidget *obsTextSourceWidget = new QWidget;
+	QHBoxLayout *obsTextSourceLayout = new QHBoxLayout;
+	obsTextSourceWidget->setLayout(obsTextSourceLayout);
+	// Add a dropdown to select a OBS text source or None
+	QComboBox *obsTextSourceComboBox = new QComboBox;
+	obsTextSourceComboBox->addItem("None");
+	// populate list of OBS text sources
+	obs_enum_sources(add_sources_to_qcombobox, obsTextSourceComboBox);
+	// Select the current OBS text source, if any
+	int itemIdx = obsTextSourceComboBox->findText(
+		QString::fromStdString(request_data->obs_text_source));
+	if (itemIdx != -1) {
+		obsTextSourceComboBox->setCurrentIndex(itemIdx);
+	} else {
+		obsTextSourceComboBox->setCurrentIndex(0);
+	}
+	// add a checkbox to disable the request if the OBS text source is empty
+	QCheckBox *obsTextSourceEnabledCheckBox = new QCheckBox("Skip empty");
+	obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
+	QCheckBox *obsTextSourceSkipSameCheckBox = new QCheckBox("Skip same");
+	obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
+	// add to urlRequestLayout with horizontal layout
+	obsTextSourceLayout->addWidget(obsTextSourceComboBox);
+	obsTextSourceLayout->addWidget(obsTextSourceEnabledCheckBox);
+	obsTextSourceLayout->addWidget(obsTextSourceSkipSameCheckBox);
+	// add to urlRequestLayout as a row
+	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceWidget);
+	// add a tooltip to explain the dynamic input
+	obsTextSourceComboBox->setToolTip(
+		"Select a OBS text source to use its current text in the request body as `{input}`.");
 
 	// Body
+	QLineEdit *bodyLineEdit = new QLineEdit;
 	bodyLineEdit->setPlaceholderText("Body");
-	formLayout->addRow("Body:", bodyLineEdit);
-	// Hide if method is GET
-	bodyLineEdit->setEnabled(request_data->method == "POST");
+	bodyLineEdit->setText(QString::fromStdString(request_data->body));
+	// add to urlRequestLayout with horizontal layout
+	urlRequestLayout->addRow("Body:", bodyLineEdit);
 
-	// Output parsing options
-	QGroupBox *outputGroupBox = new QGroupBox("Output Parsing");
+	auto setVisibilityOfBody = [=]() {
+		// If method is not GET, show the body input
+		set_form_row_visibility(urlRequestLayout, bodyLineEdit,
+					methodComboBox->currentText() != "GET");
+		set_form_row_visibility(urlRequestLayout, obsTextSourceWidget,
+					methodComboBox->currentText() != "GET");
+		this->adjustSize();
+	};
+
+	setVisibilityOfBody();
+
+	// Method select from dropdown change
+	connect(methodComboBox, &QComboBox::currentTextChanged, this, setVisibilityOfBody);
+
+	urlRequestLayout->addWidget(advancedOptionsCollapseButton);
+	sslGroupBox->adjustSize();
+	urlRequestLayout->addWidget(sslGroupBox);
+	advancedOptionsCollapseButton->setContent(sslGroupBox, this);
+
+	// ------------ Output parsing options --------------
+	QGroupBox *outputGroupBox = new QGroupBox("Output Parsing", this);
 	layout->addWidget(outputGroupBox);
 
 	QFormLayout *formOutputParsing = new QFormLayout;
@@ -198,65 +339,51 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	QLineEdit *outputJSONPathLineEdit = new QLineEdit;
 	outputJSONPathLineEdit->setText(QString::fromStdString(request_data->output_json_path));
-	outputJSONPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "JSON");
 	outputJSONPathLineEdit->setPlaceholderText("JSON Pointer");
 	formOutputParsing->addRow("JSON Pointer", outputJSONPathLineEdit);
 	QLineEdit *outputXPathLineEdit = new QLineEdit;
 	outputXPathLineEdit->setText(QString::fromStdString(request_data->output_xpath));
-	outputXPathLineEdit->setEnabled(outputTypeComboBox->currentText() == "XML" ||
-					outputTypeComboBox->currentText() == "HTML");
 	outputXPathLineEdit->setPlaceholderText("XPath");
 	formOutputParsing->addRow("XPath", outputXPathLineEdit);
 	QLineEdit *outputRegexLineEdit = new QLineEdit;
 	outputRegexLineEdit->setText(QString::fromStdString(request_data->output_regex));
-	outputRegexLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	outputRegexLineEdit->setPlaceholderText("Regex");
 	formOutputParsing->addRow("Regex", outputRegexLineEdit);
 	QLineEdit *outputRegexFlagsLineEdit = new QLineEdit;
 	outputRegexFlagsLineEdit->setText(QString::fromStdString(request_data->output_regex_flags));
-	outputRegexFlagsLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	outputRegexFlagsLineEdit->setPlaceholderText("Regex flags");
 	formOutputParsing->addRow("Regex flags", outputRegexFlagsLineEdit);
 	QLineEdit *outputRegexGroupLineEdit = new QLineEdit;
 	outputRegexGroupLineEdit->setText(QString::fromStdString(request_data->output_regex_group));
-	outputRegexGroupLineEdit->setEnabled(outputTypeComboBox->currentText() == "Text");
 	outputRegexGroupLineEdit->setPlaceholderText("Regex group");
 	formOutputParsing->addRow("Regex group", outputRegexGroupLineEdit);
 
-	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this, [=]() {
+	auto setVisibilityOfOutputParsingOptions = [=]() {
+		// Hide all output parsing options
+		set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputXPathLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, false);
+
+		// Show the output parsing options for the selected output type
 		if (outputTypeComboBox->currentText() == "JSON") {
-			// Enable JSONPath input, disable others
-			outputJSONPathLineEdit->setEnabled(true);
-			outputXPathLineEdit->setEnabled(false);
-			outputRegexLineEdit->setEnabled(false);
-			outputRegexFlagsLineEdit->setEnabled(false);
-			outputRegexGroupLineEdit->setEnabled(false);
+			set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, true);
+		} else if (outputTypeComboBox->currentText() == "XML" ||
+			   outputTypeComboBox->currentText() == "HTML") {
+			set_form_row_visibility(formOutputParsing, outputXPathLineEdit, true);
+		} else if (outputTypeComboBox->currentText() == "Text") {
+			set_form_row_visibility(formOutputParsing, outputRegexLineEdit, true);
+			set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, true);
+			set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, true);
 		}
+	};
 
-		// If XML or HTML is selected as the output type, show the XPath input
-		if (outputTypeComboBox->currentText() == "XML" ||
-		    outputTypeComboBox->currentText() == "HTML") {
-			// Enable XPath input, diable others
-			outputJSONPathLineEdit->setEnabled(false);
-			outputXPathLineEdit->setEnabled(true);
-			outputRegexLineEdit->setEnabled(false);
-			outputRegexFlagsLineEdit->setEnabled(false);
-			outputRegexGroupLineEdit->setEnabled(false);
-		}
-
-		// If text is selected as the output type, show the regex input
-		if (outputTypeComboBox->currentText() == "Text") {
-			// enable regex input, disable others
-			outputJSONPathLineEdit->setEnabled(false);
-			outputXPathLineEdit->setEnabled(false);
-			outputRegexLineEdit->setEnabled(true);
-			outputRegexFlagsLineEdit->setEnabled(true);
-			outputRegexGroupLineEdit->setEnabled(true);
-		}
-	});
-
-	QPushButton *sendButton = new QPushButton("Test Request");
-	layout->addWidget(sendButton);
+	// Show the output parsing options for the selected output type
+	setVisibilityOfOutputParsingOptions();
+	// Respond to changes in the output type
+	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this,
+		setVisibilityOfOutputParsingOptions);
 
 	// Add an error message label, hidden by default, color red
 	QLabel *errorMessageLabel = new QLabel("Error message");
@@ -268,8 +395,19 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	auto saveSettingsToRequestData = [=](url_source_request_data *request_data_for_saving) {
 		// Save the request settings to the request_data struct
 		request_data_for_saving->url = urlLineEdit->text().toStdString();
+		request_data_for_saving->url_or_file = urlRadioButton->isChecked() ? "url" : "file";
 		request_data_for_saving->method = methodComboBox->currentText().toStdString();
 		request_data_for_saving->body = bodyLineEdit->text().toStdString();
+		if (obsTextSourceComboBox->currentText() != "None") {
+			request_data_for_saving->obs_text_source =
+				obsTextSourceComboBox->currentText().toStdString();
+		} else {
+			request_data_for_saving->obs_text_source = "";
+		}
+		request_data_for_saving->obs_text_source_skip_if_empty =
+			obsTextSourceEnabledCheckBox->isChecked();
+		request_data_for_saving->obs_text_source_skip_if_same =
+			obsTextSourceSkipSameCheckBox->isChecked();
 
 		// Save the SSL certificate file
 		request_data_for_saving->ssl_client_cert_file =
@@ -303,6 +441,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			outputRegexGroupLineEdit->text().toStdString();
 	};
 
+	QPushButton *sendButton = new QPushButton("Test Request");
+
 	connect(sendButton, &QPushButton::clicked, this, [=]() {
 		// Hide the error message label
 		errorMessageLabel->setVisible(false);
@@ -330,6 +470,29 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseDialog->setMinimumWidth(500);
 		responseDialog->setMinimumHeight(300);
 		responseDialog->show();
+		responseDialog->raise();
+		responseDialog->activateWindow();
+		responseDialog->setModal(true);
+
+		// if there's a request body, add it to the dialog
+		if (response.request_body != "") {
+			QGroupBox *requestBodyGroupBox = new QGroupBox("Request Body");
+			responseLayout->addWidget(requestBodyGroupBox);
+			QVBoxLayout *requestBodyLayout = new QVBoxLayout;
+			requestBodyGroupBox->setLayout(requestBodyLayout);
+			// Add scroll area for the request body
+			QScrollArea *requestBodyScrollArea = new QScrollArea;
+			QLabel *requestLabel =
+				new QLabel(QString::fromStdString(response.request_body));
+			// Wrap the text
+			requestLabel->setWordWrap(true);
+			// Set the label as the scroll area's widget
+			requestBodyScrollArea->setWidget(requestLabel);
+			requestBodyLayout->addWidget(requestBodyScrollArea);
+		}
+
+		QGroupBox *responseBodyGroupBox = new QGroupBox("Response Body");
+		responseBodyGroupBox->setLayout(new QVBoxLayout);
 		// Add scroll area for the response body
 		QScrollArea *responseBodyScrollArea = new QScrollArea;
 		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body));
@@ -337,7 +500,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseLabel->setWordWrap(true);
 		// Set the label as the scroll area's widget
 		responseBodyScrollArea->setWidget(responseLabel);
-		responseLayout->addWidget(responseBodyScrollArea);
+		responseBodyGroupBox->layout()->addWidget(responseBodyScrollArea);
+		responseLayout->addWidget(responseBodyGroupBox);
 
 		// If there's a parsed output, add it to the dialog in a QGroupBox
 		if (response.body_parsed != "") {
@@ -355,7 +519,13 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	// Save button
 	QPushButton *saveButton = new QPushButton("Save");
-	layout->addWidget(saveButton);
+
+	// put send and save buttons in a horizontal layout
+	QHBoxLayout *saveButtonLayout = new QHBoxLayout;
+	saveButtonLayout->addWidget(sendButton);
+	saveButtonLayout->addWidget(saveButton);
+	layout->addLayout(saveButtonLayout);
+
 	connect(saveButton, &QPushButton::clicked, this, [=]() {
 		// Save the request settings to the request_data struct
 		saveSettingsToRequestData(request_data);
