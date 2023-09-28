@@ -247,21 +247,20 @@ ${_usage_host:-}"
     cmake --build build_${target##*-} --config ${config} -t package_source ${cmake_args}
     popd
 
-    if (( package )) {
-      log_group "Packaging ${product_name}..."
-      pushd ${project_root}
-      cmake --build build_${target##*-} --config ${config} -t package ${cmake_args}
-      popd
-    } else {
-      log_group "Archiving ${product_name}..."
-      local output_name="${product_name}-${product_version}-${target##*-}-linux-gnu"
-      local _tarflags='cJf'
-      if (( _loglevel > 1 || ${+CI} )) _tarflags="v${_tarflags}"
+    log_group "Packaging ${product_name}..."
+    pushd ${project_root}
+    cmake --build build_${target##*-} --config ${config} -t package ${cmake_args}
+    popd
 
-      pushd ${project_root}/release/${config}
-      XZ_OPT=-T0 tar "-${_tarflags}" ${project_root}/release/${output_name}.tar.xz (lib|share)
-      popd
-    }
+    log_group "Archiving ${product_name}..."
+    local output_name="${product_name}-${product_version}-${target##*-}-linux-gnu"
+    local _tarflags='cJf'
+    if (( _loglevel > 1 || ${+CI} )) _tarflags="v${_tarflags}"
+
+    pushd ${project_root}/release/${config}
+    XZ_OPT=-T0 tar "-${_tarflags}" ${project_root}/release/${output_name}.tar.xz (lib|share)
+    popd
+
     log_group
   }
 }
