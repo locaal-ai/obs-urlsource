@@ -26,7 +26,7 @@ if(ENABLE_QT)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt::Core Qt::Widgets)
   target_compile_options(
     ${CMAKE_PROJECT_NAME} PRIVATE $<$<C_COMPILER_ID:Clang,AppleClang>:-Wno-quoted-include-in-framework-header
-                                  -Wno-comma> -DQT_NO_VERSION_TAGGING)
+                                  -Wno-comma>)
   set_target_properties(
     ${CMAKE_PROJECT_NAME}
     PROPERTIES AUTOMOC ON
