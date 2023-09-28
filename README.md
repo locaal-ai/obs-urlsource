@@ -47,6 +47,7 @@ Features:
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
 - Websocket support
+- Multi-value parsed output capture and advanced templating
 - More output parsing options (JSONPath, CSS selectors, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
 - More output formats (XML, HTML, CSV, etc.)
