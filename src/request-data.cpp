@@ -90,6 +90,33 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 	return response;
 }
 
+struct request_data_handler_response
+parse_xml_by_xquery(struct request_data_handler_response response,
+		    url_source_request_data *request_data)
+{
+	// Parse the response as XML using pugixml
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_string(response.body.c_str());
+	if (!result) {
+		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
+		// Return an error response
+		struct request_data_handler_response responseFail;
+		responseFail.error_message = result.description();
+		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
+		return responseFail;
+	}
+	// Get the output value
+	if (request_data->output_xquery != "") {
+		pugi::xpath_query query_entity(request_data->output_xquery.c_str());
+		std::string s = query_entity.evaluate_string(doc);
+		response.body_parsed = s;
+	} else {
+		// Return the whole XML object
+		response.body_parsed = response.body;
+	}
+	return response;
+}
+
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
 						url_source_request_data *request_data)
 {
@@ -278,6 +305,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		response = parse_json(response, request_data);
 	} else if (request_data->output_type == "XML" || request_data->output_type == "HTML") {
 		response = parse_xml(response, request_data);
+	} else if (request_data->output_type == "XML (XQuery)") {
+		response = parse_xml_by_xquery(response, request_data);
 	} else if (request_data->output_type == "Text") {
 		response = parse_regex(response, request_data);
 	} else {

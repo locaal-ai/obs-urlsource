@@ -332,6 +332,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	outputTypeComboBox->addItem("Text");
 	outputTypeComboBox->addItem("JSON");
 	outputTypeComboBox->addItem("XML");
+	outputTypeComboBox->addItem("XML (XQuery)");
 	outputTypeComboBox->addItem("HTML");
 	outputTypeComboBox->setCurrentIndex(
 		outputTypeComboBox->findText(QString::fromStdString(request_data->output_type)));
@@ -345,6 +346,10 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	outputXPathLineEdit->setText(QString::fromStdString(request_data->output_xpath));
 	outputXPathLineEdit->setPlaceholderText("XPath");
 	formOutputParsing->addRow("XPath", outputXPathLineEdit);
+	QLineEdit *outputXQueryLineEdit = new QLineEdit;
+	outputXQueryLineEdit->setText(QString::fromStdString(request_data->output_xquery));
+	outputXQueryLineEdit->setPlaceholderText("XQuery");
+	formOutputParsing->addRow("XQuery", outputXQueryLineEdit);
 	QLineEdit *outputRegexLineEdit = new QLineEdit;
 	outputRegexLineEdit->setText(QString::fromStdString(request_data->output_regex));
 	outputRegexLineEdit->setPlaceholderText("Regex");
@@ -362,6 +367,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// Hide all output parsing options
 		set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, false);
 		set_form_row_visibility(formOutputParsing, outputXPathLineEdit, false);
+		set_form_row_visibility(formOutputParsing, outputXQueryLineEdit, false);
 		set_form_row_visibility(formOutputParsing, outputRegexLineEdit, false);
 		set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, false);
 		set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, false);
@@ -372,6 +378,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		} else if (outputTypeComboBox->currentText() == "XML" ||
 			   outputTypeComboBox->currentText() == "HTML") {
 			set_form_row_visibility(formOutputParsing, outputXPathLineEdit, true);
+		} else if (outputTypeComboBox->currentText() == "XML (XQuery)") {
+			set_form_row_visibility(formOutputParsing, outputXQueryLineEdit, true);
 		} else if (outputTypeComboBox->currentText() == "Text") {
 			set_form_row_visibility(formOutputParsing, outputRegexLineEdit, true);
 			set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, true);
@@ -434,6 +442,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		request_data_for_saving->output_json_path =
 			outputJSONPathLineEdit->text().toStdString();
 		request_data_for_saving->output_xpath = outputXPathLineEdit->text().toStdString();
+		request_data_for_saving->output_xquery = outputXQueryLineEdit->text().toStdString();
 		request_data_for_saving->output_regex = outputRegexLineEdit->text().toStdString();
 		request_data_for_saving->output_regex_flags =
 			outputRegexFlagsLineEdit->text().toStdString();

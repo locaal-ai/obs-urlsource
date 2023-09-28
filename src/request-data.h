@@ -29,6 +29,7 @@ struct url_source_request_data {
 	std::string output_type;
 	std::string output_json_path;
 	std::string output_xpath;
+	std::string output_xquery;
 	std::string output_regex;
 	std::string output_regex_flags;
 	std::string output_regex_group;
@@ -48,6 +49,7 @@ struct url_source_request_data {
 		output_type = std::string("text");
 		output_json_path = std::string("");
 		output_xpath = std::string("");
+		output_xquery = std::string("");
 		output_regex = std::string("");
 		output_regex_flags = std::string("");
 		output_regex_group = std::string("0");
@@ -68,6 +70,7 @@ struct url_source_request_data {
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
 		output_xpath = std::string(other.output_xpath);
+		output_xquery = std::string(other.output_xquery);
 		output_regex = std::string(other.output_regex);
 		output_regex_flags = std::string(other.output_regex_flags);
 		output_regex_group = std::string(other.output_regex_group);
@@ -88,6 +91,7 @@ struct url_source_request_data {
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
 		output_xpath = std::string(other.output_xpath);
+		output_xquery = std::string(other.output_xquery);
 		output_regex = std::string(other.output_regex);
 		output_regex_flags = std::string(other.output_regex_flags);
 		output_regex_group = std::string(other.output_regex_group);
