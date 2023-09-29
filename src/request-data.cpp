@@ -341,6 +341,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["output_type"] = request_data->output_type;
 	json["output_json_path"] = request_data->output_json_path;
 	json["output_xpath"] = request_data->output_xpath;
+	json["output_xquery"] = request_data->output_xquery;
 	json["output_regex"] = request_data->output_regex;
 	json["output_regex_flags"] = request_data->output_regex_flags;
 	json["output_regex_group"] = request_data->output_regex_group;
@@ -410,6 +411,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	request_data.output_type = json["output_type"].get<std::string>();
 	request_data.output_json_path = json["output_json_path"].get<std::string>();
 	request_data.output_xpath = json["output_xpath"].get<std::string>();
+	request_data.output_xquery = json["output_xquery"].get<std::string>();
 	request_data.output_regex = json["output_regex"].get<std::string>();
 	request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
 	request_data.output_regex_group = json["output_regex_group"].get<std::string>();
