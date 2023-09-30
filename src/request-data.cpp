@@ -90,6 +90,33 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 	return response;
 }
 
+struct request_data_handler_response
+parse_xml_by_xquery(struct request_data_handler_response response,
+		    url_source_request_data *request_data)
+{
+	// Parse the response as XML using pugixml
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_string(response.body.c_str());
+	if (!result) {
+		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
+		// Return an error response
+		struct request_data_handler_response responseFail;
+		responseFail.error_message = result.description();
+		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
+		return responseFail;
+	}
+	// Get the output value
+	if (request_data->output_xquery != "") {
+		pugi::xpath_query query_entity(request_data->output_xquery.c_str());
+		std::string s = query_entity.evaluate_string(doc);
+		response.body_parsed = s;
+	} else {
+		// Return the whole XML object
+		response.body_parsed = response.body;
+	}
+	return response;
+}
+
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
 						url_source_request_data *request_data)
 {
@@ -276,8 +303,11 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 	// Parse the response
 	if (request_data->output_type == "JSON") {
 		response = parse_json(response, request_data);
-	} else if (request_data->output_type == "XML" || request_data->output_type == "HTML") {
+	} else if (request_data->output_type == "XML (XPath)" ||
+		   request_data->output_type == "HTML") {
 		response = parse_xml(response, request_data);
+	} else if (request_data->output_type == "XML (XQuery)") {
+		response = parse_xml_by_xquery(response, request_data);
 	} else if (request_data->output_type == "Text") {
 		response = parse_regex(response, request_data);
 	} else {
@@ -312,6 +342,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["output_type"] = request_data->output_type;
 	json["output_json_path"] = request_data->output_json_path;
 	json["output_xpath"] = request_data->output_xpath;
+	json["output_xquery"] = request_data->output_xquery;
 	json["output_regex"] = request_data->output_regex;
 	json["output_regex_flags"] = request_data->output_regex_flags;
 	json["output_regex_group"] = request_data->output_regex_group;
@@ -381,6 +412,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	request_data.output_type = json["output_type"].get<std::string>();
 	request_data.output_json_path = json["output_json_path"].get<std::string>();
 	request_data.output_xpath = json["output_xpath"].get<std::string>();
+	request_data.output_xquery = json["output_xquery"].get<std::string>();
 	request_data.output_regex = json["output_regex"].get<std::string>();
 	request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
 	request_data.output_regex_group = json["output_regex_group"].get<std::string>();
