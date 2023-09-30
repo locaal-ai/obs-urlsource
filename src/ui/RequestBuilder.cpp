@@ -331,7 +331,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	QComboBox *outputTypeComboBox = new QComboBox;
 	outputTypeComboBox->addItem("Text");
 	outputTypeComboBox->addItem("JSON");
-	outputTypeComboBox->addItem("XML");
+	outputTypeComboBox->addItem("XML (XPath)");
 	outputTypeComboBox->addItem("XML (XQuery)");
 	outputTypeComboBox->addItem("HTML");
 	outputTypeComboBox->setCurrentIndex(
@@ -375,7 +375,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// Show the output parsing options for the selected output type
 		if (outputTypeComboBox->currentText() == "JSON") {
 			set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, true);
-		} else if (outputTypeComboBox->currentText() == "XML" ||
+		} else if (outputTypeComboBox->currentText() == "XML (XPath)" ||
 			   outputTypeComboBox->currentText() == "HTML") {
 			set_form_row_visibility(formOutputParsing, outputXPathLineEdit, true);
 		} else if (outputTypeComboBox->currentText() == "XML (XQuery)") {
