@@ -219,20 +219,24 @@ void curl_loop(struct url_source_data *usd)
 					response.error_message.c_str());
 			}
 		} else {
+            if (response.body_parts_parsed.empty()) {
+                response.body_parts_parsed.push_back(response.body);
+            }
+
 			cur_time = get_time_ns();
 			usd->frame.timestamp = cur_time - start_time;
 
 			uint32_t width = 0;
 			uint32_t height = 0;
 
-			// If output regex is set - use it to format the output in response.body_parsed
+			// If output regex is set - use it to format the output in response.body_parts_parsed
 			if (!usd->output_regex.empty()) {
 				try {
 					std::regex regex(usd->output_regex);
 					std::smatch match;
-					if (std::regex_search(response.body_parsed, match, regex)) {
+					if (std::regex_search(response.body_parts_parsed[0], match, regex)) {
 						if (match.size() > 1) {
-							response.body_parsed = match[1];
+							response.body_parts_parsed[0] = match[1];
 						}
 					}
 				} catch (std::regex_error &e) {
@@ -245,23 +249,31 @@ void curl_loop(struct url_source_data *usd)
 			std::string text = usd->output_text_template;
 			// if the template is empty use the response body
 			if (text.empty()) {
-				text = response.body_parsed;
+				text = response.body_parts_parsed[0];
 			} else {
 				// if output is image URL - fetch the image and convert it to base64
 				if (usd->output_is_image_url) {
 					// use fetch_image to get the image
 					std::vector<uint8_t> image_data =
-						fetch_image(response.body_parsed);
+						fetch_image(response.body_parts_parsed[0]);
 					// convert the image to base64
 					const std::string base64_image = base64_encode(image_data);
 					// build an image tag with the base64 image
-					response.body_parsed = "<img src=\"data:image/png;base64," +
+					response.body_parts_parsed[0] = "<img src=\"data:image/png;base64," +
 							       base64_image + "\" />";
 				}
 				try {
-					// attempt to replace {output} with the response body
-					text = std::regex_replace(text, std::regex("\\{output\\}"),
-								  response.body_parsed);
+                    // if the parsed response is an array - allow `{outputN}` to be used in the template
+                    if (response.body_parts_parsed.size() > 1) {
+                        for (int i = 0; i < response.body_parts_parsed.size(); i++) {
+                            text = std::regex_replace(text, std::regex("\\{output" + std::to_string(i) + "\\}"),
+                                                      response.body_parts_parsed[i]);
+                        }
+                    } else {
+                        // attempt to replace {output} with the response body
+                        text = std::regex_replace(text, std::regex("\\{output\\}"),
+                                    response.body_parts_parsed[0]);
+                    }
 				} catch (std::regex_error &e) {
 					obs_log(LOG_ERROR, "Failed to parse template: %s",
 						e.what());
@@ -274,7 +286,7 @@ void curl_loop(struct url_source_data *usd)
 					obs_frontend_get_streaming_output();
 				if (streaming_output) {
 					obs_output_output_caption_text1(
-						streaming_output, response.body_parsed.c_str());
+						streaming_output, text.c_str());
 					obs_output_release(streaming_output);
 				}
 			}

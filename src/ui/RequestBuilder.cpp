@@ -338,10 +338,14 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		outputTypeComboBox->findText(QString::fromStdString(request_data->output_type)));
 	formOutputParsing->addRow("Content-Type", outputTypeComboBox);
 
+	QLineEdit *outputJSONPointerLineEdit = new QLineEdit;
+	outputJSONPointerLineEdit->setText(QString::fromStdString(request_data->output_json_pointer));
+	outputJSONPointerLineEdit->setPlaceholderText("JSON Pointer");
+	formOutputParsing->addRow("JSON Pointer", outputJSONPointerLineEdit);
 	QLineEdit *outputJSONPathLineEdit = new QLineEdit;
 	outputJSONPathLineEdit->setText(QString::fromStdString(request_data->output_json_path));
-	outputJSONPathLineEdit->setPlaceholderText("JSON Pointer");
-	formOutputParsing->addRow("JSON Pointer", outputJSONPathLineEdit);
+	outputJSONPathLineEdit->setPlaceholderText("JSON Path");
+	formOutputParsing->addRow("JSON Path", outputJSONPathLineEdit);
 	QLineEdit *outputXPathLineEdit = new QLineEdit;
 	outputXPathLineEdit->setText(QString::fromStdString(request_data->output_xpath));
 	outputXPathLineEdit->setPlaceholderText("XPath");
@@ -365,16 +369,17 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	auto setVisibilityOfOutputParsingOptions = [=]() {
 		// Hide all output parsing options
-		set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, false);
-		set_form_row_visibility(formOutputParsing, outputXPathLineEdit, false);
-		set_form_row_visibility(formOutputParsing, outputXQueryLineEdit, false);
-		set_form_row_visibility(formOutputParsing, outputRegexLineEdit, false);
-		set_form_row_visibility(formOutputParsing, outputRegexFlagsLineEdit, false);
-		set_form_row_visibility(formOutputParsing, outputRegexGroupLineEdit, false);
+        for (const auto &widget : {outputJSONPathLineEdit, outputXPathLineEdit,
+                                   outputXQueryLineEdit, outputRegexLineEdit,
+                                   outputRegexFlagsLineEdit, outputRegexGroupLineEdit,
+                                   outputJSONPointerLineEdit}) {
+		    set_form_row_visibility(formOutputParsing, widget, false);
+        }
 
 		// Show the output parsing options for the selected output type
 		if (outputTypeComboBox->currentText() == "JSON") {
 			set_form_row_visibility(formOutputParsing, outputJSONPathLineEdit, true);
+            set_form_row_visibility(formOutputParsing, outputJSONPointerLineEdit, true);
 		} else if (outputTypeComboBox->currentText() == "XML (XPath)" ||
 			   outputTypeComboBox->currentText() == "HTML") {
 			set_form_row_visibility(formOutputParsing, outputXPathLineEdit, true);
@@ -439,6 +444,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// Save the output parsing options
 		request_data_for_saving->output_type =
 			outputTypeComboBox->currentText().toStdString();
+		request_data_for_saving->output_json_pointer =
+			outputJSONPointerLineEdit->text().toStdString();
 		request_data_for_saving->output_json_path =
 			outputJSONPathLineEdit->text().toStdString();
 		request_data_for_saving->output_xpath = outputXPathLineEdit->text().toStdString();
@@ -513,13 +520,24 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseLayout->addWidget(responseBodyGroupBox);
 
 		// If there's a parsed output, add it to the dialog in a QGroupBox
-		if (response.body_parsed != "") {
+		if (response.body_parts_parsed.size() > 0 && response.body_parts_parsed[0] != "") {
 			QGroupBox *parsedOutputGroupBox = new QGroupBox("Parsed Output");
 			responseLayout->addWidget(parsedOutputGroupBox);
 			QVBoxLayout *parsedOutputLayout = new QVBoxLayout;
 			parsedOutputGroupBox->setLayout(parsedOutputLayout);
-			parsedOutputLayout->addWidget(
-				new QLabel(QString::fromStdString(response.body_parsed)));
+            if (response.body_parts_parsed.size() > 1) {
+                // Add a QTabWidget to show the parsed output parts
+                QTabWidget *tabWidget = new QTabWidget;
+                parsedOutputLayout->addWidget(tabWidget);
+                for (auto &parsedOutput : response.body_parts_parsed) {
+                    tabWidget->addTab(new QLabel(QString::fromStdString(parsedOutput)),
+                                      QString::fromStdString(parsedOutput));
+                }
+            } else {
+                // Add a QLabel to show a single parsed output
+                parsedOutputLayout->addWidget(
+                    new QLabel(QString::fromStdString(response.body_parts_parsed[0])));
+            }
 		}
 
 		// Resize the dialog to fit the text
