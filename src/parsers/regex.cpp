@@ -5,11 +5,10 @@
 #include <regex>
 #include <obs-module.h>
 
-
 struct request_data_handler_response parse_regex(struct request_data_handler_response response,
 						 const url_source_request_data *request_data)
 {
-    std::string parsed_output = "";
+	std::string parsed_output = "";
 	if (request_data->output_regex == "") {
 		// Return the whole response body
 		parsed_output = response.body;
@@ -33,6 +32,6 @@ struct request_data_handler_response parse_regex(struct request_data_handler_res
 			return responseFail;
 		}
 	}
-    response.body_parts_parsed.push_back(parsed_output);
+	response.body_parts_parsed.push_back(parsed_output);
 	return response;
 }

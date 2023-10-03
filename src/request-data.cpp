@@ -166,14 +166,14 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 	// Parse the response
 	if (request_data->output_type == "JSON") {
-        if (request_data->output_json_path != "") {
-            response = parse_json_path(response, request_data);
-        } else if (request_data->output_json_pointer != "") {
-            response = parse_json_pointer(response, request_data);
-        } else {
-            // attempt to parse as json and return the whole object
-            response = parse_json(response, request_data);
-        }
+		if (request_data->output_json_path != "") {
+			response = parse_json_path(response, request_data);
+		} else if (request_data->output_json_pointer != "") {
+			response = parse_json_pointer(response, request_data);
+		} else {
+			// attempt to parse as json and return the whole object
+			response = parse_json(response, request_data);
+		}
 	} else if (request_data->output_type == "XML (XPath)" ||
 		   request_data->output_type == "HTML") {
 		response = parse_xml(response, request_data);
@@ -212,7 +212,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	// Output parsing options
 	json["output_type"] = request_data->output_type;
 	json["output_json_path"] = request_data->output_json_path;
-    json["output_json_pointer"] = request_data->output_json_pointer;
+	json["output_json_pointer"] = request_data->output_json_pointer;
 	json["output_xpath"] = request_data->output_xpath;
 	json["output_xquery"] = request_data->output_xquery;
 	json["output_regex"] = request_data->output_regex;
@@ -233,87 +233,99 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	// Unserialize the request data from a string using JSON
 	// throughout this function we use .contains() to check if a key exists to avoid
 	// exceptions
-    url_source_request_data request_data;
+	url_source_request_data request_data;
 	try {
-    	nlohmann::json json;
+		nlohmann::json json;
 		json = nlohmann::json::parse(serialized_request_data);
 
-        request_data.url = json["url"].get<std::string>();
-        if (json.contains("url_or_file")) {
-            request_data.url_or_file = json["url_or_file"].get<std::string>();
-        } else {
-            request_data.url_or_file = "url";
-        }
-        request_data.method = json["method"].get<std::string>();
-        request_data.body = json["body"].get<std::string>();
-        if (json.contains("obs_text_source")) {
-            request_data.obs_text_source = json["obs_text_source"].get<std::string>();
-        } else {
-            request_data.obs_text_source = "";
-        }
-        if (json.contains("obs_text_source_skip_if_empty")) {
-            request_data.obs_text_source_skip_if_empty =
-                json["obs_text_source_skip_if_empty"].get<bool>();
-        } else {
-            request_data.obs_text_source_skip_if_empty = false;
-        }
-        if (json.contains("obs_text_source_skip_if_same")) {
-            request_data.obs_text_source_skip_if_same =
-                json["obs_text_source_skip_if_same"].get<bool>();
-        } else {
-            request_data.obs_text_source_skip_if_same = false;
-        }
+		request_data.url = json["url"].get<std::string>();
+		if (json.contains("url_or_file")) {
+			request_data.url_or_file = json["url_or_file"].get<std::string>();
+		} else {
+			request_data.url_or_file = "url";
+		}
+		request_data.method = json["method"].get<std::string>();
+		request_data.body = json["body"].get<std::string>();
+		if (json.contains("obs_text_source")) {
+			request_data.obs_text_source = json["obs_text_source"].get<std::string>();
+		} else {
+			request_data.obs_text_source = "";
+		}
+		if (json.contains("obs_text_source_skip_if_empty")) {
+			request_data.obs_text_source_skip_if_empty =
+				json["obs_text_source_skip_if_empty"].get<bool>();
+		} else {
+			request_data.obs_text_source_skip_if_empty = false;
+		}
+		if (json.contains("obs_text_source_skip_if_same")) {
+			request_data.obs_text_source_skip_if_same =
+				json["obs_text_source_skip_if_same"].get<bool>();
+		} else {
+			request_data.obs_text_source_skip_if_same = false;
+		}
 
-        // SSL options
-        if (json.contains("ssl_client_cert_file")) {
-            request_data.ssl_client_cert_file = json["ssl_client_cert_file"].get<std::string>();
-        }
-        if (json.contains("ssl_client_key_file")) {
-            request_data.ssl_client_key_file = json["ssl_client_key_file"].get<std::string>();
-        }
-        if (json.contains("ssl_client_key_pass")) {
-            request_data.ssl_client_key_pass = json["ssl_client_key_pass"].get<std::string>();
-        }
-        // Output parsing options
-        request_data.output_type = json["output_type"].get<std::string>();
-        if (json.contains("output_json_path")) {
-            request_data.output_json_path = json["output_json_path"].get<std::string>();
-            if (request_data.output_json_path != "" && request_data.output_json_path[0] == '/') {
-                obs_log(LOG_WARNING, "JSON pointer detected in JSON Path. Translating to JSON "
-                    "path.");
-                // this is a json pointer - translate by adding a "$" prefix and replacing all
-                // "/"s with "."
-                request_data.output_json_path = "$." + request_data.output_json_path.substr(1);
-                std::replace(request_data.output_json_path.begin(),
-                             request_data.output_json_path.end(), '/', '.');
-            }
-        }
-        if (json.contains("output_json_pointer")) {
-            request_data.output_json_pointer = json["output_json_pointer"].get<std::string>();
-            if (request_data.output_json_pointer != "" && request_data.output_json_pointer[0] == '$') {
-                obs_log(LOG_WARNING, "JSON path detected in JSON Pointer. Translating to JSON "
-                    "pointer.");
-                // this is a json path - translate by replacing all "."s with "/"s
-                std::replace(request_data.output_json_pointer.begin(),
-                             request_data.output_json_pointer.end(), '.', '/');
-                request_data.output_json_pointer = "/" + request_data.output_json_pointer;
-            }
-        }
-        request_data.output_xpath = json["output_xpath"].get<std::string>();
-        request_data.output_xquery = json["output_xquery"].get<std::string>();
-        request_data.output_regex = json["output_regex"].get<std::string>();
-        request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
-        request_data.output_regex_group = json["output_regex_group"].get<std::string>();
+		// SSL options
+		if (json.contains("ssl_client_cert_file")) {
+			request_data.ssl_client_cert_file =
+				json["ssl_client_cert_file"].get<std::string>();
+		}
+		if (json.contains("ssl_client_key_file")) {
+			request_data.ssl_client_key_file =
+				json["ssl_client_key_file"].get<std::string>();
+		}
+		if (json.contains("ssl_client_key_pass")) {
+			request_data.ssl_client_key_pass =
+				json["ssl_client_key_pass"].get<std::string>();
+		}
+		// Output parsing options
+		request_data.output_type = json["output_type"].get<std::string>();
+		if (json.contains("output_json_path")) {
+			request_data.output_json_path = json["output_json_path"].get<std::string>();
+			if (request_data.output_json_path != "" &&
+			    request_data.output_json_path[0] == '/') {
+				obs_log(LOG_WARNING,
+					"JSON pointer detected in JSON Path. Translating to JSON "
+					"path.");
+				// this is a json pointer - translate by adding a "$" prefix and replacing all
+				// "/"s with "."
+				request_data.output_json_path =
+					"$." + request_data.output_json_path.substr(1);
+				std::replace(request_data.output_json_path.begin(),
+					     request_data.output_json_path.end(), '/', '.');
+			}
+		}
+		if (json.contains("output_json_pointer")) {
+			request_data.output_json_pointer =
+				json["output_json_pointer"].get<std::string>();
+			if (request_data.output_json_pointer != "" &&
+			    request_data.output_json_pointer[0] == '$') {
+				obs_log(LOG_WARNING,
+					"JSON path detected in JSON Pointer. Translating to JSON "
+					"pointer.");
+				// this is a json path - translate by replacing all "."s with "/"s
+				std::replace(request_data.output_json_pointer.begin(),
+					     request_data.output_json_pointer.end(), '.', '/');
+				request_data.output_json_pointer =
+					"/" + request_data.output_json_pointer;
+			}
+		}
+		request_data.output_xpath = json["output_xpath"].get<std::string>();
+		request_data.output_xquery = json["output_xquery"].get<std::string>();
+		request_data.output_regex = json["output_regex"].get<std::string>();
+		request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
+		request_data.output_regex_group = json["output_regex_group"].get<std::string>();
 
-        nlohmann::json headers_json = json["headers"];
-        for (auto header : headers_json.items()) {
-            request_data.headers.push_back(
-                std::make_pair(header.key(), header.value().get<std::string>()));
-        }
+		nlohmann::json headers_json = json["headers"];
+		for (auto header : headers_json.items()) {
+			request_data.headers.push_back(
+				std::make_pair(header.key(), header.value().get<std::string>()));
+		}
 
 	} catch (const std::exception &e) {
-		obs_log(LOG_WARNING, "Failed to parse JSON request data. Saved request "
-            "properties are reset. Error: %s", e.what());
+		obs_log(LOG_WARNING,
+			"Failed to parse JSON request data. Saved request "
+			"properties are reset. Error: %s",
+			e.what());
 		// Return an empty request data object
 		return request_data;
 	}

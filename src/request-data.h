@@ -28,7 +28,7 @@ struct url_source_request_data {
 	// Output parsing options
 	std::string output_type;
 	std::string output_json_path;
-    std::string output_json_pointer;
+	std::string output_json_pointer;
 	std::string output_xpath;
 	std::string output_xquery;
 	std::string output_regex;

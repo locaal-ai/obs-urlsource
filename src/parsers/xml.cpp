@@ -5,7 +5,6 @@
 #include <pugixml.hpp>
 #include <obs-module.h>
 
-
 struct request_data_handler_response parse_xml(struct request_data_handler_response response,
 					       const url_source_request_data *request_data)
 {
@@ -20,7 +19,7 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 		return responseFail;
 	}
-    std::string parsed_output = "";
+	std::string parsed_output = "";
 	// Get the output value
 	if (request_data->output_xpath != "") {
 		pugi::xpath_node_set nodes = doc.select_nodes(request_data->output_xpath.c_str());
@@ -38,7 +37,7 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 		// Return the whole XML object
 		parsed_output = response.body;
 	}
-    response.body_parts_parsed.push_back(parsed_output);
+	response.body_parts_parsed.push_back(parsed_output);
 	return response;
 }
 
@@ -57,7 +56,7 @@ parse_xml_by_xquery(struct request_data_handler_response response,
 		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
 		return responseFail;
 	}
-    std::string parsed_output = "";
+	std::string parsed_output = "";
 	// Get the output value
 	if (request_data->output_xquery != "") {
 		pugi::xpath_query query_entity(request_data->output_xquery.c_str());
@@ -67,6 +66,6 @@ parse_xml_by_xquery(struct request_data_handler_response response,
 		// Return the whole XML object
 		parsed_output = response.body;
 	}
-    response.body_parts_parsed.push_back(parsed_output);
+	response.body_parts_parsed.push_back(parsed_output);
 	return response;
 }
