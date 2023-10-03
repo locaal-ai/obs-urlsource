@@ -267,7 +267,7 @@ void curl_loop(struct url_source_data *usd)
 				try {
 					// if the parsed response is an array - allow `{outputN}` to be used in the template
 					if (response.body_parts_parsed.size() > 1) {
-						for (int i = 0;
+						for (size_t i = 0;
 						     i < response.body_parts_parsed.size(); i++) {
 							text = std::regex_replace(
 								text,
