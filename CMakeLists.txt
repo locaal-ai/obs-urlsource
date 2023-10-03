@@ -34,11 +34,30 @@ if(ENABLE_QT)
                AUTORCC ON)
 endif()
 
-include(cmake/BuildMyCurl.cmake)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libcurl)
+set(USE_SYSTEM_CURL
+    OFF
+    CACHE STRING "Use system cURL")
 
-include(cmake/BuildPugiXML.cmake)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libpugixml)
+set(USE_SYSTEM_PUGIXML
+    OFF
+    CACHE STRING "Use system pugixml")
+
+if(USE_SYSTEM_CURL)
+  find_package(CURL REQUIRED)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${CURL_LIBRARIES}")
+  target_include_directories(${CMAKE_PROJECT_NAME} SYSTEM PUBLIC "${CURL_INCLUDE_DIRS}")
+else()
+  include(cmake/BuildMyCurl.cmake)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libcurl)
+endif()
+
+if(USE_SYSTEM_PUGIXML)
+  find_package(pugixml REQUIRED)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE pugixml)
+else()
+  include(cmake/BuildPugiXML.cmake)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libpugixml)
+endif()
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 
