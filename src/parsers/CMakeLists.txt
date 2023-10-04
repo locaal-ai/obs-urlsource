@@ -3,5 +3,5 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE jsonpointer.cpp jsonpath.cpp regex.
 # on linux, disable conversion errors
 if(UNIX AND NOT APPLE)
   set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
-  target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wno-error -Wno-conversion -Wno-shadow -Wno-unused-parameter)
+  add_compile_options(-Wno-error -Wno-conversion -Wno-shadow -Wno-unused-parameter)
 endif()

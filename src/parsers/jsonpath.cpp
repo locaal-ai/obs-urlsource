@@ -4,10 +4,12 @@
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 #include <sstream>
+#include <obs-module.h>
 
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
 						const url_source_request_data *request_data)
 {
+	UNUSED_PARAMETER(request_data);
 
 	// Parse the response as JSON
 	jsoncons::json json;
