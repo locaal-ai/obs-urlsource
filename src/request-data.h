@@ -7,6 +7,7 @@
 #define URL_SOURCE_REQUEST_STANDARD_ERROR_CODE -1
 #define URL_SOURCE_REQUEST_BENIGN_ERROR_CODE -2
 #define URL_SOURCE_REQUEST_PARSING_ERROR_CODE -3
+#define URL_SOURCE_REQUEST_SUCCESS 0
 
 struct url_source_request_data {
 	std::string url;

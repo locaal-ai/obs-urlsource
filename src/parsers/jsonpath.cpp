@@ -1,9 +1,9 @@
 #include "request-data.h"
 #include "errors.h"
 
-#include <jsoncons/json.hpp>
+#include <jsoncons/basic_json.hpp>
+#include <jsoncons/json_parser.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
-#include <sstream>
 #include <obs-module.h>
 
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
@@ -19,9 +19,7 @@ struct request_data_handler_response parse_json(struct request_data_handler_resp
 		return make_fail_parse_response(e.what());
 	}
 	// Return the whole JSON object
-	std::stringstream ss;
-	json.dump(ss);
-	response.body_parts_parsed.push_back(ss.str());
+	response.body_parts_parsed.push_back(json.as_string());
 	return response;
 }
 
@@ -45,28 +43,18 @@ struct request_data_handler_response parse_json_path(struct request_data_handler
 			if (value.is_array()) {
 				// extract array items as strings
 				for (const auto &item : value.array_range()) {
-					if (item.is_string()) {
-						parsed_output.push_back(item.as_string());
-					} else {
-						std::stringstream ss;
-						item.dump(ss);
-						parsed_output.push_back(ss.str());
-					}
+					parsed_output.push_back(item.as_string());
 				}
 			} else {
-				std::stringstream ss;
-				value.dump(ss);
-				parsed_output.push_back(ss.str());
+				parsed_output.push_back(value.as_string());
 			}
 		} catch (jsoncons::json_exception &e) {
 			return make_fail_parse_response(e.what());
 		}
 	} else {
 		// Return the whole JSON object
-		std::stringstream ss;
-		json.dump(ss);
 		parsed_output.clear();
-		parsed_output.push_back(ss.str());
+		parsed_output.push_back(json.as_string());
 	}
 	response.body_parts_parsed = parsed_output;
 	return response;

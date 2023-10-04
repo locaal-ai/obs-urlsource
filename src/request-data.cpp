@@ -49,7 +49,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		file.close();
 
 		response.body = responseBody;
-		response.status_code = 200;
+		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	} else {
 		// This is a URL request
 		// Check if the URL is empty
@@ -69,7 +69,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
-		CURLcode code;
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
@@ -150,7 +149,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
 
 		// Send the request
-		code = curl_easy_perform(curl);
+		CURLcode code = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 		if (code != CURLE_OK) {
 			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
@@ -161,7 +160,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 
 		response.body = responseBody;
-		response.status_code = 200;
+		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	}
 
 	// Parse the response

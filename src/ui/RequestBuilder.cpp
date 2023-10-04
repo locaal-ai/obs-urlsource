@@ -472,7 +472,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		struct request_data_handler_response response =
 			request_data_handler(request_data_test);
 
-		if (response.status_code == -1) {
+		if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
 			// Show the error message label
 			errorMessageLabel->setText(QString::fromStdString(response.error_message));
 			errorMessageLabel->setVisible(true);
@@ -531,9 +531,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				QTabWidget *tabWidget = new QTabWidget;
 				parsedOutputLayout->addWidget(tabWidget);
 				for (auto &parsedOutput : response.body_parts_parsed) {
+					// label each tab {outputN} where N is the index of the output part
 					tabWidget->addTab(
 						new QLabel(QString::fromStdString(parsedOutput)),
-						QString::fromStdString(parsedOutput));
+						QString::fromStdString(
+							"{output" +
+							std::to_string(tabWidget->count()) + "}"));
 				}
 			} else {
 				// Add a QLabel to show a single parsed output
