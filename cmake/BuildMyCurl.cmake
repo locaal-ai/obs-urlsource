@@ -15,7 +15,7 @@ set(CURL_USE_LIBSSH2 OFF)
 set(BUILD_TESTING OFF)
 set(PICKY_COMPILER OFF)
 
-add_subdirectory(vendor/curl EXCLUDE_FROM_ALL)
+add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/curl EXCLUDE_FROM_ALL)
 if(OS_MACOS)
   target_compile_options(
     libcurl PRIVATE -Wno-error=ambiguous-macro -Wno-error=deprecated-declarations -Wno-error=unreachable-code

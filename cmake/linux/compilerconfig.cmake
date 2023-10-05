@@ -56,9 +56,6 @@ add_compile_options(
 # Add support for color diagnostics and CMake switch for warnings as errors to CMake < 3.24
 if(CMAKE_VERSION VERSION_LESS 3.24.0)
   add_compile_options($<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics> $<$<CXX_COMPILER_ID:Clang>:-fcolor-diagnostics>)
-  if(CMAKE_COMPILE_WARNING_AS_ERROR)
-    add_compile_options(-Werror)
-  endif()
 else()
   set(CMAKE_COLOR_DIAGNOSTICS ON)
 endif()

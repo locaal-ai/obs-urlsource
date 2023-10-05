@@ -7,6 +7,7 @@
 #define URL_SOURCE_REQUEST_STANDARD_ERROR_CODE -1
 #define URL_SOURCE_REQUEST_BENIGN_ERROR_CODE -2
 #define URL_SOURCE_REQUEST_PARSING_ERROR_CODE -3
+#define URL_SOURCE_REQUEST_SUCCESS 0
 
 struct url_source_request_data {
 	std::string url;
@@ -28,6 +29,7 @@ struct url_source_request_data {
 	// Output parsing options
 	std::string output_type;
 	std::string output_json_path;
+	std::string output_json_pointer;
 	std::string output_xpath;
 	std::string output_xquery;
 	std::string output_regex;
@@ -48,6 +50,7 @@ struct url_source_request_data {
 		headers = {};
 		output_type = std::string("text");
 		output_json_path = std::string("");
+		output_json_pointer = std::string("");
 		output_xpath = std::string("");
 		output_xquery = std::string("");
 		output_regex = std::string("");
@@ -69,6 +72,7 @@ struct url_source_request_data {
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
+		output_json_pointer = std::string(other.output_json_pointer);
 		output_xpath = std::string(other.output_xpath);
 		output_xquery = std::string(other.output_xquery);
 		output_regex = std::string(other.output_regex);
@@ -90,6 +94,7 @@ struct url_source_request_data {
 		headers = std::vector<std::pair<std::string, std::string>>(other.headers);
 		output_type = std::string(other.output_type);
 		output_json_path = std::string(other.output_json_path);
+		output_json_pointer = std::string(other.output_json_pointer);
 		output_xpath = std::string(other.output_xpath);
 		output_xquery = std::string(other.output_xquery);
 		output_regex = std::string(other.output_regex);
@@ -102,7 +107,7 @@ struct url_source_request_data {
 struct request_data_handler_response {
 	std::string body;
 	std::string content_type;
-	std::string body_parsed;
+	std::vector<std::string> body_parts_parsed;
 	std::vector<std::pair<std::string, std::string>> headers;
 	int status_code;
 	std::string status_message;

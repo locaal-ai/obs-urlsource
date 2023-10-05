@@ -1,14 +1,16 @@
 #include "request-data.h"
 #include "plugin-support.h"
+#include "parsers/parsers.h"
 
-#include <curl/curl.h>
 #include <cstddef>
 #include <string>
-#include <regex>
 #include <fstream>
-#include <util/base.h>
+#include <regex>
+
+#include <curl/curl.h>
 #include <nlohmann/json.hpp>
-#include <pugixml.hpp>
+
+#include <util/base.h>
 #include <obs-module.h>
 
 static const std::string USER_AGENT = std::string(PLUGIN_NAME) + "/" + std::string(PLUGIN_VERSION);
@@ -25,144 +27,6 @@ std::size_t writeFunctionUint8Vector(void *ptr, std::size_t size, size_t nmemb,
 	data->insert(data->end(), static_cast<uint8_t *>(ptr),
 		     static_cast<uint8_t *>(ptr) + size * nmemb);
 	return size * nmemb;
-}
-
-struct request_data_handler_response parse_regex(struct request_data_handler_response response,
-						 url_source_request_data *request_data)
-{
-	if (request_data->output_regex == "") {
-		// Return the whole response body
-		response.body_parsed = response.body;
-	} else {
-		// Parse the response as a regex
-		std::regex regex(request_data->output_regex,
-				 std::regex_constants::ECMAScript | std::regex_constants::optimize);
-		std::smatch match;
-		if (std::regex_search(response.body, match, regex)) {
-			if (match.size() > 1) {
-				response.body_parsed = match[1].str();
-			} else {
-				response.body_parsed = match[0].str();
-			}
-		} else {
-			obs_log(LOG_INFO, "Failed to match regex");
-			// Return an error response
-			struct request_data_handler_response responseFail;
-			responseFail.error_message = "Failed to match regex";
-			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-			return responseFail;
-		}
-	}
-	return response;
-}
-
-struct request_data_handler_response parse_xml(struct request_data_handler_response response,
-					       url_source_request_data *request_data)
-{
-	// Parse the response as XML using pugixml
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_string(response.body.c_str());
-	if (!result) {
-		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
-		// Return an error response
-		struct request_data_handler_response responseFail;
-		responseFail.error_message = result.description();
-		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-		return responseFail;
-	}
-	// Get the output value
-	if (request_data->output_xpath != "") {
-		pugi::xpath_node_set nodes = doc.select_nodes(request_data->output_xpath.c_str());
-		if (nodes.size() > 0) {
-			response.body_parsed = nodes[0].node().text().get();
-		} else {
-			obs_log(LOG_INFO, "Failed to get XML value");
-			// Return an error response
-			struct request_data_handler_response responseFail;
-			responseFail.error_message = "Failed to get XML value";
-			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-			return responseFail;
-		}
-	} else {
-		// Return the whole XML object
-		response.body_parsed = response.body;
-	}
-	return response;
-}
-
-struct request_data_handler_response
-parse_xml_by_xquery(struct request_data_handler_response response,
-		    url_source_request_data *request_data)
-{
-	// Parse the response as XML using pugixml
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_string(response.body.c_str());
-	if (!result) {
-		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
-		// Return an error response
-		struct request_data_handler_response responseFail;
-		responseFail.error_message = result.description();
-		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-		return responseFail;
-	}
-	// Get the output value
-	if (request_data->output_xquery != "") {
-		pugi::xpath_query query_entity(request_data->output_xquery.c_str());
-		std::string s = query_entity.evaluate_string(doc);
-		response.body_parsed = s;
-	} else {
-		// Return the whole XML object
-		response.body_parsed = response.body;
-	}
-	return response;
-}
-
-struct request_data_handler_response parse_json(struct request_data_handler_response response,
-						url_source_request_data *request_data)
-{
-	// Parse the response as JSON
-	nlohmann::json json;
-	try {
-		json = nlohmann::json::parse(response.body);
-	} catch (nlohmann::json::parse_error &e) {
-		obs_log(LOG_INFO, "Failed to parse JSON response: %s", e.what());
-		// Return an error response
-		struct request_data_handler_response responseFail;
-		responseFail.error_message = e.what();
-		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-		return responseFail;
-	}
-	// Get the output value
-	if (request_data->output_json_path != "") {
-		try {
-			const auto value = json.at(nlohmann::json::json_pointer(
-							   request_data->output_json_path))
-						   .get<nlohmann::json>();
-			if (value.is_string()) {
-				response.body_parsed = value.get<std::string>();
-			} else {
-				response.body_parsed = value.dump();
-			}
-			// remove potential prefix and postfix quotes, conversion from string
-			if (response.body_parsed.size() > 1 &&
-			    response.body_parsed.front() == '"' &&
-			    response.body_parsed.back() == '"') {
-				response.body_parsed = response.body_parsed.substr(
-					1, response.body_parsed.size() - 2);
-			}
-		} catch (nlohmann::json::exception &e) {
-			obs_log(LOG_INFO, "Failed to get JSON value: %s", e.what());
-			// Return an error response
-			struct request_data_handler_response responseFail;
-			responseFail.error_message = e.what();
-			responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-			return responseFail;
-		}
-	} else {
-		// Return the whole JSON object
-		response.body_parsed = json.dump();
-	}
-	return response;
 }
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
@@ -185,7 +49,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		file.close();
 
 		response.body = responseBody;
-		response.status_code = 200;
+		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	} else {
 		// This is a URL request
 		// Check if the URL is empty
@@ -205,7 +69,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
-		CURLcode code;
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
@@ -286,7 +149,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
 
 		// Send the request
-		code = curl_easy_perform(curl);
+		CURLcode code = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 		if (code != CURLE_OK) {
 			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
@@ -297,12 +160,19 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 
 		response.body = responseBody;
-		response.status_code = 200;
+		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	}
 
 	// Parse the response
 	if (request_data->output_type == "JSON") {
-		response = parse_json(response, request_data);
+		if (request_data->output_json_path != "") {
+			response = parse_json_path(response, request_data);
+		} else if (request_data->output_json_pointer != "") {
+			response = parse_json_pointer(response, request_data);
+		} else {
+			// attempt to parse as json and return the whole object
+			response = parse_json(response, request_data);
+		}
 	} else if (request_data->output_type == "XML (XPath)" ||
 		   request_data->output_type == "HTML") {
 		response = parse_xml(response, request_data);
@@ -341,6 +211,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	// Output parsing options
 	json["output_type"] = request_data->output_type;
 	json["output_json_path"] = request_data->output_json_path;
+	json["output_json_pointer"] = request_data->output_json_pointer;
 	json["output_xpath"] = request_data->output_xpath;
 	json["output_xquery"] = request_data->output_xquery;
 	json["output_regex"] = request_data->output_regex;
@@ -361,66 +232,101 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	// Unserialize the request data from a string using JSON
 	// throughout this function we use .contains() to check if a key exists to avoid
 	// exceptions
-	nlohmann::json json;
-	try {
-		json = nlohmann::json::parse(serialized_request_data);
-	} catch (nlohmann::json::parse_error &e) {
-		obs_log(LOG_INFO, "Failed to parse JSON request data: %s", e.what());
-		// Return an empty request data object
-		url_source_request_data request_data;
-		return request_data;
-	}
-
 	url_source_request_data request_data;
-	request_data.url = json["url"].get<std::string>();
-	if (json.contains("url_or_file")) {
-		request_data.url_or_file = json["url_or_file"].get<std::string>();
-	} else {
-		request_data.url_or_file = "url";
-	}
-	request_data.method = json["method"].get<std::string>();
-	request_data.body = json["body"].get<std::string>();
-	if (json.contains("obs_text_source")) {
-		request_data.obs_text_source = json["obs_text_source"].get<std::string>();
-	} else {
-		request_data.obs_text_source = "";
-	}
-	if (json.contains("obs_text_source_skip_if_empty")) {
-		request_data.obs_text_source_skip_if_empty =
-			json["obs_text_source_skip_if_empty"].get<bool>();
-	} else {
-		request_data.obs_text_source_skip_if_empty = false;
-	}
-	if (json.contains("obs_text_source_skip_if_same")) {
-		request_data.obs_text_source_skip_if_same =
-			json["obs_text_source_skip_if_same"].get<bool>();
-	} else {
-		request_data.obs_text_source_skip_if_same = false;
-	}
+	try {
+		nlohmann::json json;
+		json = nlohmann::json::parse(serialized_request_data);
 
-	// SSL options
-	if (json.contains("ssl_client_cert_file")) {
-		request_data.ssl_client_cert_file = json["ssl_client_cert_file"].get<std::string>();
-	}
-	if (json.contains("ssl_client_key_file")) {
-		request_data.ssl_client_key_file = json["ssl_client_key_file"].get<std::string>();
-	}
-	if (json.contains("ssl_client_key_pass")) {
-		request_data.ssl_client_key_pass = json["ssl_client_key_pass"].get<std::string>();
-	}
-	// Output parsing options
-	request_data.output_type = json["output_type"].get<std::string>();
-	request_data.output_json_path = json["output_json_path"].get<std::string>();
-	request_data.output_xpath = json["output_xpath"].get<std::string>();
-	request_data.output_xquery = json["output_xquery"].get<std::string>();
-	request_data.output_regex = json["output_regex"].get<std::string>();
-	request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
-	request_data.output_regex_group = json["output_regex_group"].get<std::string>();
+		request_data.url = json["url"].get<std::string>();
+		if (json.contains("url_or_file")) {
+			request_data.url_or_file = json["url_or_file"].get<std::string>();
+		} else {
+			request_data.url_or_file = "url";
+		}
+		request_data.method = json["method"].get<std::string>();
+		request_data.body = json["body"].get<std::string>();
+		if (json.contains("obs_text_source")) {
+			request_data.obs_text_source = json["obs_text_source"].get<std::string>();
+		} else {
+			request_data.obs_text_source = "";
+		}
+		if (json.contains("obs_text_source_skip_if_empty")) {
+			request_data.obs_text_source_skip_if_empty =
+				json["obs_text_source_skip_if_empty"].get<bool>();
+		} else {
+			request_data.obs_text_source_skip_if_empty = false;
+		}
+		if (json.contains("obs_text_source_skip_if_same")) {
+			request_data.obs_text_source_skip_if_same =
+				json["obs_text_source_skip_if_same"].get<bool>();
+		} else {
+			request_data.obs_text_source_skip_if_same = false;
+		}
 
-	nlohmann::json headers_json = json["headers"];
-	for (auto header : headers_json.items()) {
-		request_data.headers.push_back(
-			std::make_pair(header.key(), header.value().get<std::string>()));
+		// SSL options
+		if (json.contains("ssl_client_cert_file")) {
+			request_data.ssl_client_cert_file =
+				json["ssl_client_cert_file"].get<std::string>();
+		}
+		if (json.contains("ssl_client_key_file")) {
+			request_data.ssl_client_key_file =
+				json["ssl_client_key_file"].get<std::string>();
+		}
+		if (json.contains("ssl_client_key_pass")) {
+			request_data.ssl_client_key_pass =
+				json["ssl_client_key_pass"].get<std::string>();
+		}
+		// Output parsing options
+		request_data.output_type = json["output_type"].get<std::string>();
+		if (json.contains("output_json_path")) {
+			request_data.output_json_path = json["output_json_path"].get<std::string>();
+			if (request_data.output_json_path != "" &&
+			    request_data.output_json_path[0] == '/') {
+				obs_log(LOG_WARNING,
+					"JSON pointer detected in JSON Path. Translating to JSON "
+					"path.");
+				// this is a json pointer - translate by adding a "$" prefix and replacing all
+				// "/"s with "."
+				request_data.output_json_path =
+					"$." + request_data.output_json_path.substr(1);
+				std::replace(request_data.output_json_path.begin(),
+					     request_data.output_json_path.end(), '/', '.');
+			}
+		}
+		if (json.contains("output_json_pointer")) {
+			request_data.output_json_pointer =
+				json["output_json_pointer"].get<std::string>();
+			if (request_data.output_json_pointer != "" &&
+			    request_data.output_json_pointer[0] == '$') {
+				obs_log(LOG_WARNING,
+					"JSON path detected in JSON Pointer. Translating to JSON "
+					"pointer.");
+				// this is a json path - translate by replacing all "."s with "/"s
+				std::replace(request_data.output_json_pointer.begin(),
+					     request_data.output_json_pointer.end(), '.', '/');
+				request_data.output_json_pointer =
+					"/" + request_data.output_json_pointer;
+			}
+		}
+		request_data.output_xpath = json["output_xpath"].get<std::string>();
+		request_data.output_xquery = json["output_xquery"].get<std::string>();
+		request_data.output_regex = json["output_regex"].get<std::string>();
+		request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
+		request_data.output_regex_group = json["output_regex_group"].get<std::string>();
+
+		nlohmann::json headers_json = json["headers"];
+		for (auto header : headers_json.items()) {
+			request_data.headers.push_back(
+				std::make_pair(header.key(), header.value().get<std::string>()));
+		}
+
+	} catch (const std::exception &e) {
+		obs_log(LOG_WARNING,
+			"Failed to parse JSON request data. Saved request "
+			"properties are reset. Error: %s",
+			e.what());
+		// Return an empty request data object
+		return request_data;
 	}
 
 	return request_data;
