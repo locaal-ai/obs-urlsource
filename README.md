@@ -41,22 +41,23 @@ Features:
 - HTTP request types: GET, POST
 - Request headers (for e.g. API Key or Auth token)
 - Request body for POST
-- Output parsing: JSON via JSONPointer, XML/HTML via XPath and Regex
+- Output parsing: JSON via JSONPointer & JSONPath, XML/HTML via XPath & XQuery and Regex
 - Update timer for live streaming data
 - Test of the request to find the right parsing
 - Output styling (font, color, etc.) and formatting (via regex post processing)
 - Image output (via URL)
 - Output to external Text Source
+- Multi-value (array, union) parsed output capture
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
+- Advanced templating (object unpacking, etc.)
 - Websocket support
-- Multi-value parsed output capture and advanced templating
-- More output parsing options (JSONPath, CSS selectors, etc.)
+- More parsing options (CSV, CSS selectors, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
-- More output formats (XML, HTML, CSV, etc.)
+- More output formats (XML, Markdown, CSV, etc.)
 - More output types (Video, Audio, etc.)
-- Output to OBS sources (Image, etc.)
+- Output to more built-in OBS sources (Image, etc.)
 
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
