@@ -83,7 +83,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		}
 
-		std::string request_body_allocated; // this is needed here, out of the `if` scope below
+		std::string
+			request_body_allocated; // this is needed here, out of the `if` scope below
 
 		if (request_data->method == "POST") {
 			curl_easy_setopt(curl, CURLOPT_POST, 1L);
@@ -207,13 +208,13 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			for (size_t i = 0; i < response.body_parts_parsed.size(); i++) {
 				if (request_data->post_process_regex_is_replace) {
 					// replace the whole string with the regex replace string
-					response.body_parts_parsed[i] =
-						std::regex_replace(response.body_parts_parsed[i], regex,
-									request_data->post_process_regex_replace);
+					response.body_parts_parsed[i] = std::regex_replace(
+						response.body_parts_parsed[i], regex,
+						request_data->post_process_regex_replace);
 				} else {
 					std::smatch match;
 					if (std::regex_search(response.body_parts_parsed[i], match,
-										regex)) {
+							      regex)) {
 						if (match.size() > 1) {
 							// replace the whole string with the first capture group
 							response.body_parts_parsed[i] = match[1];
@@ -222,8 +223,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				}
 			}
 		} catch (std::regex_error &e) {
-			obs_log(LOG_ERROR, "Failed to parse output_regex: %s",
-				e.what());
+			obs_log(LOG_ERROR, "Failed to parse output_regex: %s", e.what());
 		}
 	}
 

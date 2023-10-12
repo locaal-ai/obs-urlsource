@@ -498,7 +498,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			postProcessRegexIsReplaceCheckBox->isChecked();
 		request_data_for_saving->post_process_regex_replace =
 			postProcessRegexReplaceLineEdit->text().toStdString();
-
 	};
 
 	QPushButton *sendButton = new QPushButton("Test Request");
