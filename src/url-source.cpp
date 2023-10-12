@@ -42,7 +42,6 @@ struct url_source_data {
 	std::string css_props;
 	std::string output_text_template;
 	bool output_is_image_url = false;
-	std::string output_regex;
 	struct obs_source_frame frame;
 	bool send_to_stream = false;
 
@@ -229,23 +228,6 @@ void curl_loop(struct url_source_data *usd)
 			uint32_t width = 0;
 			uint32_t height = 0;
 
-			// If output regex is set - use it to format the output in response.body_parts_parsed
-			if (!usd->output_regex.empty()) {
-				try {
-					std::regex regex(usd->output_regex);
-					std::smatch match;
-					if (std::regex_search(response.body_parts_parsed[0], match,
-							      regex)) {
-						if (match.size() > 1) {
-							response.body_parts_parsed[0] = match[1];
-						}
-					}
-				} catch (std::regex_error &e) {
-					obs_log(LOG_ERROR, "Failed to parse output_regex: %s",
-						e.what());
-				}
-			}
-
 			// prepare the text from the template
 			std::string text = usd->output_text_template;
 			// if the template is empty use the response body
@@ -392,7 +374,6 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
 	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
 	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
-	usd->output_regex = std::string(obs_data_get_string(settings, "output_regex"));
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 
 	// initialize the mutex
@@ -424,7 +405,6 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
 	usd->css_props = obs_data_get_string(settings, "css_props");
 	usd->output_text_template = obs_data_get_string(settings, "template");
-	usd->output_regex = obs_data_get_string(settings, "output_regex");
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 
 	// update the text source
@@ -495,9 +475,6 @@ void url_source_defaults(obs_data_t *s)
 	obs_data_set_default_string(
 		s, "css_props",
 		"background-color: transparent;\ncolor: #FFFFFF;\nfont-size: 48px;");
-
-	// Default Output Regex Formatter
-	obs_data_set_default_string(s, "output_regex", "");
 
 	// Default Template
 	obs_data_set_default_string(s, "template", "{output}");
@@ -571,9 +548,6 @@ obs_properties_t *url_source_properties(void *data)
 
 	// CSS properties for styling the text
 	obs_properties_add_text(ppts, "css_props", "CSS Properties", OBS_TEXT_MULTILINE);
-
-	// Output regex formatter
-	obs_properties_add_text(ppts, "output_regex", "Output Regex Formatter", OBS_TEXT_DEFAULT);
 
 	// Output template
 	obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_DEFAULT);

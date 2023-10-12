@@ -291,7 +291,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceWidget);
 	// add a tooltip to explain the dynamic input
 	obsTextSourceComboBox->setToolTip(
-		"Select a OBS text source to use its current text in the request body as `{input}`.");
+		"Select a OBS text source to use its current text in the querystring or request body as `{input}`.");
 
 	// Body
 	QLineEdit *bodyLineEdit = new QLineEdit;
@@ -399,6 +399,40 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	connect(outputTypeComboBox, &QComboBox::currentTextChanged, this,
 		setVisibilityOfOutputParsingOptions);
 
+	// Add postprocess regex options
+	// The main option is a regex to run on the output, then a checkbox to indicate if it's a
+	// replace, and a replace string which should appear only if the checkbox is checked
+	// All options should be packed in Horizontal layout and added to the form as a row
+	QLineEdit *postProcessRegexLineEdit = new QLineEdit;
+	postProcessRegexLineEdit->setText(QString::fromStdString(request_data->post_process_regex));
+	postProcessRegexLineEdit->setPlaceholderText("Regex");
+
+	QCheckBox *postProcessRegexIsReplaceCheckBox = new QCheckBox("Replace");
+	postProcessRegexIsReplaceCheckBox->setChecked(request_data->post_process_regex_is_replace);
+
+	QLineEdit *postProcessRegexReplaceLineEdit = new QLineEdit;
+	postProcessRegexReplaceLineEdit->setText(
+		QString::fromStdString(request_data->post_process_regex_replace));
+	postProcessRegexReplaceLineEdit->setPlaceholderText("Replace");
+
+	QHBoxLayout *postProcessRegexLayout = new QHBoxLayout;
+	postProcessRegexLayout->addWidget(postProcessRegexLineEdit);
+	postProcessRegexLayout->addWidget(postProcessRegexIsReplaceCheckBox);
+	postProcessRegexLayout->addWidget(postProcessRegexReplaceLineEdit);
+
+	formOutputParsing->addRow("Postprocess Regex", postProcessRegexLayout);
+
+	auto setVisibilityOfPostProcessRegexOptions = [=]() {
+		// Hide the replace string if the checkbox is not checked
+		postProcessRegexReplaceLineEdit->setVisible(
+			postProcessRegexIsReplaceCheckBox->isChecked());
+	};
+
+	setVisibilityOfPostProcessRegexOptions();
+	// Respond to changes in the checkbox
+	connect(postProcessRegexIsReplaceCheckBox, &QCheckBox::toggled, this,
+		setVisibilityOfPostProcessRegexOptions);
+
 	// Add an error message label, hidden by default, color red
 	QLabel *errorMessageLabel = new QLabel("Error message");
 	errorMessageLabel->setStyleSheet("QLabel { color : red; }");
@@ -456,6 +490,15 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			outputRegexFlagsLineEdit->text().toStdString();
 		request_data_for_saving->output_regex_group =
 			outputRegexGroupLineEdit->text().toStdString();
+
+		// Save the postprocess regex options
+		request_data_for_saving->post_process_regex =
+			postProcessRegexLineEdit->text().toStdString();
+		request_data_for_saving->post_process_regex_is_replace =
+			postProcessRegexIsReplaceCheckBox->isChecked();
+		request_data_for_saving->post_process_regex_replace =
+			postProcessRegexReplaceLineEdit->text().toStdString();
+
 	};
 
 	QPushButton *sendButton = new QPushButton("Test Request");
