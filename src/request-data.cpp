@@ -200,8 +200,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 	// If output regex is set - use it to format the output in response.body_parts_parsed
 	if (!request_data->post_process_regex.empty()) {
-		obs_log(LOG_INFO, "Post processing response with regex: %s",
-			request_data->post_process_regex.c_str());
 		try {
 			std::regex regex(request_data->post_process_regex);
 			// for each part of the response body - apply the regex
