@@ -26,6 +26,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <graphics/graphics.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <inja/inja.hpp>
 
 #include <thread>
 #include <mutex>
@@ -247,24 +248,20 @@ void curl_loop(struct url_source_data *usd)
 						"\" />";
 				}
 				try {
-					// if the parsed response is an array - allow `{outputN}` to be used in the template
+					// Use Inja to render the template
+					inja::Environment env;
+					nlohmann::json data;
 					if (response.body_parts_parsed.size() > 1) {
 						for (size_t i = 0;
 						     i < response.body_parts_parsed.size(); i++) {
-							text = std::regex_replace(
-								text,
-								std::regex("\\{output" +
-									   std::to_string(i) +
-									   "\\}"),
-								response.body_parts_parsed[i]);
+							data["output" + std::to_string(i)] =
+								response.body_parts_parsed[i];
 						}
 					} else {
-						// attempt to replace {output} with the response body
-						text = std::regex_replace(
-							text, std::regex("\\{output\\}"),
-							response.body_parts_parsed[0]);
+						data["output"] = response.body_parts_parsed[0];
 					}
-				} catch (std::regex_error &e) {
+					text = env.render(text, data);
+				} catch (std::exception &e) {
 					obs_log(LOG_ERROR, "Failed to parse template: %s",
 						e.what());
 				}

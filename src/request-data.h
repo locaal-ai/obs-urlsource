@@ -115,6 +115,7 @@ struct request_data_handler_response {
 	int status_code;
 	std::string status_message;
 	std::string error_message;
+	std::string request_url;
 	std::string request_body;
 };
 

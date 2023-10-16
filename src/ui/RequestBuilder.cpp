@@ -304,8 +304,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// If method is not GET, show the body input
 		set_form_row_visibility(urlRequestLayout, bodyLineEdit,
 					methodComboBox->currentText() != "GET");
-		set_form_row_visibility(urlRequestLayout, obsTextSourceWidget,
-					methodComboBox->currentText() != "GET");
 		this->adjustSize();
 	};
 
@@ -532,6 +530,16 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseDialog->raise();
 		responseDialog->activateWindow();
 		responseDialog->setModal(true);
+
+		// show request URL
+		QGroupBox *requestGroupBox = new QGroupBox("Request");
+		responseLayout->addWidget(requestGroupBox);
+		QVBoxLayout *requestLayout = new QVBoxLayout;
+		requestGroupBox->setLayout(requestLayout);
+		QScrollArea *requestUrlScrollArea = new QScrollArea;
+		QLabel *requestUrlLabel = new QLabel(QString::fromStdString(response.request_url));
+		requestUrlScrollArea->setWidget(requestUrlLabel);
+		requestLayout->addWidget(requestUrlScrollArea);
 
 		// if there's a request body, add it to the dialog
 		if (response.request_body != "") {
