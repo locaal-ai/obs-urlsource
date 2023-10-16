@@ -1,3 +1,5 @@
+#include <inja/inja.hpp>
+
 #include "request-data.h"
 #include "plugin-support.h"
 #include "parsers/parsers.h"
@@ -9,7 +11,6 @@
 
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
-#include <inja/inja.hpp>
 
 #include <util/base.h>
 #include <obs-module.h>
