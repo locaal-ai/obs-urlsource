@@ -45,12 +45,14 @@ if(MSVC)
   set(libcurl_fetch_lib_location "${libcurl_fetch_SOURCE_DIR}/lib/libcurl.lib")
   set(libcurl_fetch_link_libs "\$<LINK_ONLY:ws2_32>;\$<LINK_ONLY:advapi32>;\$<LINK_ONLY:crypt32>;\$<LINK_ONLY:bcrypt>")
 else()
+  find_package(ZLIB REQUIRED)
   set(libcurl_fetch_lib_location "${libcurl_fetch_SOURCE_DIR}/lib/libcurl.a")
   if(UNIX AND NOT APPLE)
+    find_package(OpenSSL REQUIRED)
     set(libcurl_fetch_link_libs "\$<LINK_ONLY:OpenSSL::SSL>;\$<LINK_ONLY:OpenSSL::Crypto>;\$<LINK_ONLY:ZLIB::ZLIB>")
   else()
     set(libcurl_fetch_link_libs
-        "-framework SystemConfiguration;-framework Security;-framework CoreFoundation -framework CoreServices;\$<LINK_ONLY:ZLIB::ZLIB>"
+        "-framework SystemConfiguration;-framework Security;-framework CoreFoundation;-framework CoreServices;ZLIB::ZLIB"
     )
   endif()
 endif()
