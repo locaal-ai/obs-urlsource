@@ -260,7 +260,7 @@ void curl_loop(struct url_source_data *usd)
 					} else {
 						data["output"] = response.body_parts_parsed[0];
 					}
-                    data["body"] = response.body_json;
+					data["body"] = response.body_json;
 					text = env.render(text, data);
 				} catch (std::exception &e) {
 					obs_log(LOG_ERROR, "Failed to parse template: %s",
