@@ -14,6 +14,7 @@ parse_json_pointer(struct request_data_handler_response response,
 	} catch (nlohmann::json::parse_error &e) {
 		return make_fail_parse_response(e.what());
 	}
+    response.body_json = json;
 	std::string parsed_output = "";
 	// Get the output value
 	if (request_data->output_json_pointer != "") {

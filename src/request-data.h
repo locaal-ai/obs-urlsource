@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
 
 #define URL_SOURCE_REQUEST_STANDARD_ERROR_CODE -1
 #define URL_SOURCE_REQUEST_BENIGN_ERROR_CODE -2
@@ -60,55 +61,11 @@ struct url_source_request_data {
 		output_regex_flags = std::string("");
 		output_regex_group = std::string("0");
 	}
-
-	// // Copy constructor should duplicate all data
-	// url_source_request_data(const url_source_request_data &other)
-	// {
-	// 	url = std::string(other.url);
-	// 	url_or_file = std::string(other.url_or_file);
-	// 	method = std::string(other.method);
-	// 	body = std::string(other.body);
-	// 	obs_text_source = std::string(other.obs_text_source);
-	// 	obs_text_source_skip_if_empty = other.obs_text_source_skip_if_empty;
-	// 	obs_text_source_skip_if_same = other.obs_text_source_skip_if_same;
-	// 	last_obs_text_source_value = std::string(other.last_obs_text_source_value);
-	// 	headers = std::vector<std::pair<std::string, std::string>>(other.headers);
-	// 	output_type = std::string(other.output_type);
-	// 	output_json_path = std::string(other.output_json_path);
-	// 	output_json_pointer = std::string(other.output_json_pointer);
-	// 	output_xpath = std::string(other.output_xpath);
-	// 	output_xquery = std::string(other.output_xquery);
-	// 	output_regex = std::string(other.output_regex);
-	// 	output_regex_flags = std::string(other.output_regex_flags);
-	// 	output_regex_group = std::string(other.output_regex_group);
-	// }
-
-	// // Copy assignment operator should duplicate all data
-	// url_source_request_data &operator=(const url_source_request_data &other)
-	// {
-	// 	url = std::string(other.url);
-	// 	url_or_file = std::string(other.url_or_file);
-	// 	method = std::string(other.method);
-	// 	body = std::string(other.body);
-	// 	obs_text_source = std::string(other.obs_text_source);
-	// 	obs_text_source_skip_if_empty = other.obs_text_source_skip_if_empty;
-	// 	obs_text_source_skip_if_same = other.obs_text_source_skip_if_same;
-	// 	last_obs_text_source_value = std::string(other.last_obs_text_source_value);
-	// 	headers = std::vector<std::pair<std::string, std::string>>(other.headers);
-	// 	output_type = std::string(other.output_type);
-	// 	output_json_path = std::string(other.output_json_path);
-	// 	output_json_pointer = std::string(other.output_json_pointer);
-	// 	output_xpath = std::string(other.output_xpath);
-	// 	output_xquery = std::string(other.output_xquery);
-	// 	output_regex = std::string(other.output_regex);
-	// 	output_regex_flags = std::string(other.output_regex_flags);
-	// 	output_regex_group = std::string(other.output_regex_group);
-	// 	return *this;
-	// }
 };
 
 struct request_data_handler_response {
 	std::string body;
+    nlohmann::json body_json;
 	std::string content_type;
 	std::vector<std::string> body_parts_parsed;
 	std::vector<std::pair<std::string, std::string>> headers;

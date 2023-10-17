@@ -291,7 +291,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceWidget);
 	// add a tooltip to explain the dynamic input
 	obsTextSourceComboBox->setToolTip(
-		"Select a OBS text source to use its current text in the querystring or request body as `{input}`.");
+		"Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.");
 
 	// Body
 	QLineEdit *bodyLineEdit = new QLineEdit;

@@ -260,6 +260,7 @@ void curl_loop(struct url_source_data *usd)
 					} else {
 						data["output"] = response.body_parts_parsed[0];
 					}
+                    data["body"] = response.body_json;
 					text = env.render(text, data);
 				} catch (std::exception &e) {
 					obs_log(LOG_ERROR, "Failed to parse template: %s",
@@ -474,7 +475,7 @@ void url_source_defaults(obs_data_t *s)
 		"background-color: transparent;\ncolor: #FFFFFF;\nfont-size: 48px;");
 
 	// Default Template
-	obs_data_set_default_string(s, "template", "{output}");
+	obs_data_set_default_string(s, "template", "{{output}}");
 }
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
@@ -547,7 +548,7 @@ obs_properties_t *url_source_properties(void *data)
 	obs_properties_add_text(ppts, "css_props", "CSS Properties", OBS_TEXT_MULTILINE);
 
 	// Output template
-	obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_DEFAULT);
+	obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_MULTILINE);
 
 	return ppts;
 }
