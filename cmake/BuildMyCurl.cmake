@@ -1,6 +1,6 @@
 include(FetchContent)
 
-set(LibCurl_VERSION "8.4.0-1")
+set(LibCurl_VERSION "8.4.0-3")
 set(LibCurl_BASEURL "https://github.com/obs-ai/obs-ai-libcurl-dep/releases/download/${LibCurl_VERSION}")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Release OR ${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo)
