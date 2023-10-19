@@ -1,3 +1,5 @@
+#include <inja/inja.hpp>
+
 #include "request-data.h"
 #include "plugin-support.h"
 #include "parsers/parsers.h"
@@ -83,55 +85,82 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		}
 
-		std::string
-			request_body_allocated; // this is needed here, out of the `if` scope below
+		nlohmann::json json; // json object or variables for inja
+
+		// If dynamic data source is set, replace the {input} placeholder with the source text
+		if (request_data->obs_text_source != "") {
+			// Get text from OBS text source
+			obs_data_t *sourceSettings = obs_source_get_settings(
+				obs_get_source_by_name(request_data->obs_text_source.c_str()));
+			const char *text = obs_data_get_string(sourceSettings, "text");
+			obs_data_release(sourceSettings);
+			if (request_data->obs_text_source_skip_if_empty) {
+				if (text == NULL || text[0] == '\0') {
+					// Return an error response
+					response.error_message =
+						"OBS text source is empty, skipping was requested";
+					response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+					return response;
+				}
+			}
+			if (request_data->obs_text_source_skip_if_same) {
+				if (request_data->last_obs_text_source_value == text) {
+					// Return an error response
+					response.error_message =
+						"OBS text source value is the same as last time, skipping was requested";
+					response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+					return response;
+				}
+				request_data->last_obs_text_source_value = text;
+			}
+			json["input"] = text;
+		}
+
+		// Replace the {input} placeholder with the source text
+		inja::Environment env;
+		// Add an inja callback for time formatting
+		env.add_callback("strftime", 1, [](inja::Arguments &args) {
+			std::string format = args.at(0)->get<std::string>();
+			std::time_t t = std::time(nullptr);
+			std::tm *tm = std::localtime(&t);
+			char buffer[256];
+			std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
+			return std::string(buffer);
+		});
+		// add a callback for escaping strings in the querystring
+		env.add_callback("urlencode", 1, [&curl](inja::Arguments &args) {
+			std::string input = args.at(0)->get<std::string>();
+			char *escaped = curl_easy_escape(curl, input.c_str(), 0);
+			input = std::string(escaped);
+			curl_free(escaped);
+			return input;
+		});
+
+		// Replace the {input} placeholder in the querystring as well
+		std::string url = request_data->url;
+		try {
+			url = env.render(url, json);
+		} catch (std::exception &e) {
+			obs_log(LOG_WARNING, "Failed to render URL template: %s", e.what());
+		}
+		response.request_url = url;
+
+		if (request_data->url != url) { // If the url was changed
+			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		}
+
+		// this is needed here, out of the `if` scope below
+		std::string request_body_allocated;
 
 		if (request_data->method == "POST") {
 			curl_easy_setopt(curl, CURLOPT_POST, 1L);
-			request_body_allocated = request_data->body;
-			// If dynamic data source is set, replace the {input} placeholder with the source text
-			if (request_data->obs_text_source != "") {
-				// Get text from OBS text source
-				obs_data_t *sourceSettings =
-					obs_source_get_settings(obs_get_source_by_name(
-						request_data->obs_text_source.c_str()));
-				const char *text = obs_data_get_string(sourceSettings, "text");
-				obs_data_release(sourceSettings);
-				if (request_data->obs_text_source_skip_if_empty) {
-					if (text == NULL || text[0] == '\0') {
-						// Return an error response
-						response.error_message =
-							"OBS text source is empty, skipping was requested";
-						response.status_code =
-							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-						return response;
-					}
-				}
-				if (request_data->obs_text_source_skip_if_same) {
-					if (request_data->last_obs_text_source_value == text) {
-						// Return an error response
-						response.error_message =
-							"OBS text source value is the same as last time, skipping was requested";
-						response.status_code =
-							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-						return response;
-					}
-					request_data->last_obs_text_source_value = text;
-				}
-				// Replace the {input} placeholder with the source text
-				request_body_allocated = std::regex_replace(
-					request_body_allocated, std::regex("\\{input\\}"), text);
-
-				// Replace the {input} placeholder in the querystring as well
-				std::string url = request_data->url;
-				url = std::regex_replace(url, std::regex("\\{input\\}"), text);
-				// Escape the querystring
-				char *url_escaped = curl_easy_escape(curl, url.c_str(), 0);
-				curl_easy_setopt(curl, CURLOPT_URL, url_escaped);
-				curl_free(url_escaped);
+			try {
+				request_body_allocated = env.render(request_data->body, json);
+			} catch (std::exception &e) {
+				obs_log(LOG_WARNING, "Failed to render Body template: %s",
+					e.what());
 			}
 			response.request_body = request_body_allocated;
-			// allocate memory for the request body
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body_allocated.c_str());
 		} else if (request_data->method == "GET") {
 			curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
@@ -162,6 +191,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		curl_easy_cleanup(curl);
 		if (code != CURLE_OK) {
 			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
+			obs_log(LOG_INFO, "Request URL: %s", url.c_str());
 			// Return an error response
 			response.error_message = curl_easy_strerror(code);
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;

@@ -5,6 +5,7 @@
 #include <jsoncons/json_parser.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 #include <obs-module.h>
+#include <nlohmann/json.hpp>
 
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
 						const url_source_request_data *request_data)
@@ -15,7 +16,10 @@ struct request_data_handler_response parse_json(struct request_data_handler_resp
 	jsoncons::json json;
 	try {
 		json = jsoncons::json::parse(response.body);
+		response.body_json = nlohmann::json::parse(response.body);
 	} catch (jsoncons::json_exception &e) {
+		return make_fail_parse_response(e.what());
+	} catch (nlohmann::json::parse_error &e) {
 		return make_fail_parse_response(e.what());
 	}
 	// Return the whole JSON object
@@ -31,7 +35,10 @@ struct request_data_handler_response parse_json_path(struct request_data_handler
 	jsoncons::json json;
 	try {
 		json = jsoncons::json::parse(response.body);
+		response.body_json = nlohmann::json::parse(response.body);
 	} catch (jsoncons::json_exception &e) {
+		return make_fail_parse_response(e.what());
+	} catch (nlohmann::json::parse_error &e) {
 		return make_fail_parse_response(e.what());
 	}
 	std::vector<std::string> parsed_output = {};
