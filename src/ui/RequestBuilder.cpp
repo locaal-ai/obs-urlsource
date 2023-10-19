@@ -291,7 +291,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	urlRequestLayout->addRow("Dynamic Input:", obsTextSourceWidget);
 	// add a tooltip to explain the dynamic input
 	obsTextSourceComboBox->setToolTip(
-		"Select a OBS text source to use its current text in the querystring or request body as `{input}`.");
+		"Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.");
 
 	// Body
 	QLineEdit *bodyLineEdit = new QLineEdit;
@@ -303,8 +303,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	auto setVisibilityOfBody = [=]() {
 		// If method is not GET, show the body input
 		set_form_row_visibility(urlRequestLayout, bodyLineEdit,
-					methodComboBox->currentText() != "GET");
-		set_form_row_visibility(urlRequestLayout, obsTextSourceWidget,
 					methodComboBox->currentText() != "GET");
 		this->adjustSize();
 	};
@@ -532,6 +530,16 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseDialog->raise();
 		responseDialog->activateWindow();
 		responseDialog->setModal(true);
+
+		// show request URL
+		QGroupBox *requestGroupBox = new QGroupBox("Request");
+		responseLayout->addWidget(requestGroupBox);
+		QVBoxLayout *requestLayout = new QVBoxLayout;
+		requestGroupBox->setLayout(requestLayout);
+		QScrollArea *requestUrlScrollArea = new QScrollArea;
+		QLabel *requestUrlLabel = new QLabel(QString::fromStdString(response.request_url));
+		requestUrlScrollArea->setWidget(requestUrlLabel);
+		requestLayout->addWidget(requestUrlScrollArea);
 
 		// if there's a request body, add it to the dialog
 		if (response.request_body != "") {
