@@ -28,6 +28,24 @@ Watch a short tutorial on how to use and setup the URL/API source on your OBS sc
   https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM
 </div>
 
+#### Dynamic Templating
+The URL source supports both input and output templating using the [Inja](https://github.com/pantor/inja) engine.
+
+Output templates include `{{output}}` in case of a singular extraction from the response or `{{output1}},{{output2}},...` in case of multiple extracted value. In addition the `{{body}}` variable contains the entire body of the response in case of JSON. Advanced output templating functions can be achieved through [Inja](https://github.com/pantor/inja) like looping over arrays, etc.
+
+<div align="center">
+<img width="50%" src="https://github.com/obs-ai/obs-urlsource/assets/441170/2b7a4ceb-3c38-4afd-82b3-675c0fa8c5fe" />
+</div>
+
+The input template works for the URL (querystring or REST path) or the POST body
+
+<div align="center">
+<img width="50%" src="https://github.com/obs-ai/obs-urlsource/assets/441170/ae6b9e04-ff5a-441b-a94c-427b1e7c76b3" />
+</div>
+
+Use the `{{input}}` variable to insert the output from a Text source. Inja advanced templates are available too.
+A special function `strftime` is available for formatting the current time using conventions from C++ STL ([strftime](https://en.cppreference.com/w/cpp/chrono/c/strftime)), as well as `urlencode` which is useful for dynamic input in the querystring.
+
 ### Code Walkthrough
 Watch an explanation of the major parts of the code and how they work together.
 <div align="center">
