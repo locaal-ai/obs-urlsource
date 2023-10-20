@@ -548,7 +548,16 @@ obs_properties_t *url_source_properties(void *data)
 	obs_properties_add_text(ppts, "css_props", "CSS Properties", OBS_TEXT_MULTILINE);
 
 	// Output template
-	obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_MULTILINE);
+	obs_property_t *template_prop =
+		obs_properties_add_text(ppts, "template", "Output Template", OBS_TEXT_MULTILINE);
+	obs_property_set_long_description(
+		template_prop,
+		"Template processed by inja engine\n"
+		"Use {{output}} for text representation of a single object/string\n"
+		"Use {{outputN}}, where N is index of item starting at 0, for text "
+		"representation of parts of array (see Test Request button)\n"
+		"Use body variable for unparsed object/array/...representation of the "
+		"entire response");
 
 	return ppts;
 }
