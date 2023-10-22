@@ -555,8 +555,8 @@ obs_properties_t *url_source_properties(void *data)
 		"Template processed by inja engine\n"
 		"Use {{output}} for text representation of a single object/string\n"
 		"Use {{outputN}}, where N is index of item starting at 0, for text "
-		"representation of parts of array (see Test Request button)\n"
-		"Use body variable for unparsed object/array/...representation of the "
+		"representation of parts of an array (see Test Request button)\n"
+		"Use {{body}} variable for unparsed object/array representation of the "
 		"entire response");
 
 	return ppts;
