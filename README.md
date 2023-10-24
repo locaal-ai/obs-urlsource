@@ -80,7 +80,8 @@ Coming soon:
 Check out our other plugins:
 - [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
 - 🚧 Experimental 🚧 [CleanStream](https://github.com/royshil/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
-- [LocalVocal](https://github.com/royshil/obs-localvocal) speech AI assistant plugin for real-time transcription (captions), translation and more language functions
+- [LocalVocal](https://github.com/royshil/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
+- [Polyglot](https://github.com/obs-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 
