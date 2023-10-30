@@ -562,9 +562,11 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		responseBodyGroupBox->setLayout(new QVBoxLayout);
 		// Add scroll area for the response body
 		QScrollArea *responseBodyScrollArea = new QScrollArea;
-		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body));
+		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body).trimmed());
 		// Wrap the text
 		responseLabel->setWordWrap(true);
+        // dont allow rich text
+        responseLabel->setTextFormat(Qt::PlainText);
 		// Set the label as the scroll area's widget
 		responseBodyScrollArea->setWidget(responseLabel);
 		responseBodyGroupBox->layout()->addWidget(responseBodyScrollArea);
@@ -590,8 +592,11 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				}
 			} else {
 				// Add a QLabel to show a single parsed output
-				parsedOutputLayout->addWidget(new QLabel(
-					QString::fromStdString(response.body_parts_parsed[0])));
+                QLabel* parsedOutputLabel = new QLabel(
+                    QString::fromStdString(response.body_parts_parsed[0]));
+                parsedOutputLabel->setWordWrap(true);
+                parsedOutputLabel->setTextFormat(Qt::PlainText);
+				parsedOutputLayout->addWidget(parsedOutputLabel);
 			}
 		}
 
