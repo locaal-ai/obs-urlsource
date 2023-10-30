@@ -1,4 +1,4 @@
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE jsonpointer.cpp jsonpath.cpp regex.cpp xml.cpp errors.cpp)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE jsonpointer.cpp jsonpath.cpp regex.cpp xml.cpp errors.cpp html.cpp)
 
 # on linux, disable conversion errors
 if(UNIX AND NOT APPLE)

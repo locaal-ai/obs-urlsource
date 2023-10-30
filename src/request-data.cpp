@@ -212,11 +212,12 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			// attempt to parse as json and return the whole object
 			response = parse_json(response, request_data);
 		}
-	} else if (request_data->output_type == "XML (XPath)" ||
-		   request_data->output_type == "HTML") {
+	} else if (request_data->output_type == "XML (XPath)") {
 		response = parse_xml(response, request_data);
 	} else if (request_data->output_type == "XML (XQuery)") {
 		response = parse_xml_by_xquery(response, request_data);
+	} else if (request_data->output_type == "HTML") {
+		response = parse_html(response, request_data);
 	} else if (request_data->output_type == "Text") {
 		response = parse_regex(response, request_data);
 	} else {
