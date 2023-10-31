@@ -2,10 +2,10 @@
 
 <div align="center">
 
-[![GitHub](https://img.shields.io/github/license/royshil/obs-urlsource)](https://github.com/royshil/obs-urlsource/blob/main/LICENSE)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/royshil/obs-urlsource/push.yaml)](https://github.com/royshil/obs-urlsource/actions/workflows/push.yaml)
-[![Total downloads](https://img.shields.io/github/downloads/royshil/obs-urlsource/total)](https://github.com/royshil/obs-urlsource/releases)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/royshil/obs-urlsource)](https://github.com/royshil/obs-urlsource/releases)
+[![GitHub](https://img.shields.io/github/license/occ-ai/obs-urlsource)](https://github.com/occ-ai/obs-urlsource/blob/main/LICENSE)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/occ-ai/obs-urlsource/push.yaml)](https://github.com/occ-ai/obs-urlsource/actions/workflows/push.yaml)
+[![Total downloads](https://img.shields.io/github/downloads/occ-ai/obs-urlsource/total)](https://github.com/occ-ai/obs-urlsource/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/occ-ai/obs-urlsource)](https://github.com/occ-ai/obs-urlsource/releases)
 
 </div>
 
@@ -34,13 +34,13 @@ The URL source supports both input and output templating using the [Inja](https:
 Output templates include `{{output}}` in case of a singular extraction from the response or `{{output1}},{{output2}},...` in case of multiple extracted value. In addition the `{{body}}` variable contains the entire body of the response in case of JSON. Advanced output templating functions can be achieved through [Inja](https://github.com/pantor/inja) like looping over arrays, etc.
 
 <div align="center">
-<img width="50%" src="https://github.com/obs-ai/obs-urlsource/assets/441170/2b7a4ceb-3c38-4afd-82b3-675c0fa8c5fe" />
+<img width="50%" src="https://github.com/occ-ai/obs-urlsource/assets/441170/2b7a4ceb-3c38-4afd-82b3-675c0fa8c5fe" />
 </div>
 
 The input template works for the URL (querystring or REST path) or the POST body
 
 <div align="center">
-<img width="50%" src="https://github.com/obs-ai/obs-urlsource/assets/441170/ae6b9e04-ff5a-441b-a94c-427b1e7c76b3" />
+<img width="50%" src="https://github.com/occ-ai/obs-urlsource/assets/441170/ae6b9e04-ff5a-441b-a94c-427b1e7c76b3" />
 </div>
 
 Use the `{{input}}` variable to insert the output from a Text source. Inja advanced templates are available too.
@@ -78,15 +78,15 @@ Coming soon:
 - Output to more built-in OBS sources (Image, etc.)
 
 Check out our other plugins:
-- [Background Removal](https://github.com/royshil/obs-backgroundremoval) removes background from webcam without a green screen.
-- 🚧 Experimental 🚧 [CleanStream](https://github.com/royshil/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
-- [LocalVocal](https://github.com/royshil/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
-- [Polyglot](https://github.com/obs-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
+- [Background Removal](https://github.com/occ-ai/obs-backgroundremoval) removes background from webcam without a green screen.
+- 🚧 Experimental 🚧 [CleanStream](https://github.com/occ-ai/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
+- [LocalVocal](https://github.com/occ-ai/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
+- [Polyglot](https://github.com/occ-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 
 ## Download
-Check out the [latest releases](https://github.com/royshil/obs-urlsource/releases) for downloads and install instructions.
+Check out the [latest releases](https://github.com/occ-ai/obs-urlsource/releases) for downloads and install instructions.
 
 
 ## Building
