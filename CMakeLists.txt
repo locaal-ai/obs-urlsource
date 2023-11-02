@@ -56,7 +56,7 @@ if(USE_SYSTEM_PUGIXML)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE pugixml)
 else()
   include(cmake/BuildPugiXML.cmake)
-  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libpugixml)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libpugixml_internal)
 endif()
 
 include(cmake/BuildJSONCONS.cmake)
@@ -65,8 +65,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE jsoncons)
 include(cmake/BuildInja.cmake)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE inja)
 
-include(cmake/BuildLibTidy.cmake)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE libtidy)
+include(cmake/BuildLexbor.cmake)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE liblexbor_internal)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 

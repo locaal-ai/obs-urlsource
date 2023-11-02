@@ -2,6 +2,10 @@
 
 #include "request-data.h"
 
+namespace Ui {
+class RequestBuilder;
+}
+
 class RequestBuilder : public QDialog {
 	Q_OBJECT
 public:
@@ -11,4 +15,5 @@ public:
 
 private:
 	QVBoxLayout *layout;
+	Ui::RequestBuilder *ui;
 };

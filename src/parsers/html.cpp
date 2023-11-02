@@ -1,122 +1,126 @@
 #include "request-data.h"
 #include "plugin-support.h"
+#include "errors.h"
 
-#include <tidy.h>
-#include <tidybuffio.h>
-#include <pugixml.hpp>
+#include <lexbor/html/parser.h>
+#include <lexbor/html/html.h>
+#include <lexbor/dom/interfaces/element.h>
+#include <lexbor/css/css.h>
+#include <lexbor/selectors/selectors.h>
 
 #include <obs-module.h>
 
+lxb_inline lxb_status_t serializer_callback(const lxb_char_t *data, size_t len, void *ctx)
+{
+	((std::string *)ctx)->append((const char *)data, len);
+	return LXB_STATUS_OK;
+}
+
+lxb_status_t find_callback(lxb_dom_node_t *node, lxb_css_selector_specificity_t spec, void *data)
+{
+	UNUSED_PARAMETER(spec);
+	std::string str;
+	(void)lxb_html_serialize_deep_cb(node, serializer_callback, &str);
+	((std::vector<std::string> *)data)->push_back(str);
+	return LXB_STATUS_OK;
+}
+
+lxb_status_t find_with_selectors(const std::string &slctrs, lxb_html_document_t *document,
+				 std::vector<std::string> &found)
+{
+	/* Create CSS parser. */
+	lxb_css_parser_t *parser;
+	lxb_css_selector_list_t *list;
+	lxb_status_t status;
+	lxb_dom_node_t *body;
+	lxb_selectors_t *selectors;
+
+	parser = lxb_css_parser_create();
+	status = lxb_css_parser_init(parser, NULL);
+	if (status != LXB_STATUS_OK) {
+		obs_log(LOG_ERROR, "Failed to setup CSS parser");
+		return EXIT_FAILURE;
+	}
+
+	/* Selectors. */
+	selectors = lxb_selectors_create();
+	status = lxb_selectors_init(selectors);
+	if (status != LXB_STATUS_OK) {
+		obs_log(LOG_ERROR, "Failed to setup Selectors");
+		return EXIT_FAILURE;
+	}
+
+	/* Parse and get the log. */
+
+	list = lxb_css_selectors_parse(parser, (const lxb_char_t *)slctrs.c_str(), slctrs.length());
+	if (parser->status != LXB_STATUS_OK) {
+		obs_log(LOG_ERROR, "Failed to parse CSS selectors");
+		return EXIT_FAILURE;
+	}
+
+	/* Selector List Serialization. */
+
+	// std::string selectors_str;
+	// (void) lxb_css_selector_serialize_list_chain(list, serializer_callback, &selectors_str);
+	// printf("Selectors: %s\n", selectors_str.c_str());
+
+	/* Find HTML nodes by CSS Selectors. */
+
+	body = lxb_dom_interface_node(lxb_html_document_body_element(document));
+
+	status = lxb_selectors_find(selectors, body, list, find_callback, &found);
+	if (status != LXB_STATUS_OK) {
+		obs_log(LOG_ERROR, "Failed to find HTML nodes by CSS Selectors");
+		return EXIT_FAILURE;
+	}
+
+	/* Destroy Selectors object. */
+	(void)lxb_selectors_destroy(selectors, true);
+
+	/* Destroy resources for CSS Parser. */
+	(void)lxb_css_parser_destroy(parser, true);
+
+	/* Destroy all object for all CSS Selector List. */
+	lxb_css_selector_list_destroy_memory(list);
+
+	return LXB_STATUS_OK;
+}
+
 struct request_data_handler_response parse_html(struct request_data_handler_response response,
-					       const url_source_request_data *request_data) {
-  // Parse the response as HTML using tidy
-  TidyBuffer output = {0};
-  TidyBuffer errbuf = {0};
-  TidyDoc tdoc = tidyCreate();
-  tidyOptSetBool( tdoc, TidyXhtmlOut, yes );
-  // tidyOptSetBool(tdoc, TidyShowWarnings, no);
-  // tidyOptSetBool(tdoc, TidyShowErrors, no);
-  // tidyOptSetBool(tdoc, TidyQuiet, yes);
-  // tidyOptSetBool(tdoc, TidyNumEntities, yes);
-  // tidyOptSetBool(tdoc, TidyShowInfo, no);
-  // tidyOptSetBool(tdoc, TidyShowMarkup, no);
-  // tidyOptSetBool(tdoc, TidyBodyOnly, yes);
-  // tidyOptSetBool(tdoc, TidyMakeClean, yes);
-  tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
-  tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
-  // tidyOptSetBool(tdoc, TidyWrapScriptlets, yes);
+						const url_source_request_data *request_data)
+{
 
-  tidySetErrorBuffer(tdoc, &errbuf);
-  tidyParseString(tdoc, response.body.c_str());
-  tidyCleanAndRepair(tdoc);
-  if (tidyRunDiagnostics(tdoc) < 0) {
-    obs_log(LOG_INFO, "Failed to parse HTML response: %s", errbuf.bp);
-    // Return an error response
-    struct request_data_handler_response responseFail;
-    responseFail.error_message = (const char *)errbuf.bp;
-    responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-    // release tidy buffers
-    tidyBufFree(&output);
-    tidyBufFree(&errbuf);
-    tidyRelease(tdoc);
-    return responseFail;
-  }
-  tidyOptSetBool(tdoc, TidyForceOutput, yes);
-  if (tidySaveBuffer(tdoc, &output) < 0) {
-    obs_log(LOG_INFO, "Failed to parse HTML response: %s", errbuf.bp);
-    // Return an error response
-    struct request_data_handler_response responseFail;
-    responseFail.error_message = (const char *)errbuf.bp;
-    responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-    // release tidy buffers
-    tidyBufFree(&output);
-    tidyBufFree(&errbuf);
-    tidyRelease(tdoc);
-    return responseFail;
-  }
+	lxb_status_t status;
+	lxb_html_document_t *document;
 
-  // check for errors
-  if (errbuf.bp != NULL && errbuf.size > 0) {
-    obs_log(LOG_INFO, "Failed to parse HTML response: %s", errbuf.bp);
-    // Return an error response
-    struct request_data_handler_response responseFail;
-    responseFail.error_message = (const char *)errbuf.bp;
-    responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-    // release tidy buffers
-    tidyBufFree(&output);
-    tidyBufFree(&errbuf);
-    tidyRelease(tdoc);
-    return responseFail;
-  }
+	document = lxb_html_document_create();
+	if (document == NULL) {
+		return make_fail_parse_response("Failed to setup HTML parser");
+	}
 
-  if (output.bp == NULL || output.size == 0) {
-    obs_log(LOG_INFO, "Failed to parse HTML response: empty output");
-    // Return an error response
-    struct request_data_handler_response responseFail;
-    responseFail.error_message = "Failed to parse HTML response: empty output";
-    responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-    // release tidy buffers
-    tidyBufFree(&output);
-    tidyBufFree(&errbuf);
-    tidyRelease(tdoc);
-    return responseFail;
-  }
+	status = lxb_html_document_parse(document, (const lxb_char_t *)response.body.c_str(),
+					 response.body.length());
+	if (status != LXB_STATUS_OK) {
+		return make_fail_parse_response("Failed to parse HTML");
+	}
 
-  // use pugixml to parse the output
-  pugi::xml_document doc;
-  pugi::xml_parse_result result = doc.load_string((const char *)output.bp);
-  if (!result) {
-    obs_log(LOG_INFO, "Failed to parse HTML response: %s", result.description());
-    // Return an error response
-    struct request_data_handler_response responseFail;
-    responseFail.error_message = result.description();
-    responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-    return responseFail;
-  }
-  std::string parsed_output = "";
-  // Get the output value
-  if (request_data->output_xpath != "") {
-    pugi::xpath_node_set nodes = doc.select_nodes(request_data->output_xpath.c_str());
-    if (nodes.size() > 0) {
-      parsed_output = nodes[0].node().text().get();
-    } else {
-      obs_log(LOG_INFO, "Failed to get HTML value");
-      // Return an error response
-      struct request_data_handler_response responseFail;
-      responseFail.error_message = "Failed to get HTML value";
-      responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-      return responseFail;
-    }
-  } else {
-    // Return the whole HTML object
-    parsed_output = response.body;
-  }
-  response.body_parts_parsed.push_back(parsed_output);
+	std::string parsed_output = response.body;
+	// Get the output value
+	if (request_data->output_cssselector != "") {
+		std::vector<std::string> found;
+		if (find_with_selectors(request_data->output_cssselector, document, found) !=
+		    LXB_STATUS_OK) {
+			return make_fail_parse_response("Failed to find element with CSS selector");
+		} else {
+			if (found.size() > 0) {
+				std::copy(found.begin(), found.end(),
+					  std::back_inserter(response.body_parts_parsed));
+			}
+		}
+	} else {
+		// Return the whole HTML object
+		response.body_parts_parsed.push_back(parsed_output);
+	}
 
-  // free tidy buffers
-  tidyBufFree(&output);
-  tidyBufFree(&errbuf);
-  tidyRelease(tdoc);
-
-  return response;
+	return response;
 }

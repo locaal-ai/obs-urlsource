@@ -25,10 +25,10 @@ set(pugixml_lib_location ${INSTALL_DIR}/lib/${pugixml_lib_filename})
 
 message(STATUS "pugixml library expected at ${pugixml_lib_location}")
 
-add_library(pugixml STATIC IMPORTED)
-set_target_properties(pugixml PROPERTIES IMPORTED_LOCATION ${pugixml_lib_location})
+add_library(pugixml_internal STATIC IMPORTED)
+set_target_properties(pugixml_internal PROPERTIES IMPORTED_LOCATION ${pugixml_lib_location})
 
-add_library(libpugixml INTERFACE)
-add_dependencies(libpugixml pugixml_build)
-target_link_libraries(libpugixml INTERFACE pugixml)
-set_target_properties(libpugixml PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+add_library(libpugixml_internal INTERFACE)
+add_dependencies(libpugixml_internal pugixml_build)
+target_link_libraries(libpugixml_internal INTERFACE pugixml_internal)
+set_target_properties(libpugixml_internal PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)

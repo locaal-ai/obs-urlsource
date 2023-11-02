@@ -35,6 +35,7 @@ struct url_source_request_data {
 	std::string output_regex;
 	std::string output_regex_flags;
 	std::string output_regex_group;
+	std::string output_cssselector;
 	// post process options
 	std::string post_process_regex;
 	bool post_process_regex_is_replace;
@@ -60,6 +61,7 @@ struct url_source_request_data {
 		output_regex = std::string("");
 		output_regex_flags = std::string("");
 		output_regex_group = std::string("0");
+		output_cssselector = std::string("");
 	}
 };
 
