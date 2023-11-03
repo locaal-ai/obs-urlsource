@@ -19,13 +19,16 @@ If this free plugin has been valuable to you consider adding a ⭐ to this GH re
 Watch a short tutorial on how to use and setup the URL/API source on your OBS scene.
 <div align="center">
   <a href="https://youtu.be/E_UMNIfgR5w" target="_blank">
-    <img width="40%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/258666347-327a632f-62f3-4365-af8e-6bb91f5a56ef.jpeg" />
+    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/258666347-327a632f-62f3-4365-af8e-6bb91f5a56ef.jpeg" />
   </a>
   <a href="https://youtu.be/hwHgNcPJEfM" target="_blank">
-    <img width="40%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/271332973-a482c56a-6c21-494b-b8a4-95216210ab58.jpeg" />
+    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/271332973-a482c56a-6c21-494b-b8a4-95216210ab58.jpeg" />
+  </a>
+  <a href="https://youtube.com/live/fOvSiL8lhFQ?feature=share" target="_blank">
+    <img width="27%" src="https://i9.ytimg.com/vi/fOvSiL8lhFQ/mqdefault.jpg?sqp=CIj1k6oG-oaymwEmCMACELQB8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGE4gUChlMA8=&rs=AOn4CLCGMkjoUbBbECUH3DBTYBONI6HBPg" />
   </a>
   <br/>
-  https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM
+  https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtube.com/live/fOvSiL8lhFQ?feature=share" target="_blank">HTML Scraping Tutorial (30 min)</a>
 </div>
 
 #### Dynamic Templating
