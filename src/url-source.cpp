@@ -257,6 +257,8 @@ void curl_loop(struct url_source_data *usd)
 							data["output" + std::to_string(i)] =
 								response.body_parts_parsed[i];
 						}
+						// in "output" add an array of all the outputs
+						data["output"] = response.body_parts_parsed;
 					} else {
 						data["output"] = response.body_parts_parsed[0];
 					}

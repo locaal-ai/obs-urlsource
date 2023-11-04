@@ -113,7 +113,19 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				}
 				request_data->last_obs_text_source_value = text;
 			}
-			json["input"] = text;
+			// if one of the headers is Content-Type application/json, make sure the text is JSONified
+			std::string textStr = text;
+			for (auto header : request_data->headers) {
+				if (header.first == "Content-Type" &&
+				    header.second == "application/json") {
+					nlohmann::json tmp = text;
+					textStr = tmp.dump();
+					// remove '"' from the beginning and end of the string
+					textStr = textStr.substr(1, textStr.size() - 2);
+					break;
+				}
+			}
+			json["input"] = textStr;
 		}
 
 		// Replace the {input} placeholder with the source text
