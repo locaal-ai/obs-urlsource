@@ -157,6 +157,26 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	connect(ui->urlRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
 
 	ui->methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
+
+	// populate headers in ui->tableView_headers from request_data->headers
+	QStandardItemModel* model = new QStandardItemModel;
+	for (auto &pair : request_data->headers) {
+		// add a new row
+		model->appendRow({new QStandardItem(QString::fromStdString(pair.first)),
+				 new QStandardItem(QString::fromStdString(pair.second))});
+	}
+	ui->tableView_headers->setModel(model);
+	connect(ui->pushButton_addHeader, &QPushButton::clicked, this, [=]() {
+		// add a new row
+		((QStandardItemModel*)ui->tableView_headers->model())->appendRow(
+			{new QStandardItem(""), new QStandardItem("")});
+	});
+	connect(ui->pushButton_removeHeader, &QPushButton::clicked, this, [=]() {
+		// remove the selected row
+		ui->tableView_headers->model()->removeRow(
+			ui->tableView_headers->selectionModel()->currentIndex().row());
+	});
+
 	ui->sslCertFileLineEdit->setText(
 		QString::fromStdString(request_data->ssl_client_cert_file));
 	ui->sslKeyFileLineEdit->setText(QString::fromStdString(request_data->ssl_client_key_file));
@@ -330,9 +350,15 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// Save the verify peer option
 		request_data_for_saving->ssl_verify_peer = ui->verifyPeerCheckBox->isChecked();
 
-		// Save the headers
-		// get_key_value_as_pairs_from_key_value_list_widget(headersWidget,
-		// 						  request_data_for_saving->headers);
+		// Save the headers from ui->tableView_headers's model
+		request_data_for_saving->headers.clear();
+		QStandardItemModel *model =
+			(QStandardItemModel *)ui->tableView_headers->model();
+		for (int i = 0; i < model->rowCount(); i++) {
+			request_data_for_saving->headers.push_back(std::make_pair(
+				model->item(i, 0)->text().toStdString(),
+				model->item(i, 1)->text().toStdString()));
+		}
 
 		// Save the output parsing options
 		request_data_for_saving->output_type =
