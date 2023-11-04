@@ -58,14 +58,7 @@ lxb_status_t find_with_selectors(const std::string &slctrs, lxb_html_document_t 
 		return EXIT_FAILURE;
 	}
 
-	/* Selector List Serialization. */
-
-	// std::string selectors_str;
-	// (void) lxb_css_selector_serialize_list_chain(list, serializer_callback, &selectors_str);
-	// printf("Selectors: %s\n", selectors_str.c_str());
-
 	/* Find HTML nodes by CSS Selectors. */
-
 	body = lxb_dom_interface_node(lxb_html_document_body_element(document));
 
 	status = lxb_selectors_find(selectors, body, list, find_callback, &found);
@@ -89,7 +82,6 @@ lxb_status_t find_with_selectors(const std::string &slctrs, lxb_html_document_t 
 struct request_data_handler_response parse_html(struct request_data_handler_response response,
 						const url_source_request_data *request_data)
 {
-
 	lxb_status_t status;
 	lxb_html_document_t *document;
 
