@@ -31,6 +31,8 @@ Watch a short tutorial on how to use and setup the URL/API source on your OBS sc
   https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtube.com/live/fOvSiL8lhFQ?feature=share" target="_blank">HTML Scraping Tutorial (30 min)</a>
 </div>
 
+Out of ideas on what to do with URL/API Source? Here's a repo with 1,000s of public APIs https://github.com/public-apis/public-apis
+
 #### Dynamic Templating
 The URL source supports both input and output templating using the [Inja](https://github.com/pantor/inja) engine.
 
@@ -62,21 +64,20 @@ Features:
 - HTTP request types: GET, POST
 - Request headers (for e.g. API Key or Auth token)
 - Request body for POST
-- Output parsing: JSON via JSONPointer & JSONPath, XML/HTML via XPath & XQuery and Regex
+- Output parsing: JSON via JSONPointer & JSONPath, XML/HTML via XPath & XQuery, Regex and CSS selectors
 - Update timer for live streaming data
 - Test of the request to find the right parsing
 - Output styling (font, color, etc.) and formatting (via regex post processing)
 - Image output (via URL)
 - Output to external Text Source
-- Multi-value (array, union) parsed output capture
+- Multi-value (array, union) parsed output capture, object unpacking (via Inja)
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
-- Advanced templating (object unpacking, etc.)
 - Websocket support
-- More parsing options (CSV, CSS selectors, etc.)
+- More parsing options (CSV, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
-- More output formats (XML, Markdown, CSV, etc.)
+- More output formats (Markdown, slim, reStructured, HAML, etc.)
 - More output types (Video, Audio, etc.)
 - Output to more built-in OBS sources (Image, etc.)
 
