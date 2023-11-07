@@ -52,6 +52,7 @@ struct url_source_request_data {
 		obs_text_source_skip_if_empty = false;
 		obs_text_source_skip_if_same = false;
 		last_obs_text_source_value = std::string("");
+		ssl_verify_peer = false;
 		headers = {};
 		output_type = std::string("text");
 		output_json_path = std::string("");
