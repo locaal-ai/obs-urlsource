@@ -22,6 +22,12 @@ struct request_data_handler_response parse_xml(struct request_data_handler_respo
 struct request_data_handler_response parse_html(struct request_data_handler_response response,
 						const url_source_request_data *request_data);
 
+struct request_data_handler_response parse_image_data(struct request_data_handler_response response,
+						      const url_source_request_data *request_data);
+
+struct request_data_handler_response parse_audio_data(struct request_data_handler_response response,
+						      const url_source_request_data *request_data);
+
 struct request_data_handler_response
 parse_xml_by_xquery(struct request_data_handler_response response,
 		    const url_source_request_data *request_data);

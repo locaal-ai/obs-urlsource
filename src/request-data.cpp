@@ -3,17 +3,23 @@
 #include "request-data.h"
 #include "plugin-support.h"
 #include "parsers/parsers.h"
+#include "string-util.h"
 
 #include <cstddef>
 #include <string>
 #include <fstream>
 #include <regex>
+#include <algorithm>
+#include <cctype>
+#include <locale>
 
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
 #include <util/base.h>
 #include <obs-module.h>
+
+#define URL_SOURCE_AGG_BUFFER_MAX_SIZE 1024
 
 static const std::string USER_AGENT = std::string(PLUGIN_NAME) + "/" + std::string(PLUGIN_VERSION);
 
@@ -29,6 +35,35 @@ std::size_t writeFunctionUint8Vector(void *ptr, std::size_t size, size_t nmemb,
 	data->insert(data->end(), static_cast<uint8_t *>(ptr),
 		     static_cast<uint8_t *>(ptr) + size * nmemb);
 	return size * nmemb;
+}
+
+size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
+{
+	std::map<std::string, std::string> *headers =
+		static_cast<std::map<std::string, std::string> *>(userdata);
+	size_t real_size = size * nitems;
+	std::string header_line(buffer, real_size);
+
+	// Find the colon in the line
+	auto pos = header_line.find(':');
+	if (pos != std::string::npos) {
+		std::string key = header_line.substr(0, pos);
+		std::string value = header_line.substr(pos + 1);
+
+		// Remove potential carriage return
+		if (!value.empty() && value.back() == '\r') {
+			value.pop_back();
+		}
+
+		// Convert key to lowercase
+		std::transform(key.begin(), key.end(), key.begin(),
+			       [](unsigned char c) { return std::tolower(c); });
+
+		// Store the header
+		(*headers)[key] = value;
+	}
+
+	return real_size;
 }
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
@@ -73,7 +108,21 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
+
+		std::string responseBody;
+		std::vector<uint8_t> responseBodyUint8;
+
+		// if the request is for textual data write to string
+		if (request_data->output_type == "JSON" ||
+		    request_data->output_type == "XML (XPath)" ||
+		    request_data->output_type == "XML (XQuery)" ||
+		    request_data->output_type == "HTML" || request_data->output_type == "Text") {
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
+		} else {
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBodyUint8);
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionUint8Vector);
+		}
 
 		if (request_data->headers.size() > 0) {
 			// Add request headers
@@ -94,8 +143,16 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				obs_get_source_by_name(request_data->obs_text_source.c_str()));
 			const char *text = obs_data_get_string(sourceSettings, "text");
 			obs_data_release(sourceSettings);
-			if (request_data->obs_text_source_skip_if_empty) {
-				if (text == NULL || text[0] == '\0') {
+			if (text == NULL || text[0] == '\0') {
+				if (request_data->aggregate_to_empty &&
+				    !request_data->aggregate_to_empty_buffer.empty()) {
+					// empty input found, use the aggregate buffer if it's not empty
+					obs_log(LOG_INFO,
+						"OBS text source is empty, using aggregate buffer %s",
+						request_data->aggregate_to_empty_buffer.c_str());
+					json["input"] = request_data->aggregate_to_empty_buffer;
+					request_data->aggregate_to_empty_buffer = "";
+				} else if (request_data->obs_text_source_skip_if_empty) {
 					// Return an error response
 					response.error_message =
 						"OBS text source is empty, skipping was requested";
@@ -113,10 +170,31 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				}
 				request_data->last_obs_text_source_value = text;
 			}
+			if (request_data->aggregate_to_empty && text != NULL && text[0] != '\0') {
+				// aggregate to empty is requested and the text is not empty
+				// trim the text and add it to the aggregate buffer
+				std::string textStr = text;
+				request_data->aggregate_to_empty_buffer += trim(textStr);
+				// if the buffer is larger than the limit, remove the first part
+				if (request_data->aggregate_to_empty_buffer.size() >
+				    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
+					request_data->aggregate_to_empty_buffer.erase(
+						0, request_data->aggregate_to_empty_buffer.size() -
+							   URL_SOURCE_AGG_BUFFER_MAX_SIZE);
+				}
+				response.error_message =
+					"Aggregate to empty is requested, skipping";
+				response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+				return response;
+			}
+
 			// if one of the headers is Content-Type application/json, make sure the text is JSONified
 			std::string textStr = text;
 			for (auto header : request_data->headers) {
-				if (header.first == "Content-Type" &&
+				// check if the header is Content-Type case insensitive using regex
+				std::regex header_regex("content-type",
+							std::regex_constants::icase);
+				if (std::regex_search(header.first, header_regex) &&
 				    header.second == "application/json") {
 					nlohmann::json tmp = text;
 					textStr = tmp.dump();
@@ -125,7 +203,10 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					break;
 				}
 			}
-			json["input"] = textStr;
+			if (!json.contains("input")) {
+				// only set the input if it wasn't set by aggregate-to-empty
+				json["input"] = textStr;
+			}
 		}
 
 		// Replace the {input} placeholder with the source text
@@ -195,8 +276,9 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		}
 
-		std::string responseBody;
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+		std::map<std::string, std::string> headers;
+		curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+		curl_easy_setopt(curl, CURLOPT_HEADERDATA, &headers);
 
 		// Send the request
 		CURLcode code = curl_easy_perform(curl);
@@ -211,8 +293,13 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 
 		response.body = responseBody;
+		response.body_bytes = responseBodyUint8;
 		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
+		response.headers = headers;
 	}
+
+	if (!response.body.empty())
+		obs_log(LOG_INFO, "Response Body: %s", response.body.c_str());
 
 	// Parse the response
 	if (request_data->output_type == "JSON") {
@@ -232,6 +319,10 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		response = parse_html(response, request_data);
 	} else if (request_data->output_type == "Text") {
 		response = parse_regex(response, request_data);
+	} else if (request_data->output_type == "Image (data)") {
+		response = parse_image_data(response, request_data);
+	} else if (request_data->output_type == "Audio (data)") {
+		response = parse_audio_data(response, request_data);
 	} else {
 		obs_log(LOG_INFO, "Invalid output type");
 		// Return an error response
@@ -240,6 +331,9 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		responseFail.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 		return responseFail;
 	}
+
+	if (!response.body.empty())
+		obs_log(LOG_INFO, "Response Body after parse: %s", response.body.c_str());
 
 	// If output regex is set - use it to format the output in response.body_parts_parsed
 	if (!request_data->post_process_regex.empty()) {
@@ -283,6 +377,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["obs_text_source"] = request_data->obs_text_source;
 	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
 	json["obs_text_source_skip_if_same"] = request_data->obs_text_source_skip_if_same;
+	json["aggregate_to_empty"] = request_data->aggregate_to_empty;
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
 	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
@@ -322,98 +417,60 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		json = nlohmann::json::parse(serialized_request_data);
 
 		request_data.url = json["url"].get<std::string>();
-		if (json.contains("url_or_file")) {
-			request_data.url_or_file = json["url_or_file"].get<std::string>();
-		} else {
-			request_data.url_or_file = "url";
-		}
+		request_data.url_or_file = json.value("url_or_file", "url");
 		request_data.method = json["method"].get<std::string>();
 		request_data.body = json["body"].get<std::string>();
-		if (json.contains("obs_text_source")) {
-			request_data.obs_text_source = json["obs_text_source"].get<std::string>();
-		} else {
-			request_data.obs_text_source = "";
-		}
-		if (json.contains("obs_text_source_skip_if_empty")) {
-			request_data.obs_text_source_skip_if_empty =
-				json["obs_text_source_skip_if_empty"].get<bool>();
-		} else {
-			request_data.obs_text_source_skip_if_empty = false;
-		}
-		if (json.contains("obs_text_source_skip_if_same")) {
-			request_data.obs_text_source_skip_if_same =
-				json["obs_text_source_skip_if_same"].get<bool>();
-		} else {
-			request_data.obs_text_source_skip_if_same = false;
-		}
+		request_data.obs_text_source = json.value("obs_text_source", "");
+		request_data.obs_text_source_skip_if_empty =
+			json.value("obs_text_source_skip_if_empty", false);
+		request_data.obs_text_source_skip_if_same =
+			json.value("obs_text_source_skip_if_same", false);
+		request_data.aggregate_to_empty = json.value("aggregate_to_empty", false);
 
 		// SSL options
-		if (json.contains("ssl_client_cert_file")) {
-			request_data.ssl_client_cert_file =
-				json["ssl_client_cert_file"].get<std::string>();
-		}
-		if (json.contains("ssl_client_key_file")) {
-			request_data.ssl_client_key_file =
-				json["ssl_client_key_file"].get<std::string>();
-		}
-		if (json.contains("ssl_client_key_pass")) {
-			request_data.ssl_client_key_pass =
-				json["ssl_client_key_pass"].get<std::string>();
-		}
+		request_data.ssl_client_cert_file = json.value("ssl_client_cert_file", "");
+		request_data.ssl_client_key_file = json.value("ssl_client_key_file", "");
+		request_data.ssl_client_key_pass = json.value("ssl_client_key_pass", "");
+
 		// Output parsing options
-		request_data.output_type = json["output_type"].get<std::string>();
-		if (json.contains("output_json_path")) {
-			request_data.output_json_path = json["output_json_path"].get<std::string>();
-			if (request_data.output_json_path != "" &&
-			    request_data.output_json_path[0] == '/') {
-				obs_log(LOG_WARNING,
-					"JSON pointer detected in JSON Path. Translating to JSON "
-					"path.");
-				// this is a json pointer - translate by adding a "$" prefix and replacing all
-				// "/"s with "."
-				request_data.output_json_path =
-					"$." + request_data.output_json_path.substr(1);
-				std::replace(request_data.output_json_path.begin(),
-					     request_data.output_json_path.end(), '/', '.');
-			}
+		request_data.output_type = json.value("output_type", "Text");
+		request_data.output_json_path = json.value("output_json_path", "");
+		if (request_data.output_json_path != "" &&
+		    request_data.output_json_path[0] == '/') {
+			obs_log(LOG_WARNING,
+				"JSON pointer detected in JSON Path. Translating to JSON "
+				"path.");
+			// this is a json pointer - translate by adding a "$" prefix and replacing all
+			// "/"s with "."
+			request_data.output_json_path =
+				"$." + request_data.output_json_path.substr(1);
+			std::replace(request_data.output_json_path.begin(),
+				     request_data.output_json_path.end(), '/', '.');
 		}
-		if (json.contains("output_json_pointer")) {
-			request_data.output_json_pointer =
-				json["output_json_pointer"].get<std::string>();
-			if (request_data.output_json_pointer != "" &&
-			    request_data.output_json_pointer[0] == '$') {
-				obs_log(LOG_WARNING,
-					"JSON path detected in JSON Pointer. Translating to JSON "
-					"pointer.");
-				// this is a json path - translate by replacing all "."s with "/"s
-				std::replace(request_data.output_json_pointer.begin(),
-					     request_data.output_json_pointer.end(), '.', '/');
-				request_data.output_json_pointer =
-					"/" + request_data.output_json_pointer;
-			}
+		request_data.output_json_pointer = json.value("output_json_pointer", "");
+		if (request_data.output_json_pointer != "" &&
+		    request_data.output_json_pointer[0] == '$') {
+			obs_log(LOG_WARNING,
+				"JSON path detected in JSON Pointer. Translating to JSON "
+				"pointer.");
+			// this is a json path - translate by replacing all "."s with "/"s
+			std::replace(request_data.output_json_pointer.begin(),
+				     request_data.output_json_pointer.end(), '.', '/');
+			request_data.output_json_pointer = "/" + request_data.output_json_pointer;
 		}
 		request_data.output_xpath = json["output_xpath"].get<std::string>();
 		request_data.output_xquery = json["output_xquery"].get<std::string>();
 		request_data.output_regex = json["output_regex"].get<std::string>();
 		request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
 		request_data.output_regex_group = json["output_regex_group"].get<std::string>();
-		if (json.contains("output_cssselector"))
-			request_data.output_cssselector =
-				json["output_cssselector"].get<std::string>();
+		request_data.output_cssselector = json.value("output_cssselector", "");
 
 		// postprocess options
-		if (json.contains("post_process_regex")) {
-			request_data.post_process_regex =
-				json["post_process_regex"].get<std::string>();
-		}
-		if (json.contains("post_process_regex_is_replace")) {
-			request_data.post_process_regex_is_replace =
-				json["post_process_regex_is_replace"].get<bool>();
-		}
-		if (json.contains("post_process_regex_replace")) {
-			request_data.post_process_regex_replace =
-				json["post_process_regex_replace"].get<std::string>();
-		}
+		request_data.post_process_regex = json.value("post_process_regex", "");
+		request_data.post_process_regex_is_replace =
+			json.value("post_process_regex_is_replace", false);
+		request_data.post_process_regex_replace =
+			json.value("post_process_regex_replace", "");
 
 		nlohmann::json headers_json = json["headers"];
 		for (auto header : headers_json.items()) {

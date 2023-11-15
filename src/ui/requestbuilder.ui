@@ -2,20 +2,6 @@
 <ui version="4.0">
  <class>RequestBuilder</class>
  <widget class="QDialog" name="RequestBuilder">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>511</width>
-    <height>855</height>
-   </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -141,6 +127,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="urlRequestOptionsGroup">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>URL Request Options</string>
      </property>
@@ -294,28 +286,38 @@
          <item>
           <widget class="QCheckBox" name="obsTextSourceEnabledCheckBox">
            <property name="text">
-            <string>Skip empty</string>
+            <string>No empty</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="obsTextSourceSkipSameCheckBox">
            <property name="text">
-            <string>Skip same</string>
+            <string>No same</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="aggToEmpty">
+           <property name="toolTip">
+            <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
+           </property>
+           <property name="text">
+            <string>Agg to empty</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+      <item row="7" column="1">
        <widget class="QGroupBox" name="sslOptionsGroup">
         <property name="title">
          <string/>
@@ -393,7 +395,7 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0">
             <property name="spacing">
-             <number>-1</number>
+             <number>7</number>
             </property>
             <property name="leftMargin">
              <number>0</number>
@@ -441,23 +443,20 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_16">
         <property name="text">
          <string>Body</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QTextEdit" name="bodyTextEdit">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
+          <verstretch>1</verstretch>
          </sizepolicy>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
         </property>
         <property name="acceptRichText">
          <bool>false</bool>
@@ -467,7 +466,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QCheckBox" name="sslOptionsCheckbox">
         <property name="text">
          <string>SSL Options</string>
@@ -479,6 +478,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="outputGroupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>Output Parsing Options</string>
      </property>
@@ -489,6 +494,13 @@
       <property name="verticalSpacing">
        <number>3</number>
       </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Content-Type</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QComboBox" name="outputTypeComboBox">
         <property name="sizePolicy">
@@ -500,6 +512,16 @@
         <item>
          <property name="text">
           <string>Text</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Image (data)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Audio (data)</string>
          </property>
         </item>
         <item>
@@ -522,13 +544,6 @@
           <string>HTML</string>
          </property>
         </item>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Content-Type</string>
-        </property>
        </widget>
       </item>
       <item row="1" column="0">
@@ -609,6 +624,16 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>CSS Selector</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="cssSelectorLineEdit"/>
+      </item>
       <item row="9" column="0">
        <widget class="QLabel" name="label_15">
         <property name="text">
@@ -647,21 +672,17 @@
         </layout>
        </widget>
       </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_17">
-        <property name="text">
-         <string>CSS Selector</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLineEdit" name="cssSelectorLineEdit"/>
-      </item>
      </layout>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="errorMessageLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="styleSheet">
       <string notr="true">QLabel { color : red; }</string>
      </property>
@@ -672,6 +693,12 @@
    </item>
    <item>
     <widget class="QWidget" name="widget_7" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QGridLayout" name="gridLayout">
       <property name="leftMargin">
        <number>0</number>

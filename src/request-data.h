@@ -18,6 +18,8 @@ struct url_source_request_data {
 	std::string obs_text_source;
 	bool obs_text_source_skip_if_empty;
 	bool obs_text_source_skip_if_same;
+	bool aggregate_to_empty;
+	std::string aggregate_to_empty_buffer;
 	std::string last_obs_text_source_value;
 	// SSL options
 	std::string ssl_client_cert_file;
@@ -51,6 +53,8 @@ struct url_source_request_data {
 		obs_text_source = std::string("");
 		obs_text_source_skip_if_empty = false;
 		obs_text_source_skip_if_same = false;
+		aggregate_to_empty = false;
+		aggregate_to_empty_buffer = std::string("");
 		last_obs_text_source_value = std::string("");
 		ssl_verify_peer = false;
 		headers = {};
@@ -68,10 +72,11 @@ struct url_source_request_data {
 
 struct request_data_handler_response {
 	std::string body;
+	std::vector<uint8_t> body_bytes;
 	nlohmann::json body_json;
 	std::string content_type;
 	std::vector<std::string> body_parts_parsed;
-	std::vector<std::pair<std::string, std::string>> headers;
+	std::map<std::string, std::string> headers;
 	int status_code;
 	std::string status_message;
 	std::string error_message;
