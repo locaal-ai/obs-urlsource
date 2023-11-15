@@ -39,6 +39,8 @@ std::string save_to_temp_file(const std::vector<uint8_t> &data, const std::strin
 struct request_data_handler_response parse_image_data(struct request_data_handler_response response,
 						      const url_source_request_data *request_data)
 {
+    UNUSED_PARAMETER(request_data);
+
 	// find the image type from the content type on the response.headers map
 	std::string content_type = response.headers["content-type"];
 	std::string image_type = content_type.substr(content_type.find("/") + 1);
@@ -59,6 +61,8 @@ struct request_data_handler_response parse_image_data(struct request_data_handle
 struct request_data_handler_response parse_audio_data(struct request_data_handler_response response,
 						      const url_source_request_data *request_data)
 {
+    UNUSED_PARAMETER(request_data);
+
 	// find the audio type from the content type on the response.headers map
 	std::string content_type = response.headers["content-type"];
 	std::string audio_type = content_type.substr(content_type.find("/") + 1);
