@@ -477,5 +477,5 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		close();
 	});
 
-    adjustSize();
+	adjustSize();
 }
