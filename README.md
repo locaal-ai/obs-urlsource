@@ -29,7 +29,14 @@ Watch a short tutorial on how to use and setup the URL/API source on your OBS sc
   </a>
   <br/>
   https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtu.be/kgAOCijJ51Q" target="_blank">HTML Scraping Tutorial (18 min)</a>
+  <br/>
+  <a href="https://youtu.be/4BTmoKr0YMw" target="_blank">
+    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/283315931-70c0c583-d1dc-4bd6-9ace-86c8e47f1229.jpg" />
+  </a>
+
 </div>
+
+
 
 #### Inspiration
 Out of ideas on what to do with URL/API Source? Here's a repo with 1,000s of public APIs https://github.com/public-apis/public-apis
@@ -72,6 +79,7 @@ Features:
 - Image output (via URL)
 - Output to external Text Source
 - Multi-value (array, union) parsed output capture, object unpacking (via Inja)
+- Support binary output (Image, Audio)
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
@@ -79,7 +87,6 @@ Coming soon:
 - More parsing options (CSV, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
 - More output formats (Markdown, slim, reStructured, HAML, etc.)
-- More output types (Video, Audio, etc.)
 - Output to more built-in OBS sources (Image, etc.)
 
 Check out our other plugins:
