@@ -19,6 +19,8 @@
 #include <util/base.h>
 #include <obs-module.h>
 
+#include "obs-source-util.h"
+
 #define URL_SOURCE_AGG_BUFFER_MAX_SIZE 1024
 
 static const std::string USER_AGENT = std::string(PLUGIN_NAME) + "/" + std::string(PLUGIN_VERSION);
@@ -138,76 +140,123 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 		// If dynamic data source is set, replace the {input} placeholder with the source text
 		if (request_data->obs_text_source != "") {
-			// Get text from OBS text source
-			obs_data_t *sourceSettings = obs_source_get_settings(
-				obs_get_source_by_name(request_data->obs_text_source.c_str()));
-			const char *text = obs_data_get_string(sourceSettings, "text");
-			obs_data_release(sourceSettings);
-			if (text == NULL || text[0] == '\0') {
-				if (request_data->aggregate_to_empty &&
-				    !request_data->aggregate_to_empty_buffer.empty()) {
-					// empty input found, use the aggregate buffer if it's not empty
-					obs_log(LOG_INFO,
-						"OBS text source is empty, using aggregate buffer %s",
-						request_data->aggregate_to_empty_buffer.c_str());
-					json["input"] = request_data->aggregate_to_empty_buffer;
-					request_data->aggregate_to_empty_buffer = "";
-				} else if (request_data->obs_text_source_skip_if_empty) {
-					// Return an error response
+			// Check if the source is a text source
+			if (is_obs_source_text(request_data->obs_text_source)) {
+				// Get text from OBS text source
+				obs_data_t *sourceSettings =
+					obs_source_get_settings(obs_get_source_by_name(
+						request_data->obs_text_source.c_str()));
+				const char *text = obs_data_get_string(sourceSettings, "text");
+				obs_data_release(sourceSettings);
+				if (text == NULL || text[0] == '\0') {
+					if (request_data->aggregate_to_empty &&
+					    !request_data->aggregate_to_empty_buffer.empty()) {
+						// empty input found, use the aggregate buffer if it's not empty
+						obs_log(LOG_INFO,
+							"OBS text source is empty, using aggregate buffer (len %d)",
+							request_data->aggregate_to_empty_buffer
+								.size());
+						json["input"] =
+							request_data->aggregate_to_empty_buffer;
+						request_data->aggregate_to_empty_buffer = "";
+					} else if (request_data->obs_text_source_skip_if_empty) {
+						// Return an error response
+						response.error_message =
+							"OBS text source is empty, skipping was requested";
+						response.status_code =
+							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+						return response;
+					}
+				}
+				if (request_data->obs_text_source_skip_if_same) {
+					if (request_data->last_obs_text_source_value == text) {
+						// Return an error response
+						response.error_message =
+							"OBS text source value is the same as last time, skipping was requested";
+						response.status_code =
+							URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+						return response;
+					}
+					request_data->last_obs_text_source_value = text;
+				}
+				if (request_data->aggregate_to_empty && text != NULL &&
+				    text[0] != '\0') {
+					// aggregate to empty is requested and the text is not empty
+					// trim the text and add it to the aggregate buffer
+					std::string textStr = text;
+					request_data->aggregate_to_empty_buffer += trim(textStr);
+					// if the buffer is larger than the limit, remove the first part
+					if (request_data->aggregate_to_empty_buffer.size() >
+					    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
+						request_data->aggregate_to_empty_buffer.erase(
+							0, request_data->aggregate_to_empty_buffer
+									   .size() -
+								   URL_SOURCE_AGG_BUFFER_MAX_SIZE);
+					}
 					response.error_message =
-						"OBS text source is empty, skipping was requested";
+						"Aggregate to empty is requested, skipping";
 					response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
 					return response;
 				}
-			}
-			if (request_data->obs_text_source_skip_if_same) {
-				if (request_data->last_obs_text_source_value == text) {
-					// Return an error response
-					response.error_message =
-						"OBS text source value is the same as last time, skipping was requested";
-					response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-					return response;
-				}
-				request_data->last_obs_text_source_value = text;
-			}
-			if (request_data->aggregate_to_empty && text != NULL && text[0] != '\0') {
-				// aggregate to empty is requested and the text is not empty
-				// trim the text and add it to the aggregate buffer
-				std::string textStr = text;
-				request_data->aggregate_to_empty_buffer += trim(textStr);
-				// if the buffer is larger than the limit, remove the first part
-				if (request_data->aggregate_to_empty_buffer.size() >
-				    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
-					request_data->aggregate_to_empty_buffer.erase(
-						0, request_data->aggregate_to_empty_buffer.size() -
-							   URL_SOURCE_AGG_BUFFER_MAX_SIZE);
-				}
-				response.error_message =
-					"Aggregate to empty is requested, skipping";
-				response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-				return response;
-			}
 
-			// if one of the headers is Content-Type application/json, make sure the text is JSONified
-			std::string textStr = text;
-			for (auto header : request_data->headers) {
-				// check if the header is Content-Type case insensitive using regex
-				std::regex header_regex("content-type",
-							std::regex_constants::icase);
-				if (std::regex_search(header.first, header_regex) &&
-				    header.second == "application/json") {
-					nlohmann::json tmp = text;
-					textStr = tmp.dump();
-					// remove '"' from the beginning and end of the string
-					textStr = textStr.substr(1, textStr.size() - 2);
-					break;
+				// if one of the headers is Content-Type application/json, make sure the text is JSONified
+				std::string textStr = text;
+				for (auto header : request_data->headers) {
+					// check if the header is Content-Type case insensitive using regex
+					std::regex header_regex("content-type",
+								std::regex_constants::icase);
+					if (std::regex_search(header.first, header_regex) &&
+					    header.second == "application/json") {
+						nlohmann::json tmp = text;
+						textStr = tmp.dump();
+						// remove '"' from the beginning and end of the string
+						textStr = textStr.substr(1, textStr.size() - 2);
+						break;
+					}
 				}
-			}
-			if (!json.contains("input")) {
-				// only set the input if it wasn't set by aggregate-to-empty
-				json["input"] = textStr;
-			}
-		}
+				if (!json.contains("input")) {
+					// only set the input if it wasn't set by aggregate-to-empty
+					json["input"] = textStr;
+				}
+			} else {
+				// this is not a text source.
+				// we should grab an image of its output, encode it to base64 and use it as input
+				obs_source_t *source = obs_get_source_by_name(
+					request_data->obs_text_source.c_str());
+				if (source == NULL) {
+					obs_log(LOG_INFO, "Failed to get source by name");
+					// Return an error response
+					response.error_message = "Failed to get source by name";
+					response.status_code =
+						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+					return response;
+				}
+
+				// render the source to an image using get_rgba_from_source_render
+				source_render_data tf;
+				init_source_render_data(&tf);
+				uint32_t width, height;
+				std::vector<uint8_t> rgba =
+					get_rgba_from_source_render(source, &tf, width, height);
+				if (rgba.empty()) {
+					obs_log(LOG_INFO, "Failed to get RGBA from source render");
+					// Return an error response
+					response.error_message =
+						"Failed to get RGBA from source render";
+					response.status_code =
+						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+					return response;
+				}
+				destroy_source_render_data(&tf);
+
+				// encode the image to base64
+				std::string base64 =
+					convert_rgba_buffer_to_png_base64(rgba, width, height);
+
+				// set the input to the base64 encoded image
+				json["imageb64"] = base64;
+			} // end of non-text source
+		}         // end of dynamic data source != ""
 
 		// Replace the {input} placeholder with the source text
 		inja::Environment env;
@@ -298,9 +347,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		response.headers = headers;
 	}
 
-	if (!response.body.empty())
-		obs_log(LOG_INFO, "Response Body: %s", response.body.c_str());
-
 	// Parse the response
 	if (request_data->output_type == "JSON") {
 		if (request_data->output_json_path != "") {
@@ -331,9 +377,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		responseFail.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 		return responseFail;
 	}
-
-	if (!response.body.empty())
-		obs_log(LOG_INFO, "Response Body after parse: %s", response.body.c_str());
 
 	// If output regex is set - use it to format the output in response.body_parts_parsed
 	if (!request_data->post_process_regex.empty()) {
@@ -496,7 +539,7 @@ std::vector<uint8_t> fetch_image(std::string url)
 	// Build the request with libcurl
 	CURL *curl = curl_easy_init();
 	if (!curl) {
-		obs_log(LOG_INFO, "Failed to initialize curl");
+		obs_log(LOG_WARNING, "Failed to initialize curl");
 		// Return an error response
 		std::vector<uint8_t> responseFail;
 		return responseFail;

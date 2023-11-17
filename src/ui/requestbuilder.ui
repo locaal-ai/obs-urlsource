@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>RequestBuilder</class>
  <widget class="QDialog" name="RequestBuilder">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>602</width>
+    <height>971</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -256,58 +264,34 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QWidget" name="widget_6" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QComboBox" name="obsTextSourceComboBox">
-           <property name="toolTip">
-            <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.&quot;</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="obsTextSourceEnabledCheckBox">
-           <property name="text">
-            <string>No empty</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="obsTextSourceSkipSameCheckBox">
-           <property name="text">
-            <string>No same</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="aggToEmpty">
-           <property name="toolTip">
-            <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
-           </property>
-           <property name="text">
-            <string>Agg to empty</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Body</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QTextEdit" name="bodyTextEdit">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptRichText">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string>Body</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="sslOptionsCheckbox">
+        <property name="text">
+         <string>SSL Options</string>
+        </property>
        </widget>
       </item>
       <item row="7" column="0">
@@ -443,34 +427,103 @@
         </layout>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>Body</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QTextEdit" name="bodyTextEdit">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptRichText">
-         <bool>false</bool>
-        </property>
-        <property name="placeholderText">
-         <string>Body</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="sslOptionsCheckbox">
-        <property name="text">
-         <string>SSL Options</string>
-        </property>
+      <item row="2" column="1">
+       <widget class="QWidget" name="widget_6" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QWidget" name="widget_8" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QComboBox" name="obsTextSourceComboBox">
+              <property name="toolTip">
+               <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.&quot;</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_10" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="obsTextSourceEnabledCheckBox">
+              <property name="text">
+               <string>No empty</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="obsTextSourceSkipSameCheckBox">
+              <property name="text">
+               <string>No same</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="aggToEmpty">
+              <property name="toolTip">
+               <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
+              </property>
+              <property name="text">
+               <string>Agg to empty</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
