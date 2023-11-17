@@ -6,6 +6,8 @@
 
 #include <obs-module.h>
 
+#include "obs-source-util.h"
+
 void set_form_row_visibility(QFormLayout *layout, QWidget *widget, bool visible)
 {
 	if (layout == nullptr) {
@@ -31,17 +33,26 @@ void set_form_row_visibility(QFormLayout *layout, QWidget *widget, bool visible)
 	}
 }
 
-bool add_sources_to_qcombobox(void *list, obs_source_t *obs_source)
+bool add_sources_to_qcombobox(void *list, obs_source_t *source)
 {
-	const auto source_id = obs_source_get_id(obs_source);
-	if (strcmp(source_id, "text_ft2_source_v2") != 0 &&
-	    strcmp(source_id, "text_gdiplus_v2") != 0) {
+	const auto source_id = obs_source_get_id(source);
+	// add all text sources and sources that produce an image (by checking source.output_flags = OBS_SOURCE_VIDEO)
+	if (!is_obs_source_text(source) &&
+	    ((obs_source_get_output_flags(source) & OBS_SOURCE_VIDEO) == 0)) {
 		return true;
 	}
 
-	const char *name = obs_source_get_name(obs_source);
+	std::string name = obs_source_get_name(source);
+	std::string prefix = "";
+	if (strcmp(source_id, "text_ft2_source_v2") == 0 ||
+	    strcmp(source_id, "text_gdiplus_v2") == 0)
+		prefix = "(Text) ";
+	else
+		prefix = "(Image) ";
+	std::string name_with_prefix = prefix + name;
 	QComboBox *comboList = (QComboBox *)list;
-	comboList->addItem(name);
+	comboList->addItem(QString::fromStdString(name_with_prefix),
+			   QVariant(QString::fromStdString(name)));
 	return true;
 }
 
@@ -152,8 +163,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// populate list of OBS text sources
 	obs_enum_sources(add_sources_to_qcombobox, ui->obsTextSourceComboBox);
 	// Select the current OBS text source, if any
-	int itemIdx = ui->obsTextSourceComboBox->findText(
-		QString::fromStdString(request_data->obs_text_source));
+	int itemIdx = ui->obsTextSourceComboBox->findData(
+		QVariant(QString::fromStdString(request_data->obs_text_source)));
 	if (itemIdx != -1) {
 		ui->obsTextSourceComboBox->setCurrentIndex(itemIdx);
 	} else {
@@ -268,9 +279,9 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 										       : "file";
 		request_data_for_saving->method = ui->methodComboBox->currentText().toStdString();
 		request_data_for_saving->body = ui->bodyTextEdit->toPlainText().toStdString();
-		if (ui->obsTextSourceComboBox->currentText() != "None") {
+		if (ui->obsTextSourceComboBox->currentData().toString().toStdString() != "None") {
 			request_data_for_saving->obs_text_source =
-				ui->obsTextSourceComboBox->currentText().toStdString();
+				ui->obsTextSourceComboBox->currentData().toString().toStdString();
 		} else {
 			request_data_for_saving->obs_text_source = "";
 		}

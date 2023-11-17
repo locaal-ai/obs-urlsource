@@ -221,7 +221,6 @@ void setAudioCallback(const std::string &str, struct url_source_data *usd)
 		return;
 	}
 	auto media_settings = obs_source_get_settings(target);
-	obs_log(LOG_INFO, "Setting media source %s to %s", usd->output_source_name, str.c_str());
 	obs_data_set_string(media_settings, "file", str.c_str());
 	obs_source_update(target, media_settings);
 	obs_source_release(target);
