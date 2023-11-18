@@ -34,11 +34,7 @@ ExternalProject_Get_Property(lexbor_build INSTALL_DIR)
 
 set(lexbor_lib_location ${INSTALL_DIR}/lib/${lexbor_lib_filename})
 
-add_library(lexbor_internal STATIC IMPORTED)
-add_dependencies(lexbor_internal lexbor_build)
-set_target_properties(lexbor_internal PROPERTIES IMPORTED_LOCATION ${lexbor_lib_location})
-
-add_library(liblexbor_internal INTERFACE)
-add_dependencies(liblexbor_internal lexbor_internal)
-target_link_libraries(liblexbor_internal INTERFACE lexbor_internal)
-set_target_properties(liblexbor_internal PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+add_library(liblexbor_internal STATIC IMPORTED)
+add_dependencies(liblexbor_internal lexbor_build)
+set_target_properties(liblexbor_internal PROPERTIES IMPORTED_LOCATION ${lexbor_lib_location})
+target_include_directories(liblexbor_internal INTERFACE ${INSTALL_DIR}/include)
