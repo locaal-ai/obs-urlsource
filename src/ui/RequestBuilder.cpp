@@ -58,12 +58,11 @@ bool add_sources_to_qcombobox(void *list, obs_source_t *source)
 
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			       std::function<void()> update_handler, QWidget *parent)
-	: QDialog(parent), layout(new QVBoxLayout), ui(new Ui::RequestBuilder)
+	: QDialog(parent), ui(new Ui::RequestBuilder)
 {
 	ui->setupUi(this);
 
 	setWindowTitle("HTTP Request Builder");
-	setLayout(layout);
 	// Make modal
 	setModal(true);
 
@@ -344,6 +343,9 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->postProcessRegexReplaceLineEdit->text().toStdString();
 	};
 
+	connect(this, &RequestBuilder::show_response_dialog_signal, this,
+		&RequestBuilder::show_response_dialog);
+
 	connect(ui->sendButton, &QPushButton::clicked, this, [=]() {
 		// Hide the error message label
 		ui->errorMessageLabel->setVisible(false);
@@ -360,7 +362,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 			obs_log(LOG_INFO, "Sending request to %s", request_data_test.url.c_str());
 
-			struct request_data_handler_response response =
+			request_data_handler_response response =
 				request_data_handler(&request_data_test);
 
 			if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
@@ -374,104 +376,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				return;
 			}
 
-			obs_log(LOG_INFO, "Response HTTP status code: %ld",
-				response.http_status_code);
-
-			// Display the response
-			QDialog *responseDialog = new QDialog(this);
-			responseDialog->setWindowTitle("Response");
-			QVBoxLayout *responseLayout = new QVBoxLayout;
-			responseDialog->setLayout(responseLayout);
-			responseDialog->setMinimumWidth(500);
-			responseDialog->setMinimumHeight(300);
-			responseDialog->show();
-			responseDialog->raise();
-			responseDialog->activateWindow();
-			responseDialog->setModal(true);
-
-			// show request URL
-			QGroupBox *requestGroupBox = new QGroupBox("Request");
-			responseLayout->addWidget(requestGroupBox);
-			QVBoxLayout *requestLayout = new QVBoxLayout;
-			requestGroupBox->setLayout(requestLayout);
-			QScrollArea *requestUrlScrollArea = new QScrollArea;
-			QLabel *requestUrlLabel =
-				new QLabel(QString::fromStdString(response.request_url));
-			requestUrlScrollArea->setWidget(requestUrlLabel);
-			requestLayout->addWidget(requestUrlScrollArea);
-
-			// if there's a request body, add it to the dialog
-			if (response.request_body != "") {
-				QGroupBox *requestBodyGroupBox = new QGroupBox("Request Body");
-				responseLayout->addWidget(requestBodyGroupBox);
-				QVBoxLayout *requestBodyLayout = new QVBoxLayout;
-				requestBodyGroupBox->setLayout(requestBodyLayout);
-				// Add scroll area for the request body
-				QScrollArea *requestBodyScrollArea = new QScrollArea;
-				QLabel *requestLabel =
-					new QLabel(QString::fromStdString(response.request_body));
-				// Wrap the text
-				requestLabel->setWordWrap(true);
-				// Set the label as the scroll area's widget
-				requestBodyScrollArea->setWidget(requestLabel);
-				requestBodyLayout->addWidget(requestBodyScrollArea);
-			}
-
-			if (!response.body.empty()) {
-				QGroupBox *responseBodyGroupBox = new QGroupBox("Response Body");
-				responseBodyGroupBox->setLayout(new QVBoxLayout);
-				// Add scroll area for the response body
-				QScrollArea *responseBodyScrollArea = new QScrollArea;
-				QLabel *responseLabel =
-					new QLabel(QString::fromStdString(response.body).trimmed());
-				// Wrap the text
-				responseLabel->setWordWrap(true);
-				// dont allow rich text
-				responseLabel->setTextFormat(Qt::PlainText);
-				// Set the label as the scroll area's widget
-				responseBodyScrollArea->setWidget(responseLabel);
-				responseBodyGroupBox->layout()->addWidget(responseBodyScrollArea);
-				responseLayout->addWidget(responseBodyGroupBox);
-			}
-
-			// If there's a parsed output, add it to the dialog in a QGroupBox
-			if (response.body_parts_parsed.size() > 0 &&
-			    response.body_parts_parsed[0] != "") {
-				QGroupBox *parsedOutputGroupBox = new QGroupBox("Parsed Output");
-				responseLayout->addWidget(parsedOutputGroupBox);
-				QVBoxLayout *parsedOutputLayout = new QVBoxLayout;
-				parsedOutputGroupBox->setLayout(parsedOutputLayout);
-				if (response.body_parts_parsed.size() > 1) {
-					// Add a QTabWidget to show the parsed output parts
-					QTabWidget *tabWidget = new QTabWidget;
-					parsedOutputLayout->addWidget(tabWidget);
-					for (auto &parsedOutput : response.body_parts_parsed) {
-						// label each tab {outputN} where N is the index of the output part
-						tabWidget->addTab(
-							new QLabel(QString::fromStdString(
-								parsedOutput)),
-							QString::fromStdString(
-								"{output" +
-								std::to_string(tabWidget->count()) +
-								"}"));
-					}
-				} else {
-					// Add a QLabel to show a single parsed output
-					QLabel *parsedOutputLabel =
-						new QLabel(QString::fromStdString(
-							response.body_parts_parsed[0]));
-					parsedOutputLabel->setWordWrap(true);
-					parsedOutputLabel->setTextFormat(Qt::PlainText);
-					parsedOutputLayout->addWidget(parsedOutputLabel);
-				}
-			}
-
-			// enable the send button
-			this->ui->sendButton->setEnabled(true);
-			this->ui->sendButton->setText("Test Request");
-
-			// Resize the dialog to fit the text
-			responseDialog->adjustSize();
+			// Show the response dialog
+			emit show_response_dialog_signal(response);
 		};
 
 		// Create a thread to send the request to prevent the UI from hanging
@@ -494,4 +400,104 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	});
 
 	adjustSize();
+}
+
+void RequestBuilder::show_response_dialog(const request_data_handler_response &response)
+{
+	obs_log(LOG_INFO, "Response HTTP status code: %ld", response.http_status_code);
+
+	// Display the response
+	QDialog *responseDialog = new QDialog(this);
+	responseDialog->setWindowTitle("Response");
+	QVBoxLayout *responseLayout = new QVBoxLayout;
+	responseDialog->setLayout(responseLayout);
+	responseDialog->setMinimumWidth(500);
+	responseDialog->setMinimumHeight(300);
+	responseDialog->raise();
+	responseDialog->activateWindow();
+	responseDialog->setModal(true);
+
+	// show request URL
+	QGroupBox *requestGroupBox = new QGroupBox("Request");
+	responseLayout->addWidget(requestGroupBox);
+	QVBoxLayout *requestLayout = new QVBoxLayout;
+	requestGroupBox->setLayout(requestLayout);
+	QScrollArea *requestUrlScrollArea = new QScrollArea;
+	QLabel *requestUrlLabel = new QLabel(QString::fromStdString(response.request_url));
+	requestUrlScrollArea->setWidget(requestUrlLabel);
+	requestLayout->addWidget(requestUrlScrollArea);
+
+	// if there's a request body, add it to the dialog
+	if (response.request_body != "") {
+		QGroupBox *requestBodyGroupBox = new QGroupBox("Request Body");
+		responseLayout->addWidget(requestBodyGroupBox);
+		QVBoxLayout *requestBodyLayout = new QVBoxLayout;
+		requestBodyGroupBox->setLayout(requestBodyLayout);
+		// Add scroll area for the request body
+		QScrollArea *requestBodyScrollArea = new QScrollArea;
+		QLabel *requestLabel = new QLabel(QString::fromStdString(response.request_body));
+		// Wrap the text
+		requestLabel->setWordWrap(true);
+		// Set the label as the scroll area's widget
+		requestBodyScrollArea->setWidget(requestLabel);
+		requestBodyLayout->addWidget(requestBodyScrollArea);
+	}
+
+	if (!response.body.empty()) {
+		QGroupBox *responseBodyGroupBox = new QGroupBox("Response Body");
+		responseBodyGroupBox->setLayout(new QVBoxLayout);
+		// Add scroll area for the response body
+		QScrollArea *responseBodyScrollArea = new QScrollArea;
+		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body).trimmed());
+		// Wrap the text
+		responseLabel->setWordWrap(true);
+		// dont allow rich text
+		responseLabel->setTextFormat(Qt::PlainText);
+		// Set the label as the scroll area's widget
+		responseBodyScrollArea->setWidget(responseLabel);
+		responseBodyGroupBox->layout()->addWidget(responseBodyScrollArea);
+		responseLayout->addWidget(responseBodyGroupBox);
+	}
+
+	// If there's a parsed output, add it to the dialog in a QGroupBox
+	if (response.body_parts_parsed.size() > 0 && response.body_parts_parsed[0] != "") {
+		QGroupBox *parsedOutputGroupBox = new QGroupBox("Parsed Output");
+		responseLayout->addWidget(parsedOutputGroupBox);
+		QVBoxLayout *parsedOutputLayout = new QVBoxLayout;
+		parsedOutputGroupBox->setLayout(parsedOutputLayout);
+		if (response.body_parts_parsed.size() > 1) {
+			// Add a QTabWidget to show the parsed output parts
+			QTabWidget *tabWidget = new QTabWidget;
+			parsedOutputLayout->addWidget(tabWidget);
+			for (auto &parsedOutput : response.body_parts_parsed) {
+				// label each tab {outputN} where N is the index of the output part
+				tabWidget->addTab(
+					new QLabel(QString::fromStdString(parsedOutput)),
+					QString::fromStdString("{output" +
+							       std::to_string(tabWidget->count()) +
+							       "}"));
+			}
+		} else {
+			// Add a QLabel to show a single parsed output
+			QLabel *parsedOutputLabel =
+				new QLabel(QString::fromStdString(response.body_parts_parsed[0]));
+			parsedOutputLabel->setWordWrap(true);
+			parsedOutputLabel->setTextFormat(Qt::PlainText);
+			parsedOutputLayout->addWidget(parsedOutputLabel);
+		}
+	}
+
+	// enable the send button
+	this->ui->sendButton->setEnabled(true);
+	this->ui->sendButton->setText("Test Request");
+
+	// Resize the dialog to fit the text
+	responseDialog->adjustSize();
+
+	// Center the dialog
+	responseDialog->move(this->x() + (this->width() - responseDialog->width()) / 2,
+			     this->y() + (this->height() - responseDialog->height()) / 2);
+
+	// Show the dialog
+	responseDialog->show();
 }
