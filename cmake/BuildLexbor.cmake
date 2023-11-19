@@ -18,8 +18,7 @@ ExternalProject_Add(
   GIT_REPOSITORY https://github.com/lexbor/lexbor.git
   GIT_TAG v2.3.0
   CMAKE_GENERATOR ${CMAKE_GENERATOR}
-  BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${lexbor_lib_filename}
-  INSTALL_BYPRODUCTS <INSTALL_DIR>/include
+  BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${lexbor_lib_filename} INSTALL_BYPRODUCTS <INSTALL_DIR>/include
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
              -DLEXBOR_BUILD_SHARED=OFF
              -DLEXBOR_BUILD_STATIC=ON
