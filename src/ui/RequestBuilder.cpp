@@ -356,10 +356,10 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		ui->sendButton->setEnabled(false);
 
 		// Create a request_data_handler function that will be called by the thread
-		auto request_data_handler_ex = [this](url_source_request_data *request_data) {
-			obs_log(LOG_INFO, "Sending request to %s", request_data->url.c_str());
+		auto request_data_handler_ex = [this](url_source_request_data *request_data_for_handler) {
+			obs_log(LOG_INFO, "Sending request to %s", request_data_for_handler->url.c_str());
 			struct request_data_handler_response response =
-				request_data_handler(request_data);
+				request_data_handler(request_data_for_handler);
 
 			if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
 				// Show the error message label
