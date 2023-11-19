@@ -78,6 +78,7 @@ struct request_data_handler_response {
 	std::vector<std::string> body_parts_parsed;
 	std::map<std::string, std::string> headers;
 	int status_code;
+	long http_status_code;
 	std::string status_message;
 	std::string error_message;
 	std::string request_url;

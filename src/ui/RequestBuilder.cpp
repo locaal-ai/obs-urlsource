@@ -348,18 +348,20 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// Hide the error message label
 		ui->errorMessageLabel->setVisible(false);
 
-		// Get an interim request_data struct with the current settings
-		url_source_request_data *request_data_test = new url_source_request_data;
-		saveSettingsToRequestData(request_data_test);
-
 		// disable the send button
 		ui->sendButton->setEnabled(false);
+		ui->sendButton->setText("Sending...");
 
 		// Create a request_data_handler function that will be called by the thread
-		auto request_data_handler_ex = [this](url_source_request_data *request_data_for_handler) {
-			obs_log(LOG_INFO, "Sending request to %s", request_data_for_handler->url.c_str());
+		auto request_data_handler_ex = [this, saveSettingsToRequestData]() {
+			// Get an interim request_data struct with the current settings
+			url_source_request_data request_data_test;
+			saveSettingsToRequestData(&request_data_test);
+
+			obs_log(LOG_INFO, "Sending request to %s", request_data_test.url.c_str());
+
 			struct request_data_handler_response response =
-				request_data_handler(request_data_for_handler);
+				request_data_handler(&request_data_test);
 
 			if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
 				// Show the error message label
@@ -368,10 +370,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				this->ui->errorMessageLabel->setVisible(true);
 				// enable the send button
 				this->ui->sendButton->setEnabled(true);
+				this->ui->sendButton->setText("Test Request");
 				return;
 			}
 
-			obs_log(LOG_INFO, "Response status code: %d", response.status_code);
+			obs_log(LOG_INFO, "Response HTTP status code: %ld",
+				response.http_status_code);
 
 			// Display the response
 			QDialog *responseDialog = new QDialog(this);
@@ -464,14 +468,15 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 			// enable the send button
 			this->ui->sendButton->setEnabled(true);
+			this->ui->sendButton->setText("Test Request");
 
 			// Resize the dialog to fit the text
 			responseDialog->adjustSize();
 		};
 
-		request_data_handler_ex(request_data_test);
-
-		// TODO: Create a thread to send the request to prevent the UI from hanging
+		// Create a thread to send the request to prevent the UI from hanging
+		std::thread request_data_handler_thread(request_data_handler_ex);
+		request_data_handler_thread.detach();
 	});
 
 	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, [=]() {

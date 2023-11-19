@@ -110,6 +110,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
+		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
 		std::string responseBody;
 		std::vector<uint8_t> responseBodyUint8;
@@ -331,7 +332,10 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 		// Send the request
 		CURLcode code = curl_easy_perform(curl);
+		long http_code = 0;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 		curl_easy_cleanup(curl);
+
 		if (code != CURLE_OK) {
 			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
 			obs_log(LOG_INFO, "Request URL: %s", url.c_str());
@@ -345,6 +349,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		response.body_bytes = responseBodyUint8;
 		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 		response.headers = headers;
+		response.http_status_code = http_code;
 	}
 
 	// Parse the response
