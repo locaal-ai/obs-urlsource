@@ -242,11 +242,15 @@ ${_usage_host:-}"
           -G "${generator}"
           -DQT_VERSION=${QT_VERSION:-6}
           -DCMAKE_BUILD_TYPE=${config}
-          --compile-no-warning-as-error
         )
 
         local cmake_version
         read -r _ _ cmake_version <<< "$(cmake --version)"
+
+        # if cmake version > 3.24 then add "--compile-no-warning-as-error"
+        if is-at-least 3.24.0 ${cmake_version}; then
+          cmake_args+=(--compile-no-warning-as-error)
+        fi
 
         if [[ ${CPUTYPE} != ${target##*-} ]] {
           if is-at-least 3.21.0 ${cmake_version}; then
