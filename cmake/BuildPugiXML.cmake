@@ -20,7 +20,11 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(pugixml_build INSTALL_DIR)
 
-set(pugixml_lib_location ${INSTALL_DIR}/lib/${pugixml_lib_filename})
+# try to find for pugixml in ${INSTALL_DIR}/lib/ or  ${INSTALL_DIR}/lib64/
+find_library(
+  pugixml_lib_location
+  NAMES ${pugixml_lib_filename}
+  HINTS ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib64)
 
 add_library(pugixml_internal STATIC IMPORTED)
 add_dependencies(pugixml_internal pugixml_build)
