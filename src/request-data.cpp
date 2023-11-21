@@ -185,7 +185,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					// aggregate to empty is requested and the text is not empty
 					// trim the text and add it to the aggregate buffer
 					std::string textStr = text;
-					request_data->aggregate_to_empty_buffer += trim(textStr);
+					request_data->aggregate_to_empty_buffer +=
+						" " + trim(textStr);
 					// if the buffer is larger than the limit, remove the first part
 					if (request_data->aggregate_to_empty_buffer.size() >
 					    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
