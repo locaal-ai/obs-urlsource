@@ -15,8 +15,8 @@ The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that all
 
 If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work: https://github.com/sponsors/royshil
 
-### Usage Tutorial
-Watch a short tutorial on how to use and setup the URL/API source on your OBS scene.
+### Usage Tutorials
+Watch quick tutorials on how to use and setup the URL/API source on your OBS scene.
 <div align="center">
   <a href="https://youtu.be/E_UMNIfgR5w" target="_blank">
     <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/258666347-327a632f-62f3-4365-af8e-6bb91f5a56ef.jpeg" />
@@ -29,14 +29,21 @@ Watch a short tutorial on how to use and setup the URL/API source on your OBS sc
   </a>
   <br/>
   https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtu.be/kgAOCijJ51Q" target="_blank">HTML Scraping Tutorial (18 min)</a>
-  <br/>
+</div>
+
+#### AI on OBS Tutorials
+Bring AI to your OBS! Be a x10 streamer and content creator with AI tools:
+<div align="center">
   <a href="https://youtu.be/4BTmoKr0YMw" target="_blank">
     <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/283315931-70c0c583-d1dc-4bd6-9ace-86c8e47f1229.jpg" />
   </a>
-
+  <a href="https://youtu.be/2wJ72DcgBew" target="_blank">
+    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/284642194-6c97a6e7-3ba3-4e57-b0b6-612615266ae6.jpeg" />
+  </a>
+  <a href="https://youtu.be/kltJbg9hH4s" target="_blank">
+    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/284643465-a7aa2d13-c968-404d-8300-827fe069832d.jpg" />
+  </a>
 </div>
-
-
 
 #### Inspiration
 Out of ideas on what to do with URL/API Source? Here's a repo with 1,000s of public APIs https://github.com/public-apis/public-apis
