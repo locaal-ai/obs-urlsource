@@ -50,9 +50,9 @@ std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_re
 		obs_log(LOG_ERROR, "Width or height is 0");
 		return std::vector<uint8_t>();
 	}
-    // scale the width and height
-    width *= scale;
-    height *= scale;
+	// scale the width and height
+	width *= scale;
+	height *= scale;
 
 	// enter graphics context
 	obs_enter_graphics();
