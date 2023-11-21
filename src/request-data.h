@@ -21,6 +21,7 @@ struct url_source_request_data {
 	bool aggregate_to_empty;
 	std::string aggregate_to_empty_buffer;
 	std::string last_obs_text_source_value;
+    std::string obs_input_source_resize_option;
 	// SSL options
 	std::string ssl_client_cert_file;
 	std::string ssl_client_key_file;
@@ -56,6 +57,7 @@ struct url_source_request_data {
 		aggregate_to_empty = false;
 		aggregate_to_empty_buffer = std::string("");
 		last_obs_text_source_value = std::string("");
+        obs_input_source_resize_option = std::string("100%");
 		ssl_verify_peer = false;
 		headers = {};
 		output_type = std::string("text");

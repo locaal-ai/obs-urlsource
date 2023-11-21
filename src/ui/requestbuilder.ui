@@ -449,7 +449,7 @@
           <widget class="QWidget" name="widget_8" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <property name="spacing">
-             <number>0</number>
+             <number>3</number>
             </property>
             <property name="leftMargin">
              <number>0</number>
@@ -465,6 +465,12 @@
             </property>
             <item>
              <widget class="QComboBox" name="obsTextSourceComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="toolTip">
                <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.&quot;</string>
               </property>
@@ -475,11 +481,65 @@
               </item>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="label_resizeInput">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Resize</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_resizeInput">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>100%</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>50%</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>25%</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>10%</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>5%</string>
+               </property>
+              </item>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
          <item>
           <widget class="QWidget" name="widget_10" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <property name="spacing">
              <number>2</number>
