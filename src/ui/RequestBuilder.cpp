@@ -307,11 +307,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 		// Save the headers from ui->tableView_headers's model
 		request_data_for_saving->headers.clear();
-		QStandardItemModel *model = (QStandardItemModel *)ui->tableView_headers->model();
-		for (int i = 0; i < model->rowCount(); i++) {
+		QStandardItemModel *itemModel =
+			(QStandardItemModel *)ui->tableView_headers->model();
+		for (int i = 0; i < itemModel->rowCount(); i++) {
 			request_data_for_saving->headers.push_back(
-				std::make_pair(model->item(i, 0)->text().toStdString(),
-					       model->item(i, 1)->text().toStdString()));
+				std::make_pair(itemModel->item(i, 0)->text().toStdString(),
+					       itemModel->item(i, 1)->text().toStdString()));
 		}
 
 		// Save the output parsing options
