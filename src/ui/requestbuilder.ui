@@ -466,7 +466,7 @@
             <item>
              <widget class="QComboBox" name="obsTextSourceComboBox">
               <property name="toolTip">
-               <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}`.&quot;</string>
+               <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}` or `{{imageb64}}`.&quot;</string>
               </property>
               <item>
                <property name="text">
@@ -479,7 +479,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QWidget" name="widget_10" native="true">
+          <widget class="QWidget" name="widget_inputValueOptions" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <property name="spacing">
              <number>2</number>
@@ -511,13 +511,50 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="aggToEmpty">
+             <widget class="QCheckBox" name="aggToTarget">
               <property name="toolTip">
                <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
               </property>
               <property name="text">
-               <string>Agg to empty</string>
+               <string>Agg</string>
               </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_aggTarget">
+              <property name="currentText">
+               <string>to Empty</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>to Empty</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>for 30s</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>for 1m</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>for 2m</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>for 5m</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>for 10m</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
