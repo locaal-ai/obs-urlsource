@@ -23,65 +23,62 @@
 
 inline std::string url_source_agg_target_to_string(int agg_target)
 {
-    switch (agg_target) {
-    case URL_SOURCE_AGG_TARGET_1MIN:
-        return "for 1m";
-    case URL_SOURCE_AGG_TARGET_2MIN:
-        return "for 2m";
-    case URL_SOURCE_AGG_TARGET_5MIN:
-        return "for 5m";
-    case URL_SOURCE_AGG_TARGET_10MIN:
-        return "for 10m";
-    case URL_SOURCE_AGG_TARGET_30s:
-        return "for 30s";
-    default:
-        return "to Empty";
-    }
+	switch (agg_target) {
+	case URL_SOURCE_AGG_TARGET_1MIN:
+		return "for 1m";
+	case URL_SOURCE_AGG_TARGET_2MIN:
+		return "for 2m";
+	case URL_SOURCE_AGG_TARGET_5MIN:
+		return "for 5m";
+	case URL_SOURCE_AGG_TARGET_10MIN:
+		return "for 10m";
+	case URL_SOURCE_AGG_TARGET_30s:
+		return "for 30s";
+	default:
+		return "to Empty";
+	}
 }
 
 inline uint64_t url_source_agg_target_to_nanoseconds(int agg_target)
 {
-    switch (agg_target) {
-    case URL_SOURCE_AGG_TARGET_1MIN:
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::minutes(1))
-            .count();
-    case URL_SOURCE_AGG_TARGET_2MIN:
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::minutes(2))
-            .count();
-    case URL_SOURCE_AGG_TARGET_5MIN:
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::minutes(5))
-            .count();
-    case URL_SOURCE_AGG_TARGET_10MIN:
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::minutes(10))
-            .count();
-    case URL_SOURCE_AGG_TARGET_30s:
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::seconds(30))
-            .count();
-    default:
-        return 0;
-    }
+	switch (agg_target) {
+	case URL_SOURCE_AGG_TARGET_1MIN:
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::minutes(1))
+			.count();
+	case URL_SOURCE_AGG_TARGET_2MIN:
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::minutes(2))
+			.count();
+	case URL_SOURCE_AGG_TARGET_5MIN:
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::minutes(5))
+			.count();
+	case URL_SOURCE_AGG_TARGET_10MIN:
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(
+			       std::chrono::minutes(10))
+			.count();
+	case URL_SOURCE_AGG_TARGET_30s:
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(
+			       std::chrono::seconds(30))
+			.count();
+	default:
+		return 0;
+	}
 }
 
-inline int url_source_agg_target_string_to_enum(const std::string& agg_target)
+inline int url_source_agg_target_string_to_enum(const std::string &agg_target)
 {
-    if (agg_target == "for 1m") {
-        return URL_SOURCE_AGG_TARGET_1MIN;
-    } else if (agg_target == "for 2m") {
-        return URL_SOURCE_AGG_TARGET_2MIN;
-    } else if (agg_target == "for 5m") {
-        return URL_SOURCE_AGG_TARGET_5MIN;
-    } else if (agg_target == "for 10m") {
-        return URL_SOURCE_AGG_TARGET_10MIN;
-    } else if (agg_target == "for 30s") {
-        return URL_SOURCE_AGG_TARGET_30s;
-    } else {
-        return URL_SOURCE_AGG_TARGET_EMPTY;
-    }
+	if (agg_target == "for 1m") {
+		return URL_SOURCE_AGG_TARGET_1MIN;
+	} else if (agg_target == "for 2m") {
+		return URL_SOURCE_AGG_TARGET_2MIN;
+	} else if (agg_target == "for 5m") {
+		return URL_SOURCE_AGG_TARGET_5MIN;
+	} else if (agg_target == "for 10m") {
+		return URL_SOURCE_AGG_TARGET_10MIN;
+	} else if (agg_target == "for 30s") {
+		return URL_SOURCE_AGG_TARGET_30s;
+	} else {
+		return URL_SOURCE_AGG_TARGET_EMPTY;
+	}
 }
 
 struct url_source_request_data {
@@ -94,8 +91,8 @@ struct url_source_request_data {
 	bool obs_text_source_skip_if_same;
 	int aggregate_to_target;
 	std::string aggregate_to_empty_buffer;
-    // agg buffer begin timestamp
-    uint64_t agg_buffer_begin_ts;
+	// agg buffer begin timestamp
+	uint64_t agg_buffer_begin_ts;
 	std::string last_obs_text_source_value;
 	// SSL options
 	std::string ssl_client_cert_file;
@@ -131,7 +128,7 @@ struct url_source_request_data {
 		obs_text_source_skip_if_same = false;
 		aggregate_to_target = URL_SOURCE_AGG_TARGET_NONE;
 		aggregate_to_empty_buffer = std::string("");
-        agg_buffer_begin_ts = 0;
+		agg_buffer_begin_ts = 0;
 		last_obs_text_source_value = std::string("");
 		ssl_verify_peer = false;
 		headers = {};

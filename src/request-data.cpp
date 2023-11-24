@@ -68,83 +68,80 @@ size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
 	return real_size;
 }
 
-void handle_nonempty_text(url_source_request_data *request_data, request_data_handler_response& response, nlohmann::json &json, const char *text) {
-    if (request_data->obs_text_source_skip_if_same) {
-        if (request_data->last_obs_text_source_value == text) {
-            // Return an error response
-            response.error_message =
-                "OBS text source value is the same as last time, skipping was requested";
-            response.status_code =
-                URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-            return;
-        }
-        request_data->last_obs_text_source_value = text;
-    }
-    if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_NONE) {
-        // aggregate to target is requested and the text is not empty
-        // trim the text and add it to the aggregate buffer
-        std::string textStr = text;
-        request_data->aggregate_to_empty_buffer += trim(textStr);
-        // if the buffer is larger than the limit, remove the first part
-        if (request_data->aggregate_to_empty_buffer.size() >
-            URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
-            request_data->aggregate_to_empty_buffer.erase(
-                0, request_data->aggregate_to_empty_buffer
-                            .size() -
-                        URL_SOURCE_AGG_BUFFER_MAX_SIZE);
-        }
+void handle_nonempty_text(url_source_request_data *request_data,
+			  request_data_handler_response &response, nlohmann::json &json,
+			  const char *text)
+{
+	if (request_data->obs_text_source_skip_if_same) {
+		if (request_data->last_obs_text_source_value == text) {
+			// Return an error response
+			response.error_message =
+				"OBS text source value is the same as last time, skipping was requested";
+			response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+			return;
+		}
+		request_data->last_obs_text_source_value = text;
+	}
+	if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_NONE) {
+		// aggregate to target is requested and the text is not empty
+		// trim the text and add it to the aggregate buffer
+		std::string textStr = text;
+		request_data->aggregate_to_empty_buffer += trim(textStr);
+		// if the buffer is larger than the limit, remove the first part
+		if (request_data->aggregate_to_empty_buffer.size() >
+		    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
+			request_data->aggregate_to_empty_buffer.erase(
+				0, request_data->aggregate_to_empty_buffer.size() -
+					   URL_SOURCE_AGG_BUFFER_MAX_SIZE);
+		}
 
-        if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_EMPTY) {
-            // this is a non-empty aggregate *timed* target
-            if (request_data->agg_buffer_begin_ts == 0) {
-                // this is the first time we aggregate, set the timer
-                request_data->agg_buffer_begin_ts = get_time_ns();
-            }
-            // check if the agg timer has expired
-            const uint64_t timer_interval_ns = url_source_agg_target_to_nanoseconds(request_data->aggregate_to_target);
-            if ((get_time_ns() - request_data->agg_buffer_begin_ts) >= timer_interval_ns) {
-                // aggregate timer has expired, use the aggregate buffer
-                obs_log(LOG_INFO,
-                    "Aggregate timer expired, using aggregate buffer (len %d)",
-                    request_data->aggregate_to_empty_buffer
-                        .size());
-                json["input"] =
-                    request_data->aggregate_to_empty_buffer;
-                request_data->aggregate_to_empty_buffer = "";
-                request_data->agg_buffer_begin_ts = get_time_ns();
-            } else {
-                // aggregate timer has not expired, return an error response
-                response.error_message =
-                    "Aggregate timer has not expired, skipping";
-                response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-            }
-        } else {
-            response.error_message =
-                "Aggregate to empty is requested, skipping";
-            response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-        }
-    }
+		if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_EMPTY) {
+			// this is a non-empty aggregate *timed* target
+			if (request_data->agg_buffer_begin_ts == 0) {
+				// this is the first time we aggregate, set the timer
+				request_data->agg_buffer_begin_ts = get_time_ns();
+			}
+			// check if the agg timer has expired
+			const uint64_t timer_interval_ns = url_source_agg_target_to_nanoseconds(
+				request_data->aggregate_to_target);
+			if ((get_time_ns() - request_data->agg_buffer_begin_ts) >=
+			    timer_interval_ns) {
+				// aggregate timer has expired, use the aggregate buffer
+				obs_log(LOG_INFO,
+					"Aggregate timer expired, using aggregate buffer (len %d)",
+					request_data->aggregate_to_empty_buffer.size());
+				json["input"] = request_data->aggregate_to_empty_buffer;
+				request_data->aggregate_to_empty_buffer = "";
+				request_data->agg_buffer_begin_ts = get_time_ns();
+			} else {
+				// aggregate timer has not expired, return an error response
+				response.error_message =
+					"Aggregate timer has not expired, skipping";
+				response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+			}
+		} else {
+			response.error_message = "Aggregate to empty is requested, skipping";
+			response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+		}
+	}
 }
 
-void handle_empty_text(url_source_request_data *request_data, request_data_handler_response& response, nlohmann::json &json) {
-    if (request_data->aggregate_to_target == URL_SOURCE_AGG_TARGET_EMPTY &&
-        !request_data->aggregate_to_empty_buffer.empty()) {
-        // empty input found, use the aggregate buffer if it's not empty
-        obs_log(LOG_INFO,
-            "OBS text source is empty, using aggregate buffer (len %d)",
-            request_data->aggregate_to_empty_buffer
-                .size());
-        json["input"] =
-            request_data->aggregate_to_empty_buffer;
-        request_data->aggregate_to_empty_buffer = "";
-        request_data->agg_buffer_begin_ts = get_time_ns();
-    } else if (request_data->obs_text_source_skip_if_empty) {
-        // Return an error response
-        response.error_message =
-            "OBS text source is empty, skipping was requested";
-        response.status_code =
-            URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
-    }
+void handle_empty_text(url_source_request_data *request_data,
+		       request_data_handler_response &response, nlohmann::json &json)
+{
+	if (request_data->aggregate_to_target == URL_SOURCE_AGG_TARGET_EMPTY &&
+	    !request_data->aggregate_to_empty_buffer.empty()) {
+		// empty input found, use the aggregate buffer if it's not empty
+		obs_log(LOG_INFO, "OBS text source is empty, using aggregate buffer (len %d)",
+			request_data->aggregate_to_empty_buffer.size());
+		json["input"] = request_data->aggregate_to_empty_buffer;
+		request_data->aggregate_to_empty_buffer = "";
+		request_data->agg_buffer_begin_ts = get_time_ns();
+	} else if (request_data->obs_text_source_skip_if_empty) {
+		// Return an error response
+		response.error_message = "OBS text source is empty, skipping was requested";
+		response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+	}
 }
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
@@ -231,11 +228,11 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				if (text == NULL || text[0] == '\0') {
 					handle_empty_text(request_data, response, json);
 				} else {
-				    handle_nonempty_text(request_data, response, json, text);
-                }
-                if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
-                    return response;
-                }
+					handle_nonempty_text(request_data, response, json, text);
+				}
+				if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
+					return response;
+				}
 
 				// if one of the headers is Content-Type application/json, make sure the text is JSONified
 				std::string textStr = text;
@@ -510,7 +507,8 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 			json.value("obs_text_source_skip_if_empty", false);
 		request_data.obs_text_source_skip_if_same =
 			json.value("obs_text_source_skip_if_same", false);
-		request_data.aggregate_to_target = json.value("aggregate_to_target", URL_SOURCE_AGG_TARGET_NONE);
+		request_data.aggregate_to_target =
+			json.value("aggregate_to_target", URL_SOURCE_AGG_TARGET_NONE);
 
 		// SSL options
 		request_data.ssl_client_cert_file = json.value("ssl_client_cert_file", "");
