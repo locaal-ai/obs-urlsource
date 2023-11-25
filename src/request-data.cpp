@@ -84,6 +84,16 @@ void handle_nonempty_text(url_source_request_data *request_data,
 	}
 	if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_NONE) {
 		// aggregate to target is requested and the text is not empty
+
+		// if the buffer ends with a punctuation mark, remove it
+		if (request_data->aggregate_to_empty_buffer.size() > 0) {
+			char lastChar = request_data->aggregate_to_empty_buffer.back();
+			if (lastChar == '.' || lastChar == ',' || lastChar == '!' ||
+			    lastChar == '?') {
+				request_data->aggregate_to_empty_buffer.pop_back();
+			}
+		}
+
 		// trim the text and add it to the aggregate buffer
 		std::string textStr = text;
 		request_data->aggregate_to_empty_buffer += trim(textStr);
