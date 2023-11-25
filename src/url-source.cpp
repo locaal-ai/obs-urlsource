@@ -280,28 +280,31 @@ void curl_loop(struct url_source_data *usd)
 				if (text.empty()) {
 					text = response.body_parts_parsed[0];
 				} else {
-					// if output is image URL - fetch the image and convert it to base64
+					// if output is image or image-URL - fetch the image and convert it to base64
 					if (usd->output_is_image_url ||
 					    usd->request_data.output_type == "Image (data)") {
-						// use fetch_image to get the image
 						std::vector<uint8_t> image_data;
+						std::string mime_type = "image/png";
 						if (usd->request_data.output_type ==
 						    "Image (data)") {
 							// if the output type is image data - use the response body bytes
 							image_data = response.body_bytes;
+							// get the mime type from the response headers if available
+							if (response.headers.find("content-type") !=
+							    response.headers.end()) {
+								mime_type =
+									response.headers
+										["content-type"];
+							}
 						} else {
-							fetch_image(response.body_parts_parsed[0]);
+							// use fetch_image to get the image
+							image_data = fetch_image(
+								response.body_parts_parsed[0],
+								mime_type);
 						}
 						// convert the image to base64
 						const std::string base64_image =
 							base64_encode(image_data);
-						// get the mime type from the response headers if available
-						std::string mime_type = "image/png";
-						if (response.headers.find("content-type") !=
-						    response.headers.end()) {
-							mime_type =
-								response.headers["content-type"];
-						}
 						// build an image tag with the base64 image
 						response.body_parts_parsed[0] =
 							"<img src=\"data:" + mime_type +

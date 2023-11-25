@@ -92,7 +92,7 @@ std::string serialize_request_data(url_source_request_data *request_data);
 url_source_request_data unserialize_request_data(std::string serialized_request_data);
 
 // Fetch image from url and get bytes
-std::vector<uint8_t> fetch_image(std::string url);
+std::vector<uint8_t> fetch_image(std::string url, std::string &out_mime_type);
 
 // encode bytes to base64
 std::string base64_encode(const std::vector<uint8_t> &bytes);
