@@ -185,17 +185,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					// aggregate to empty is requested and the text is not empty
 					// trim the text and add it to the aggregate buffer
 					std::string textStr = text;
-					// if the buffer ends with a punctuation mark, remove it
-					if (request_data->aggregate_to_empty_buffer.size() > 0) {
-						char lastChar =
-							request_data->aggregate_to_empty_buffer
-								.back();
-						if (lastChar == '.' || lastChar == ',' ||
-						    lastChar == '!' || lastChar == '?') {
-							request_data->aggregate_to_empty_buffer
-								.pop_back();
-						}
-					}
 					request_data->aggregate_to_empty_buffer +=
 						" " + trim(textStr);
 					// if the buffer is larger than the limit, remove the first part
@@ -565,39 +554,9 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	return request_data;
 }
 
-bool isURL(const std::string &str)
-{
-	// List of common URL schemes
-	std::string schemes[] = {"http://", "https://"};
-	for (const auto &scheme : schemes) {
-		if (str.substr(0, scheme.size()) == scheme) {
-			return true;
-		}
-	}
-	return false;
-}
-
 // Fetch image from url and get bytes
 std::vector<uint8_t> fetch_image(std::string url)
 {
-	// Check if the "url" is actually a file path
-	if (isURL(url) == false) {
-		// This is a file request (at least it's not a url)
-		// Read the file
-		std::ifstream file(url);
-		if (!file.is_open()) {
-			obs_log(LOG_INFO, "Failed to open file");
-			// Return an error response
-			std::vector<uint8_t> responseFail;
-			return responseFail;
-		}
-		std::vector<uint8_t> responseBody((std::istreambuf_iterator<char>(file)),
-						  std::istreambuf_iterator<char>());
-		file.close();
-
-		return responseBody;
-	}
-
 	// Build the request with libcurl
 	CURL *curl = curl_easy_init();
 	if (!curl) {
