@@ -64,13 +64,6 @@ inline bool is_valid_output_source_name(const char *output_source_name)
 	       strcmp(output_source_name, "(null)") != 0 && strcmp(output_source_name, "") != 0;
 }
 
-inline uint64_t get_time_ns(void)
-{
-	return std::chrono::duration_cast<std::chrono::nanoseconds>(
-		       std::chrono::system_clock::now().time_since_epoch())
-		.count();
-}
-
 const char *url_source_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);

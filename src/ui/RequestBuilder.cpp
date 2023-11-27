@@ -169,9 +169,31 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	} else {
 		ui->obsTextSourceComboBox->setCurrentIndex(0);
 	}
+	auto setObsTextSourceValueOptionsVisibility = [=]() {
+		// Hide the options if no OBS text source is selected
+		ui->widget_inputValueOptions->setEnabled(
+			ui->obsTextSourceComboBox->currentIndex() != 0);
+		// adjust the size of the dialog to fit the content
+		this->adjustSize();
+	};
+	setObsTextSourceValueOptionsVisibility();
+	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
+		setObsTextSourceValueOptionsVisibility);
+
 	ui->obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
 	ui->obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
-	ui->aggToEmpty->setChecked(request_data->aggregate_to_empty);
+	ui->aggToTarget->setChecked(request_data->aggregate_to_target !=
+				    URL_SOURCE_AGG_TARGET_NONE);
+	ui->comboBox_aggTarget->setCurrentIndex(
+		ui->comboBox_aggTarget->findText(QString::fromStdString(
+			url_source_agg_target_to_string(request_data->aggregate_to_target))));
+
+	auto setAggTargetEnabled = [=]() {
+		ui->comboBox_aggTarget->setEnabled(ui->aggToTarget->isChecked());
+	};
+	setAggTargetEnabled();
+	connect(ui->aggToTarget, &QCheckBox::toggled, this, setAggTargetEnabled);
+
 	ui->comboBox_resizeInput->setCurrentText(
 		QString::fromStdString(request_data->obs_input_source_resize_option));
 
@@ -306,7 +328,11 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->obsTextSourceEnabledCheckBox->isChecked();
 		request_data_for_saving->obs_text_source_skip_if_same =
 			ui->obsTextSourceSkipSameCheckBox->isChecked();
-		request_data_for_saving->aggregate_to_empty = ui->aggToEmpty->isChecked();
+		request_data_for_saving->aggregate_to_target =
+			ui->aggToTarget->isChecked()
+				? url_source_agg_target_string_to_enum(
+					  ui->comboBox_aggTarget->currentText().toStdString())
+				: URL_SOURCE_AGG_TARGET_NONE;
 		request_data_for_saving->obs_input_source_resize_option =
 			ui->comboBox_resizeInput->currentText().toStdString();
 
