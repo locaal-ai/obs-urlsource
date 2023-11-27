@@ -45,6 +45,7 @@ struct url_source_data {
 	bool output_is_image_url = false;
 	struct obs_source_frame frame;
 	bool send_to_stream = false;
+	uint32_t render_width = 640;
 
 	// Text source to output the text to
 	obs_weak_source_t *output_source = nullptr;
@@ -263,9 +264,6 @@ void curl_loop(struct url_source_data *usd)
 			cur_time = get_time_ns();
 			usd->frame.timestamp = cur_time - start_time;
 
-			uint32_t width = 0;
-			uint32_t height = 0;
-
 			if (usd->request_data.output_type == "Audio (data)") {
 				if (!is_valid_output_source_name(usd->output_source_name)) {
 					obs_log(LOG_ERROR,
@@ -365,6 +363,9 @@ void curl_loop(struct url_source_data *usd)
 					obs_source_output_video(usd->source, &usd->frame);
 				} else {
 					uint8_t *renderBuffer = nullptr;
+					uint32_t width = usd->render_width;
+					uint32_t height = 0;
+
 					// render the text with QTextDocument
 					render_text_with_qtextdocument(
 						text, width, height, &renderBuffer, usd->css_props);
@@ -468,6 +469,7 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->css_props = obs_data_get_string(settings, "css_props");
 	usd->output_text_template = obs_data_get_string(settings, "template");
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
+	usd->render_width = (uint32_t)obs_data_get_int(settings, "render_width");
 
 	// update the text source
 	const char *new_text_source_name = obs_data_get_string(settings, "text_sources");
@@ -539,6 +541,9 @@ void url_source_defaults(obs_data_t *s)
 
 	// Default Template
 	obs_data_set_default_string(s, "template", "{{output}}");
+
+	// Default Render Width
+	obs_data_set_default_int(s, "render_width", 640);
 }
 
 bool setup_request_button_click(obs_properties_t *, obs_property_t *, void *button_data)
@@ -632,6 +637,8 @@ obs_properties_t *url_source_properties(void *data)
 		"representation of parts of an array (see Test Request button)\n"
 		"Use {{body}} variable for unparsed object/array representation of the "
 		"entire response");
+
+	obs_properties_add_int(ppts, "render_width", "Render Width (px)", 100, 10000, 1);
 
 	return ppts;
 }

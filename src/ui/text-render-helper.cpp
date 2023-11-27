@@ -42,7 +42,7 @@ void render_text_with_qtextdocument(const std::string &text, uint32_t &width, ui
 			       .replace("{css_props}", QString::fromStdString(css_props));
 	QTextDocument textDocument;
 	textDocument.setHtml(html);
-	textDocument.setTextWidth(640);
+	textDocument.setTextWidth(width);
 
 	QPixmap pixmap(textDocument.size().toSize());
 	pixmap.fill(Qt::transparent);
