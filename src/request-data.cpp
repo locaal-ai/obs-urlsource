@@ -185,7 +185,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					// aggregate to empty is requested and the text is not empty
 					// trim the text and add it to the aggregate buffer
 					std::string textStr = text;
-					request_data->aggregate_to_empty_buffer += trim(textStr);
+					request_data->aggregate_to_empty_buffer +=
+						" " + trim(textStr);
 					// if the buffer is larger than the limit, remove the first part
 					if (request_data->aggregate_to_empty_buffer.size() >
 					    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
@@ -236,9 +237,21 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 				// render the source to an image using get_rgba_from_source_render
 				source_render_data tf;
 				init_source_render_data(&tf);
+				// get the scale factor from the request_data->obs_input_source_resize_option
+				float scale = 1.0;
+				if (request_data->obs_input_source_resize_option != "100%") {
+					// parse the scale from the string
+					std::string scaleStr =
+						request_data->obs_input_source_resize_option;
+					scaleStr.erase(std::remove(scaleStr.begin(), scaleStr.end(),
+								   '%'),
+						       scaleStr.end());
+					scale = (float)(std::stof(scaleStr) / 100.0f);
+				}
+
 				uint32_t width, height;
-				std::vector<uint8_t> rgba =
-					get_rgba_from_source_render(source, &tf, width, height);
+				std::vector<uint8_t> rgba = get_rgba_from_source_render(
+					source, &tf, width, height, scale);
 				if (rgba.empty()) {
 					obs_log(LOG_INFO, "Failed to get RGBA from source render");
 					// Return an error response
@@ -426,6 +439,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
 	json["obs_text_source_skip_if_same"] = request_data->obs_text_source_skip_if_same;
 	json["aggregate_to_empty"] = request_data->aggregate_to_empty;
+	json["obs_input_source_resize_option"] = request_data->obs_input_source_resize_option;
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
 	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
@@ -474,6 +488,8 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		request_data.obs_text_source_skip_if_same =
 			json.value("obs_text_source_skip_if_same", false);
 		request_data.aggregate_to_empty = json.value("aggregate_to_empty", false);
+		request_data.obs_input_source_resize_option =
+			json.value("obs_input_source_resize_option", "100%");
 
 		// SSL options
 		request_data.ssl_client_cert_file = json.value("ssl_client_cert_file", "");

@@ -33,11 +33,11 @@ void destroy_source_render_data(source_render_data *tf)
   * @param tf  The filter data
   * @param width  The width of the stage surface (output)
   * @param height  The height of the stage surface (output)
-  * @return true  if successful
-  * @return false if unsuccessful
+  * @param scale  Scale the output by this factor
+  * @return The RGBA buffer (4 bytes per pixel) or an empty vector if there was an error
 */
 std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_render_data *tf,
-						 uint32_t &width, uint32_t &height)
+						 uint32_t &width, uint32_t &height, float scale)
 {
 	if (!obs_source_enabled(source)) {
 		obs_log(LOG_ERROR, "Source is not enabled");
@@ -50,6 +50,9 @@ std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_re
 		obs_log(LOG_ERROR, "Width or height is 0");
 		return std::vector<uint8_t>();
 	}
+	// scale the width and height
+	width *= scale;
+	height *= scale;
 
 	// enter graphics context
 	obs_enter_graphics();
