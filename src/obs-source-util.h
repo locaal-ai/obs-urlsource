@@ -30,7 +30,7 @@ void init_source_render_data(source_render_data *tf);
 void destroy_source_render_data(source_render_data *tf);
 
 std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_render_data *tf,
-						 uint32_t &width, uint32_t &height);
+						 uint32_t &width, uint32_t &height, float scale);
 
 std::string convert_rgba_buffer_to_png_base64(const std::vector<uint8_t> &rgba, uint32_t width,
 					      uint32_t height);

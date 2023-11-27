@@ -194,6 +194,24 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	setAggTargetEnabled();
 	connect(ui->aggToTarget, &QCheckBox::toggled, this, setAggTargetEnabled);
 
+	ui->comboBox_resizeInput->setCurrentText(
+		QString::fromStdString(request_data->obs_input_source_resize_option));
+
+	auto inputSourceSelected = [=]() {
+		// if the source is a media source, show the resize option, otherwise hide it
+		auto current_data = ui->obsTextSourceComboBox->currentData();
+		bool hide_resize_option = true;
+		if (current_data.isValid()) {
+			const std::string source_name = current_data.toString().toStdString();
+			hide_resize_option = is_obs_source_text(source_name);
+		}
+		ui->comboBox_resizeInput->setVisible(!hide_resize_option);
+		ui->label_resizeInput->setVisible(!hide_resize_option);
+	};
+	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
+		inputSourceSelected);
+	inputSourceSelected();
+
 	ui->bodyTextEdit->setText(QString::fromStdString(request_data->body));
 
 	auto setVisibilityOfBody = [=]() {
@@ -315,6 +333,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				? url_source_agg_target_string_to_enum(
 					  ui->comboBox_aggTarget->currentText().toStdString())
 				: URL_SOURCE_AGG_TARGET_NONE;
+		request_data_for_saving->obs_input_source_resize_option =
+			ui->comboBox_resizeInput->currentText().toStdString();
 
 		// Save the SSL certificate file
 		request_data_for_saving->ssl_client_cert_file =
