@@ -598,9 +598,51 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 	return request_data;
 }
 
-// Fetch image from url and get bytes
-std::vector<uint8_t> fetch_image(std::string url)
+bool isURL(const std::string &str)
 {
+	// List of common URL schemes
+	std::string schemes[] = {"http://", "https://"};
+	for (const auto &scheme : schemes) {
+		if (str.substr(0, scheme.size()) == scheme) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// Fetch image from url and get bytes
+std::vector<uint8_t> fetch_image(std::string url, std::string &mime_type)
+{
+	// Check if the "url" is actually a file path
+	if (isURL(url) == false) {
+		// This is a file request (at least it's not a url)
+		// Read the file
+		std::ifstream imagefile(trim(url), std::ios::binary);
+		if (!imagefile) {
+			obs_log(LOG_INFO, "Failed to open file, %s", strerror(errno));
+			// Return an error response
+			std::vector<uint8_t> responseFail;
+			return responseFail;
+		}
+		std::vector<uint8_t> responseBody((std::istreambuf_iterator<char>(imagefile)),
+						  std::istreambuf_iterator<char>());
+		imagefile.close();
+
+		// infer the mime type from the file extension
+		std::string extension = url.substr(url.find_last_of(".") + 1);
+		if (extension == "jpg" || extension == "jpeg") {
+			mime_type = "image/jpeg";
+		} else if (extension == "png") {
+			mime_type = "image/png";
+		} else if (extension == "gif") {
+			mime_type = "image/gif";
+		} else {
+			mime_type = "image/unknown";
+		}
+
+		return responseBody;
+	}
+
 	// Build the request with libcurl
 	CURL *curl = curl_easy_init();
 	if (!curl) {
@@ -619,13 +661,27 @@ std::vector<uint8_t> fetch_image(std::string url)
 
 	// Send the request
 	code = curl_easy_perform(curl);
-	curl_easy_cleanup(curl);
 	if (code != CURLE_OK) {
+		curl_easy_cleanup(curl);
 		obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
 		// Return an error response
 		std::vector<uint8_t> responseFail;
 		return responseFail;
 	}
+
+	// get the mime type from the response headers
+	char *ct;
+	code = curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &ct);
+	if (code != CURLE_OK) {
+		curl_easy_cleanup(curl);
+		obs_log(LOG_INFO, "Failed to get mime type: %s", curl_easy_strerror(code));
+		// Return an error response
+		std::vector<uint8_t> responseFail;
+		return responseFail;
+	}
+	mime_type = std::string(ct);
+
+	curl_easy_cleanup(curl);
 
 	return responseBody;
 }
