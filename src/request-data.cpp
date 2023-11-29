@@ -91,6 +91,8 @@ void handle_nonempty_text(url_source_request_data *request_data,
 			if (lastChar == '.' || lastChar == ',' || lastChar == '!' ||
 			    lastChar == '?') {
 				request_data->aggregate_to_empty_buffer.pop_back();
+				// insert a space where the punctuation mark was
+				request_data->aggregate_to_empty_buffer += " ";
 			}
 		}
 
