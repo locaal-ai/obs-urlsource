@@ -198,7 +198,9 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
-		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        if (request_data->fail_on_http_error) {
+            curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        }
 
 		std::string responseBody;
 		std::vector<uint8_t> responseBodyUint8;
@@ -493,6 +495,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["url"] = request_data->url;
 	json["url_or_file"] = request_data->url_or_file;
 	json["method"] = request_data->method;
+    json["fail_on_http_error"] = request_data->fail_on_http_error;
 	json["body"] = request_data->body;
 	json["obs_text_source"] = request_data->obs_text_source;
 	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
@@ -540,6 +543,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		request_data.url = json["url"].get<std::string>();
 		request_data.url_or_file = json.value("url_or_file", "url");
 		request_data.method = json["method"].get<std::string>();
+        request_data.fail_on_http_error = json.value("fail_on_http_error", false);
 		request_data.body = json["body"].get<std::string>();
 		request_data.obs_text_source = json.value("obs_text_source", "");
 		request_data.obs_text_source_skip_if_empty =
