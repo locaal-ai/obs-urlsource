@@ -10,28 +10,30 @@
 #include <fstream>
 #include <filesystem>
 
-std::string normalizeFilename(std::string filename) {
-    const std::string invalidChars = "<>:\"/\\|?* "; // Add other invalid characters as needed
+std::string normalizeFilename(std::string filename)
+{
+	const std::string invalidChars = "<>:\"/\\|?* "; // Add other invalid characters as needed
 
-    // Replace invalid characters
-    for (char &c : filename) {
-        if (invalidChars.find(c) != std::string::npos) {
-            c = '_';
-        }
-    }
+	// Replace invalid characters
+	for (char &c : filename) {
+		if (invalidChars.find(c) != std::string::npos) {
+			c = '_';
+		}
+	}
 
-    // Length check (example for 255 characters)
-    if (filename.length() > 255) {
-        filename = filename.substr(0, 255);
-    }
+	// Length check (example for 255 characters)
+	if (filename.length() > 255) {
+		filename = filename.substr(0, 255);
+	}
 
-    // Convert to lower case (optional)
-    std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+	// Convert to lower case (optional)
+	std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
 
-    return filename;
+	return filename;
 }
 
-std::string save_to_temp_file(const std::vector<uint8_t> &data, const std::string &extension, const std::string& source_name)
+std::string save_to_temp_file(const std::vector<uint8_t> &data, const std::string &extension,
+			      const std::string &source_name)
 {
 	// check if the config folder exists if it doesn't exist, create it.
 	char *config_path = obs_module_config_path("");
@@ -74,7 +76,8 @@ struct request_data_handler_response parse_image_data(struct request_data_handle
 	}
 
 	// save the image to a temporary file
-	std::string temp_file_path = save_to_temp_file(response.body_bytes, image_type, request_data->source_name);
+	std::string temp_file_path =
+		save_to_temp_file(response.body_bytes, image_type, request_data->source_name);
 	response.body = temp_file_path;
 
 	return response;
@@ -100,7 +103,8 @@ struct request_data_handler_response parse_audio_data(struct request_data_handle
 	}
 
 	// save the audio to a temporary file
-	std::string temp_file_path = save_to_temp_file(response.body_bytes, audio_type, request_data->source_name);
+	std::string temp_file_path =
+		save_to_temp_file(response.body_bytes, audio_type, request_data->source_name);
 	response.body = temp_file_path;
 
 	return response;
