@@ -182,6 +182,7 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 	auto text_settings = obs_source_get_settings(target);
 	obs_data_set_string(text_settings, "text", str.c_str());
 	obs_source_update(target, text_settings);
+	obs_data_release(text_settings);
 	obs_source_release(target);
 };
 
@@ -211,13 +212,18 @@ void setAudioCallback(const std::string &str, struct url_source_data *usd)
 	}
 	// assert the source is a media source
 	if (strcmp(obs_source_get_id(target), "ffmpeg_source") != 0) {
+		obs_source_release(target);
 		obs_log(LOG_ERROR, "output_source is not a media source");
 		return;
 	}
-	auto media_settings = obs_source_get_settings(target);
-	obs_data_set_string(media_settings, "file", str.c_str());
+	obs_data_t *media_settings = obs_source_get_settings(target);
+	obs_data_set_bool(media_settings, "is_local_file", true);
+	obs_data_set_bool(media_settings, "clear_on_media_end", true);
 	obs_data_set_string(media_settings, "local_file", str.c_str());
+	obs_data_set_bool(media_settings, "looping", false);
 	obs_source_update(target, media_settings);
+	obs_data_release(media_settings);
+
 	obs_source_media_restart(target);
 	obs_source_release(target);
 };
@@ -427,6 +433,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 		usd->request_data = unserialize_request_data(serialized_request_data);
 	}
 
+	usd->request_data.source_name = std::string(obs_source_get_name(source));
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->run_while_not_visible = obs_data_get_bool(settings, "run_while_not_visible");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");

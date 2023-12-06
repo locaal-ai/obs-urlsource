@@ -492,6 +492,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 {
 	// Serialize the request data to a string using JSON
 	nlohmann::json json;
+	json["source_name"] = request_data->source_name;
 	json["url"] = request_data->url;
 	json["url_or_file"] = request_data->url_or_file;
 	json["method"] = request_data->method;
@@ -540,6 +541,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		nlohmann::json json;
 		json = nlohmann::json::parse(serialized_request_data);
 
+		request_data.source_name = json.value("source_name", "");
 		request_data.url = json["url"].get<std::string>();
 		request_data.url_or_file = json.value("url_or_file", "url");
 		request_data.method = json["method"].get<std::string>();

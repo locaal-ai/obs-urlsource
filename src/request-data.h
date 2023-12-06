@@ -82,6 +82,7 @@ inline int url_source_agg_target_string_to_enum(const std::string &agg_target)
 }
 
 struct url_source_request_data {
+	std::string source_name;
 	std::string url;
 	std::string url_or_file;
 	std::string method;
@@ -121,6 +122,7 @@ struct url_source_request_data {
 	// default constructor
 	url_source_request_data()
 	{
+		source_name = std::string("");
 		url = std::string("");
 		url_or_file = std::string("url");
 		method = std::string("GET");
