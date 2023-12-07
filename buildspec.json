@@ -45,7 +45,7 @@
         }
     },
     "name": "obs-urlsource",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "author": "Roy Shilkrot",
     "website": "https://github.com/royshil/obs-urlsource",
     "email": "roy.shil@gmail.com",
