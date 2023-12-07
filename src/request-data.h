@@ -82,9 +82,11 @@ inline int url_source_agg_target_string_to_enum(const std::string &agg_target)
 }
 
 struct url_source_request_data {
+	std::string source_name;
 	std::string url;
 	std::string url_or_file;
 	std::string method;
+	bool fail_on_http_error;
 	std::string body;
 	std::string obs_text_source;
 	bool obs_text_source_skip_if_empty;
@@ -120,9 +122,11 @@ struct url_source_request_data {
 	// default constructor
 	url_source_request_data()
 	{
+		source_name = std::string("");
 		url = std::string("");
 		url_or_file = std::string("url");
 		method = std::string("GET");
+		fail_on_http_error = false;
 		body = std::string("");
 		obs_text_source = std::string("");
 		obs_text_source_skip_if_empty = false;

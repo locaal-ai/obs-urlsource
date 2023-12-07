@@ -151,35 +151,21 @@
       <property name="verticalSpacing">
        <number>3</number>
       </property>
-      <item row="0" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Method</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="methodComboBox">
-        <item>
-         <property name="text">
-          <string>GET</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>POST</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="1" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Headers</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="6" column="1">
        <widget class="QWidget" name="widget_4" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <property name="leftMargin">
@@ -257,177 +243,14 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Dynamic Input</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>Body</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QTextEdit" name="bodyTextEdit">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptRichText">
-         <bool>false</bool>
-        </property>
-        <property name="placeholderText">
-         <string>Body</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="sslOptionsCheckbox">
-        <property name="text">
-         <string>SSL Options</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="7" column="1">
-       <widget class="QGroupBox" name="sslOptionsGroup">
-        <property name="title">
-         <string/>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="spacing">
-          <number>6</number>
-         </property>
-         <property name="leftMargin">
-          <number>6</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>6</number>
-         </property>
-         <property name="bottomMargin">
-          <number>6</number>
-         </property>
-         <item>
-          <widget class="QWidget" name="widget_sslcert" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLineEdit" name="sslCertFileLineEdit">
-              <property name="placeholderText">
-               <string>SSL Certificate File</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="sslCertFileButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QWidget" name="widget_sslkeyfile" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0">
-            <property name="spacing">
-             <number>7</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLineEdit" name="sslKeyFileLineEdit">
-              <property name="placeholderText">
-               <string>SSL Key File</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="sslKeyFileButton">
-              <property name="text">
-               <string>...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="sslKeyPasswordLineEdit">
-           <property name="placeholderText">
-            <string>SSL Key Password</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="verifyPeerCheckBox">
-           <property name="text">
-            <string>Verify Peer?</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="2" column="1">
        <widget class="QWidget" name="widget_6" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="spacing">
@@ -612,6 +435,214 @@
              </widget>
             </item>
            </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Body</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QTextEdit" name="bodyTextEdit">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="acceptRichText">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string>Body</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0">
+       <widget class="QCheckBox" name="sslOptionsCheckbox">
+        <property name="text">
+         <string>SSL Options</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
+       <widget class="QGroupBox" name="sslOptionsGroup">
+        <property name="title">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>6</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>6</number>
+         </property>
+         <property name="bottomMargin">
+          <number>6</number>
+         </property>
+         <item>
+          <widget class="QWidget" name="widget_sslcert" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="sslCertFileLineEdit">
+              <property name="placeholderText">
+               <string>SSL Certificate File</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="sslCertFileButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_sslkeyfile" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0">
+            <property name="spacing">
+             <number>7</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="sslKeyFileLineEdit">
+              <property name="placeholderText">
+               <string>SSL Key File</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="sslKeyFileButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="sslKeyPasswordLineEdit">
+           <property name="placeholderText">
+            <string>SSL Key Password</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="verifyPeerCheckBox">
+           <property name="text">
+            <string>Verify Peer?</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QWidget" name="widget_10" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="methodComboBox">
+           <item>
+            <property name="text">
+             <string>GET</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>POST</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_failonhttperrorcodes">
+           <property name="toolTip">
+            <string>Fail on e.g. 400 HTTP codes or continue and get the response body?</string>
+           </property>
+           <property name="text">
+            <string>Fail on HTTP error code?</string>
+           </property>
           </widget>
          </item>
         </layout>

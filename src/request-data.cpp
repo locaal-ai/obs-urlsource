@@ -91,6 +91,8 @@ void handle_nonempty_text(url_source_request_data *request_data,
 			if (lastChar == '.' || lastChar == ',' || lastChar == '!' ||
 			    lastChar == '?') {
 				request_data->aggregate_to_empty_buffer.pop_back();
+				// insert a space where the punctuation mark was
+				request_data->aggregate_to_empty_buffer += " ";
 			}
 		}
 
@@ -196,7 +198,9 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
-		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+		if (request_data->fail_on_http_error) {
+			curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+		}
 
 		std::string responseBody;
 		std::vector<uint8_t> responseBodyUint8;
@@ -235,33 +239,41 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 						request_data->obs_text_source.c_str()));
 				const char *text = obs_data_get_string(sourceSettings, "text");
 				obs_data_release(sourceSettings);
-				if (text == NULL || text[0] == '\0') {
+				std::string textStr;
+				if (text != NULL) {
+					textStr = text;
+				}
+
+				if (textStr.empty()) {
 					handle_empty_text(request_data, response, json);
 				} else {
-					handle_nonempty_text(request_data, response, json, text);
+					// trim the text for whistespace
+					textStr = trim(textStr);
+
+					handle_nonempty_text(request_data, response, json,
+							     textStr.c_str());
+
+					// if one of the headers is Content-Type application/json, make sure the text is JSONified
+					for (auto header : request_data->headers) {
+						// check if the header is Content-Type case insensitive using regex
+						std::regex header_regex(
+							"content-type",
+							std::regex_constants::icase);
+						if (std::regex_search(header.first, header_regex) &&
+						    header.second == "application/json") {
+							nlohmann::json tmp = text;
+							textStr = tmp.dump();
+							// remove '"' from the beginning and end of the string
+							textStr = textStr.substr(1, textStr.size() -
+											    2);
+							break;
+						}
+					}
+
+					json["input"] = textStr;
 				}
 				if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
 					return response;
-				}
-
-				// if one of the headers is Content-Type application/json, make sure the text is JSONified
-				std::string textStr = text;
-				for (auto header : request_data->headers) {
-					// check if the header is Content-Type case insensitive using regex
-					std::regex header_regex("content-type",
-								std::regex_constants::icase);
-					if (std::regex_search(header.first, header_regex) &&
-					    header.second == "application/json") {
-						nlohmann::json tmp = text;
-						textStr = tmp.dump();
-						// remove '"' from the beginning and end of the string
-						textStr = textStr.substr(1, textStr.size() - 2);
-						break;
-					}
-				}
-				if (!json.contains("input")) {
-					// only set the input if it wasn't set by aggregate-to-empty
-					json["input"] = textStr;
 				}
 			} else {
 				// this is not a text source.
@@ -392,20 +404,26 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 		curl_easy_cleanup(curl);
 
+		response.body = responseBody;
+		response.body_bytes = responseBodyUint8;
+		response.headers = headers;
+		response.http_status_code = http_code;
+
 		if (code != CURLE_OK) {
-			obs_log(LOG_INFO, "Failed to send request: %s", curl_easy_strerror(code));
-			obs_log(LOG_INFO, "Request URL: %s", url.c_str());
-			// Return an error response
-			response.error_message = curl_easy_strerror(code);
+			obs_log(LOG_WARNING, "Failed to send request to '%s': %s", url.c_str(),
+				curl_easy_strerror(code));
+			if (responseBody.size() > 0) {
+				obs_log(LOG_WARNING, "Response body: %s", responseBody.c_str());
+			}
+			// Return a formatted error response with the message and the HTTP status code
+			response.error_message = std::string(curl_easy_strerror(code)) + " (" +
+						 std::to_string(http_code) + ")";
+
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
 
-		response.body = responseBody;
-		response.body_bytes = responseBodyUint8;
 		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
-		response.headers = headers;
-		response.http_status_code = http_code;
 	}
 
 	// Parse the response
@@ -474,9 +492,11 @@ std::string serialize_request_data(url_source_request_data *request_data)
 {
 	// Serialize the request data to a string using JSON
 	nlohmann::json json;
+	json["source_name"] = request_data->source_name;
 	json["url"] = request_data->url;
 	json["url_or_file"] = request_data->url_or_file;
 	json["method"] = request_data->method;
+	json["fail_on_http_error"] = request_data->fail_on_http_error;
 	json["body"] = request_data->body;
 	json["obs_text_source"] = request_data->obs_text_source;
 	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
@@ -521,9 +541,11 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		nlohmann::json json;
 		json = nlohmann::json::parse(serialized_request_data);
 
+		request_data.source_name = json.value("source_name", "");
 		request_data.url = json["url"].get<std::string>();
 		request_data.url_or_file = json.value("url_or_file", "url");
 		request_data.method = json["method"].get<std::string>();
+		request_data.fail_on_http_error = json.value("fail_on_http_error", false);
 		request_data.body = json["body"].get<std::string>();
 		request_data.obs_text_source = json.value("obs_text_source", "");
 		request_data.obs_text_source_skip_if_empty =

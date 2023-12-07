@@ -101,6 +101,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	connect(ui->urlRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
 
 	ui->methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
+	ui->checkBox_failonhttperrorcodes->setChecked(request_data->fail_on_http_error);
 
 	// populate headers in ui->tableView_headers from request_data->headers
 	QStandardItemModel *model = new QStandardItemModel;
@@ -317,6 +318,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		request_data_for_saving->url_or_file = ui->urlRadioButton->isChecked() ? "url"
 										       : "file";
 		request_data_for_saving->method = ui->methodComboBox->currentText().toStdString();
+		request_data_for_saving->fail_on_http_error =
+			ui->checkBox_failonhttperrorcodes->isChecked();
 		request_data_for_saving->body = ui->bodyTextEdit->toPlainText().toStdString();
 		if (ui->obsTextSourceComboBox->currentData().toString().toStdString() != "None") {
 			request_data_for_saving->obs_text_source =
@@ -482,7 +485,12 @@ void RequestBuilder::show_response_dialog(const request_data_handler_response &r
 		requestBodyGroupBox->setLayout(requestBodyLayout);
 		// Add scroll area for the request body
 		QScrollArea *requestBodyScrollArea = new QScrollArea;
-		QLabel *requestLabel = new QLabel(QString::fromStdString(response.request_body));
+		QString request_body = QString::fromStdString(response.request_body).trimmed();
+		// if the request body is too big to fit in the dialog, trim it
+		if (request_body.length() > 1000) {
+			request_body = request_body.left(1000) + "...";
+		}
+		QLabel *requestLabel = new QLabel(request_body);
 		// Wrap the text
 		requestLabel->setWordWrap(true);
 		// Set the label as the scroll area's widget
@@ -495,7 +503,12 @@ void RequestBuilder::show_response_dialog(const request_data_handler_response &r
 		responseBodyGroupBox->setLayout(new QVBoxLayout);
 		// Add scroll area for the response body
 		QScrollArea *responseBodyScrollArea = new QScrollArea;
-		QLabel *responseLabel = new QLabel(QString::fromStdString(response.body).trimmed());
+		QString response_body = QString::fromStdString(response.body).trimmed();
+		// if the response body is too big to fit in the dialog, trim it
+		if (response_body.length() > 1000) {
+			response_body = response_body.left(1000) + "...";
+		}
+		QLabel *responseLabel = new QLabel(response_body);
 		// Wrap the text
 		responseLabel->setWordWrap(true);
 		// dont allow rich text
@@ -525,9 +538,14 @@ void RequestBuilder::show_response_dialog(const request_data_handler_response &r
 							       "}"));
 			}
 		} else {
+			QString parsed_output =
+				QString::fromStdString(response.body_parts_parsed[0]).trimmed();
+			// if the parsed output is too big to fit in the dialog, trim it
+			if (parsed_output.length() > 1000) {
+				parsed_output = parsed_output.left(1000) + "...";
+			}
 			// Add a QLabel to show a single parsed output
-			QLabel *parsedOutputLabel =
-				new QLabel(QString::fromStdString(response.body_parts_parsed[0]));
+			QLabel *parsedOutputLabel = new QLabel(parsed_output);
 			parsedOutputLabel->setWordWrap(true);
 			parsedOutputLabel->setTextFormat(Qt::PlainText);
 			parsedOutputLayout->addWidget(parsedOutputLabel);
