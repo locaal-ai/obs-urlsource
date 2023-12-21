@@ -126,8 +126,6 @@ void render_text_with_qtextdocument(const std::string &text, uint32_t &width, ui
 
 	// save pixmap to buffer
 	QImage image = pixmap.toImage();
-	// crop to the idealWidth of the text
-	image = image.copy(0, 0, (int)textDocument.idealWidth(), image.height());
 	// get width and height
 	width = image.width();
 	height = image.height();

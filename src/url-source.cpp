@@ -642,6 +642,14 @@ obs_properties_t *url_source_properties(void *data)
 
 	obs_properties_add_int(ppts, "render_width", "Render Width (px)", 100, 10000, 1);
 
+	// Add a informative text about the plugin
+	obs_properties_add_text(ppts, "info",
+				QString(PLUGIN_INFO_TEMPLATE)
+					.arg(PLUGIN_VERSION)
+					.toStdString()
+					.c_str(),
+				OBS_TEXT_INFO);
+
 	return ppts;
 }
 
