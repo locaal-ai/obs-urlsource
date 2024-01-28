@@ -180,8 +180,8 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 		return;
 	}
 	auto target_settings = obs_source_get_settings(target);
-	// if the target source is a media source - set the input field to the text and disable the local file
-	if (strcmp(obs_source_get_id(target), "ffmpeg_source") != 0) {
+	if (strcmp(obs_source_get_id(target), "ffmpeg_source") == 0) {
+		// if the target source is a media source - set the input field to the text and disable the local file
 		obs_data_set_bool(target_settings, "is_local_file", false);
 		obs_data_set_bool(target_settings, "clear_on_media_end", true);
 		obs_data_set_string(target_settings, "local_file", "");
