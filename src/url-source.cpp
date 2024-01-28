@@ -179,10 +179,20 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 		obs_log(LOG_ERROR, "text_source target is null");
 		return;
 	}
-	auto text_settings = obs_source_get_settings(target);
-	obs_data_set_string(text_settings, "text", str.c_str());
-	obs_source_update(target, text_settings);
-	obs_data_release(text_settings);
+	auto target_settings = obs_source_get_settings(target);
+	// if the target source is a media source - set the input field to the text and disable the local file
+	if (strcmp(obs_source_get_id(target), "ffmpeg_source") != 0) {
+		obs_data_set_bool(target_settings, "is_local_file", false);
+		obs_data_set_bool(target_settings, "clear_on_media_end", true);
+		obs_data_set_string(target_settings, "local_file", "");
+		obs_data_set_string(target_settings, "input", str.c_str());
+		obs_data_set_bool(target_settings, "looping", false);
+	} else {
+		// if the target source is a text source - set the text field
+		obs_data_set_string(target_settings, "text", str.c_str());
+	}
+	obs_source_update(target, target_settings);
+	obs_data_release(target_settings);
 	obs_source_release(target);
 };
 
