@@ -46,6 +46,7 @@ struct url_source_data {
 	struct obs_source_frame frame;
 	bool send_to_stream = false;
 	uint32_t render_width = 640;
+	bool unhide_output_source = false;
 
 	// Text source to output the text to
 	obs_weak_source_t *output_source = nullptr;
@@ -192,6 +193,22 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 		obs_data_set_string(target_settings, "text", str.c_str());
 	}
 	obs_source_update(target, target_settings);
+	if (usd->unhide_output_source) {
+		// unhide the output source
+		obs_source_set_enabled(target, true);
+		obs_enum_scenes([](void* target_ptr, obs_source_t* scene_source) -> bool {
+			obs_scene_t* scene = obs_scene_from_source(scene_source);
+			if (scene == nullptr) {
+				return true;
+			}
+			obs_sceneitem_t* scene_item = obs_scene_sceneitem_from_source(scene, (obs_source_t*)target_ptr);
+			if (scene_item == nullptr) {
+				return true;
+			}
+			obs_sceneitem_set_visible(scene_item, true);
+			return false; // stop enumerating
+		}, target);
+	}
 	obs_data_release(target_settings);
 	obs_source_release(target);
 };
@@ -450,6 +467,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
 	usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
+	usd->unhide_output_source = obs_data_get_bool(settings, "unhide_output_source");
 
 	// initialize the mutex
 	usd->output_source_mutex = new std::mutex();
@@ -482,6 +500,7 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->output_text_template = obs_data_get_string(settings, "template");
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 	usd->render_width = (uint32_t)obs_data_get_int(settings, "render_width");
+	usd->unhide_output_source = obs_data_get_bool(settings, "unhide_output_source");
 
 	// update the text source
 	const char *new_text_source_name = obs_data_get_string(settings, "text_sources");
@@ -535,6 +554,7 @@ void url_source_defaults(obs_data_t *s)
 	obs_data_set_default_string(s, "url", request_data.url.c_str());
 
 	obs_data_set_default_string(s, "text_sources", "none");
+	obs_data_set_default_bool(s, "unhide_output_source", false);
 
 	obs_data_set_default_bool(s, "send_to_stream", false);
 
@@ -622,12 +642,31 @@ obs_properties_t *url_source_properties(void *data)
 	obs_properties_add_bool(ppts, "run_while_not_visible", "Run while not visible?");
 
 	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources",
-							  "Output text source", OBS_COMBO_TYPE_LIST,
+							  "Output source", OBS_COMBO_TYPE_LIST,
 							  OBS_COMBO_FORMAT_STRING);
 	// Add a "none" option
 	obs_property_list_add_string(sources, "None / Internal rendering", "none");
 	// Add the sources
 	obs_enum_sources(add_sources_to_list, sources);
+
+	// Checkbox for unhiding output source on update
+	obs_properties_add_bool(ppts, "unhide_output_source", "Unhide output source on update");
+
+	// add callback for source selection change to change visibility of unhide option
+	obs_property_set_modified_callback(sources, [](obs_properties_t *props,
+						       obs_property_t *property,
+						       obs_data_t *settings) {
+		UNUSED_PARAMETER(property);
+		const char *selected_source_name = obs_data_get_string(settings, "text_sources");
+		obs_property_t *unhide_output_source =
+			obs_properties_get(props, "unhide_output_source");
+		if (is_valid_output_source_name(selected_source_name)) {
+			obs_property_set_visible(unhide_output_source, true);
+		} else {
+			obs_property_set_visible(unhide_output_source, false);
+		}
+		return true;
+	});
 
 	obs_properties_add_bool(ppts, "send_to_stream",
 				"Send output to current stream as captions");
