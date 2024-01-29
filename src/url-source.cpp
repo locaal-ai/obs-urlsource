@@ -196,18 +196,21 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 	if (usd->unhide_output_source) {
 		// unhide the output source
 		obs_source_set_enabled(target, true);
-		obs_enum_scenes([](void* target_ptr, obs_source_t* scene_source) -> bool {
-			obs_scene_t* scene = obs_scene_from_source(scene_source);
-			if (scene == nullptr) {
-				return true;
-			}
-			obs_sceneitem_t* scene_item = obs_scene_sceneitem_from_source(scene, (obs_source_t*)target_ptr);
-			if (scene_item == nullptr) {
-				return true;
-			}
-			obs_sceneitem_set_visible(scene_item, true);
-			return false; // stop enumerating
-		}, target);
+		obs_enum_scenes(
+			[](void *target_ptr, obs_source_t *scene_source) -> bool {
+				obs_scene_t *scene = obs_scene_from_source(scene_source);
+				if (scene == nullptr) {
+					return true;
+				}
+				obs_sceneitem_t *scene_item = obs_scene_sceneitem_from_source(
+					scene, (obs_source_t *)target_ptr);
+				if (scene_item == nullptr) {
+					return true;
+				}
+				obs_sceneitem_set_visible(scene_item, true);
+				return false; // stop enumerating
+			},
+			target);
 	}
 	obs_data_release(target_settings);
 	obs_source_release(target);
@@ -641,8 +644,8 @@ obs_properties_t *url_source_properties(void *data)
 	// Run timer while not visible
 	obs_properties_add_bool(ppts, "run_while_not_visible", "Run while not visible?");
 
-	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources",
-							  "Output source", OBS_COMBO_TYPE_LIST,
+	obs_property_t *sources = obs_properties_add_list(ppts, "text_sources", "Output source",
+							  OBS_COMBO_TYPE_LIST,
 							  OBS_COMBO_FORMAT_STRING);
 	// Add a "none" option
 	obs_property_list_add_string(sources, "None / Internal rendering", "none");
