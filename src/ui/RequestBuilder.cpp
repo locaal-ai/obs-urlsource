@@ -526,16 +526,41 @@ void RequestBuilder::show_response_dialog(const request_data_handler_response &r
 		QVBoxLayout *parsedOutputLayout = new QVBoxLayout;
 		parsedOutputGroupBox->setLayout(parsedOutputLayout);
 		if (response.body_parts_parsed.size() > 1) {
-			// Add a QTabWidget to show the parsed output parts
-			QTabWidget *tabWidget = new QTabWidget;
-			parsedOutputLayout->addWidget(tabWidget);
-			for (auto &parsedOutput : response.body_parts_parsed) {
-				// label each tab {outputN} where N is the index of the output part
-				tabWidget->addTab(
-					new QLabel(QString::fromStdString(parsedOutput)),
-					QString::fromStdString("{output" +
-							       std::to_string(tabWidget->count()) +
-							       "}"));
+			if (response.body_parts_parsed.size() > 3) {
+				// Use a dropdown to select the parsed output to show
+				QComboBox *parsedOutputComboBox = new QComboBox;
+				parsedOutputLayout->addWidget(parsedOutputComboBox);
+				for (size_t i = 0; i < response.body_parts_parsed.size(); i++) {
+					// add each parsed output to the dropdown
+					parsedOutputComboBox->addItem(
+						QString::number(i) + ": " +
+							QString::fromStdString(
+								response.body_parts_parsed[i]),
+						QVariant(QString::fromStdString(
+							response.body_parts_parsed[i])));
+				}
+				// Add a QLabel to show the selected parsed output
+				QLabel *parsedOutputLabel = new QLabel;
+				parsedOutputLayout->addWidget(parsedOutputLabel);
+				// Show the selected parsed output
+				connect(parsedOutputComboBox, &QComboBox::currentTextChanged, this,
+					[=]() {
+						parsedOutputLabel->setText(
+							parsedOutputComboBox->currentData()
+								.toString());
+					});
+			} else {
+				// Add a QTabWidget to show the parsed output parts
+				QTabWidget *tabWidget = new QTabWidget;
+				parsedOutputLayout->addWidget(tabWidget);
+				for (auto &parsedOutput : response.body_parts_parsed) {
+					// label each tab {outputN} where N is the index of the output part
+					tabWidget->addTab(
+						new QLabel(QString::fromStdString(parsedOutput)),
+						QString::fromStdString(
+							"{output" +
+							std::to_string(tabWidget->count()) + "}"));
+				}
 			}
 		} else {
 			QString parsed_output =
