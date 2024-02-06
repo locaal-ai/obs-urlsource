@@ -258,6 +258,28 @@ void setAudioCallback(const std::string &str, struct url_source_data *usd)
 	obs_source_release(target);
 };
 
+std::string renderOutputTemplate(inja::Environment &env, const std::string &input,
+				 const std::vector<std::string> &outputs,
+				 const nlohmann::json &body)
+try {
+	// Use Inja to render the template
+	nlohmann::json data;
+	if (outputs.size() > 1) {
+		for (size_t i = 0; i < outputs.size(); i++) {
+			data["output" + std::to_string(i)] = outputs[i];
+		}
+		// in "output" add an array of all the outputs
+		data["output"] = outputs;
+	} else {
+		data["output"] = outputs[0];
+	}
+	data["body"] = body;
+	return env.render(input, data);
+} catch (std::exception &e) {
+	obs_log(LOG_ERROR, "Failed to parse template: %s", e.what());
+	return "";
+}
+
 void curl_loop(struct url_source_data *usd)
 {
 	obs_log(LOG_INFO, "Starting URL Source thread, update timer: %d", usd->update_timer_ms);
@@ -326,40 +348,24 @@ void curl_loop(struct url_source_data *usd)
 										["content-type"];
 							}
 						} else {
+							text = renderOutputTemplate(
+								env, text,
+								response.body_parts_parsed,
+								response.body_json);
 							// use fetch_image to get the image
-							image_data = fetch_image(
-								response.body_parts_parsed[0],
-								mime_type);
+							image_data = fetch_image(text.c_str(),
+										 mime_type);
 						}
 						// convert the image to base64
 						const std::string base64_image =
 							base64_encode(image_data);
 						// build an image tag with the base64 image
-						response.body_parts_parsed[0] =
-							"<img src=\"data:" + mime_type +
-							";base64," + base64_image + "\" />";
-					}
-					try {
-						// Use Inja to render the template
-						nlohmann::json data;
-						if (response.body_parts_parsed.size() > 1) {
-							for (size_t i = 0;
-							     i < response.body_parts_parsed.size();
-							     i++) {
-								data["output" + std::to_string(i)] =
-									response.body_parts_parsed[i];
-							}
-							// in "output" add an array of all the outputs
-							data["output"] = response.body_parts_parsed;
-						} else {
-							data["output"] =
-								response.body_parts_parsed[0];
-						}
-						data["body"] = response.body_json;
-						text = env.render(text, data);
-					} catch (std::exception &e) {
-						obs_log(LOG_ERROR, "Failed to parse template: %s",
-							e.what());
+						text = "<img src=\"data:" + mime_type + ";base64," +
+						       base64_image + "\" />";
+					} else {
+						text = renderOutputTemplate(
+							env, text, response.body_parts_parsed,
+							response.body_json);
 					}
 				}
 
