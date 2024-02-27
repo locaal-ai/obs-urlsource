@@ -317,6 +317,13 @@ void curl_loop(struct url_source_data *usd)
 			cur_time = get_time_ns();
 			usd->frame.timestamp = cur_time - start_time;
 
+            // get the current source's (usd->source) properties
+            obs_data_t  *source_settings = obs_source_get_settings(usd->source);
+            // set the latest output property to the current output
+            obs_data_set_string(source_settings, "latest_output", response.body.c_str());
+            obs_data_release(source_settings);
+
+
 			if (usd->request_data.output_type == "Audio (data)") {
 				if (!is_valid_output_source_name(usd->output_source_name)) {
 					obs_log(LOG_ERROR,
@@ -639,6 +646,10 @@ obs_properties_t *url_source_properties(void *data)
 		obs_properties_add_text(ppts, "url", "URL / File", OBS_TEXT_DEFAULT);
 	// Disable the URL input since it's setup via the Request Builder dialog
 	obs_property_set_enabled(urlprop, false);
+
+    // latest output
+    obs_property_t *latestOutput = obs_properties_add_text(ppts, "latest_output", "Latest Output", OBS_TEXT_DEFAULT);
+    obs_property_set_enabled(latestOutput, false);
 
 	// Add button to open the Request Builder dialog
 	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source",
