@@ -12,6 +12,10 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <windows.h>
+#include <codecvt>
+#include <io.h>
+#include <fcntl.h>
 
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -639,7 +643,18 @@ std::vector<uint8_t> fetch_image(std::string url, std::string &mime_type)
 	if (isURL(url) == false) {
 		// This is a file request (at least it's not a url)
 		// Read the file
-		std::ifstream imagefile(trim(url), std::ios::binary);
+
+#ifdef _WIN32
+		// Convert UTF-8 string to wide string
+		int size_needed =
+			MultiByteToWideChar(CP_UTF8, 0, &url[0], (int)url.size(), NULL, 0);
+		std::wstring wurl(size_needed, 0);
+		MultiByteToWideChar(CP_UTF8, 0, &url[0], (int)url.size(), &wurl[0], size_needed);
+#else
+		std::string wurl = url;
+#endif
+
+		std::ifstream imagefile(wurl, std::ios::binary);
 		if (!imagefile) {
 			obs_log(LOG_INFO, "Failed to open file, %s", strerror(errno));
 			// Return an error response
