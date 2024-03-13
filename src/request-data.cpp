@@ -164,6 +164,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 {
 	struct request_data_handler_response response;
 
+	request_data->sequence_number++;
+
 	if (request_data->url_or_file == "file") {
 		// This is a file request
 		// Read the file
@@ -334,10 +336,14 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		// Replace the {input} placeholder with the source text
 		inja::Environment env;
 		// Add an inja callback for time formatting
-		env.add_callback("strftime", 1, [](inja::Arguments &args) {
+		env.add_callback("strftime", 2, [](inja::Arguments &args) {
 			std::string format = args.at(0)->get<std::string>();
 			std::time_t t = std::time(nullptr);
 			std::tm *tm = std::localtime(&t);
+			if (args.at(1)->get<bool>()) {
+				// if the second argument is true, use UTC time
+				tm = std::gmtime(&t);
+			}
 			char buffer[256];
 			std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
 			return std::string(buffer);
@@ -350,6 +356,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_free(escaped);
 			return input;
 		});
+
+		json["seq"] = request_data->sequence_number;
 
 		// Replace the {input} placeholder in the querystring as well
 		std::string url = request_data->url;

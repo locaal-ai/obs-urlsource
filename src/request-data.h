@@ -95,6 +95,7 @@ struct url_source_request_data {
 	std::string aggregate_to_empty_buffer;
 	// agg buffer begin timestamp
 	uint64_t agg_buffer_begin_ts;
+	uint64_t sequence_number;
 	std::string last_obs_text_source_value;
 	std::string obs_input_source_resize_option;
 	// SSL options
@@ -134,6 +135,7 @@ struct url_source_request_data {
 		aggregate_to_target = URL_SOURCE_AGG_TARGET_NONE;
 		aggregate_to_empty_buffer = std::string("");
 		agg_buffer_begin_ts = 0;
+		sequence_number = 0;
 		last_obs_text_source_value = std::string("");
 		obs_input_source_resize_option = std::string("100%");
 		ssl_verify_peer = false;

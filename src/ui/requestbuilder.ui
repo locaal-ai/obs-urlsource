@@ -158,6 +158,51 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="1">
+       <widget class="QWidget" name="widget_10" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="methodComboBox">
+           <item>
+            <property name="text">
+             <string>GET</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>POST</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_failonhttperrorcodes">
+           <property name="toolTip">
+            <string>Fail on e.g. 400 HTTP codes or continue and get the response body?</string>
+           </property>
+           <property name="text">
+            <string>Fail on HTTP error code?</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
       <item row="6" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
@@ -442,8 +487,11 @@
       </item>
       <item row="9" column="0">
        <widget class="QLabel" name="label_16">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available functions: (for URL field above as well)&lt;/p&gt;&lt;p&gt;- {{input}} : The dynamic input&lt;/p&gt;&lt;p&gt;- {{strftime(&amp;lt;format&amp;gt;, &amp;lt;utc? true/false&amp;gt;)}} : Add a formatted time&lt;/p&gt;&lt;p&gt;- {{urlencode(var)}} : URL Encoded input&lt;/p&gt;&lt;p&gt;- {{imageb64}} : Base64 encoded image input&lt;/p&gt;&lt;p&gt;- {{seq}} : Sequential counter for requests&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
-         <string>Body</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Body&lt;/p&gt;&lt;p&gt;ℹ️&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -463,21 +511,21 @@
         </property>
        </widget>
       </item>
-      <item row="11" column="0">
+      <item row="10" column="0">
        <widget class="QCheckBox" name="sslOptionsCheckbox">
         <property name="text">
          <string>SSL Options</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
+      <item row="11" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="11" column="1">
        <widget class="QGroupBox" name="sslOptionsGroup">
         <property name="title">
          <string/>
@@ -597,51 +645,6 @@
           <widget class="QCheckBox" name="verifyPeerCheckBox">
            <property name="text">
             <string>Verify Peer?</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QWidget" name="widget_10" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
-         <property name="spacing">
-          <number>6</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QComboBox" name="methodComboBox">
-           <item>
-            <property name="text">
-             <string>GET</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>POST</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_failonhttperrorcodes">
-           <property name="toolTip">
-            <string>Fail on e.g. 400 HTTP codes or continue and get the response body?</string>
-           </property>
-           <property name="text">
-            <string>Fail on HTTP error code?</string>
            </property>
           </widget>
          </item>
