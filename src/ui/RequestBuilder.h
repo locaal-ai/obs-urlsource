@@ -15,9 +15,11 @@ public:
 
 private slots:
 	void show_response_dialog(const request_data_handler_response &response);
+	void show_error_message(const std::string &error_message);
 
 signals:
 	void show_response_dialog_signal(const request_data_handler_response &response);
+	void show_error_message_signal(const std::string &error_message);
 
 private:
 	Ui::RequestBuilder *ui;
