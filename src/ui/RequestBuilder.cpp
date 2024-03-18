@@ -56,6 +56,32 @@ bool add_sources_to_qcombobox(void *list, obs_source_t *source)
 	return true;
 }
 
+void set_widgets_enabled_in_layout(QLayout *layout, bool enabled,
+				   std::vector<QWidget *> exclude = {})
+{
+	if (!layout)
+		return;
+
+	for (int i = 0; i < layout->count(); ++i) {
+		QLayoutItem *item = layout->itemAt(i);
+		QWidget *widget = item->widget();
+		// check if widget is excluded
+		bool excluded = false;
+		for (const QWidget *excludeWidget : exclude) {
+			if (widget == excludeWidget) {
+				excluded = true;
+			}
+		}
+		if (widget && !excluded) {
+			widget->setEnabled(enabled);
+		}
+		if (item->layout()) {
+			// Recursively enable/disable widgets in nested layouts, excluding the specified widget
+			set_widgets_enabled_in_layout(item->layout(), enabled, exclude);
+		}
+	}
+}
+
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			       std::function<void()> update_handler, QWidget *parent)
 	: QDialog(parent), ui(new Ui::RequestBuilder)
@@ -90,15 +116,31 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	ui->urlRequestOptionsGroup->setVisible(request_data->url_or_file == "url");
 
 	auto toggleFileUrlButtons = [=]() {
-		ui->urlOrFileButton->setEnabled(ui->fileRadioButton->isChecked());
-		// hide the urlRequestOptionsGroup if file is selected
-		ui->urlRequestOptionsGroup->setVisible(ui->urlRadioButton->isChecked());
-		// adjust the size of the dialog to fit the content
+		if (ui->fileRadioButton->isChecked()) {
+			ui->urlOrFileButton->setEnabled(true);
+			ui->urlRequestOptionsGroup->setVisible(false);
+		} else if (ui->urlRadioButton->isChecked()) {
+			ui->urlOrFileButton->setEnabled(false);
+			ui->urlRequestOptionsGroup->setVisible(true);
+		}
 		this->adjustSize();
 	};
 	// show file selector button if file is selected
 	connect(ui->fileRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
 	connect(ui->urlRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
+	connect(ui->toolButton_polyglot, &QToolButton::clicked, this, [=]() {
+		ui->urlRadioButton->setChecked(true);
+		toggleFileUrlButtons();
+		ui->methodComboBox->setCurrentIndex(1);
+		ui->urlLineEdit->setText("http://localhost:18080/translate");
+		ui->bodyTextEdit->setText(
+			"{\"text\":\"{{input}}\", \"source_lang\":\"eng_Latn\", \"target_lang\":\"spa_Latn\"}");
+		ui->obsTextSourceEnabledCheckBox->setChecked(true);
+		ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+		ui->sslOptionsCheckbox->setChecked(false);
+		ui->outputTypeComboBox->setCurrentIndex(0);
+		ui->outputRegexLineEdit->setText("");
+	});
 
 	ui->methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
 	ui->checkBox_failonhttperrorcodes->setChecked(request_data->fail_on_http_error);
@@ -395,6 +437,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	connect(this, &RequestBuilder::show_response_dialog_signal, this,
 		&RequestBuilder::show_response_dialog);
+	connect(this, &RequestBuilder::show_error_message_signal, this,
+		&RequestBuilder::show_error_message);
 
 	connect(ui->sendButton, &QPushButton::clicked, this, [=]() {
 		// Hide the error message label
@@ -404,8 +448,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		ui->sendButton->setEnabled(false);
 		ui->sendButton->setText("Sending...");
 
-		// Create a request_data_handler function that will be called by the thread
-		auto request_data_handler_ex = [this, saveSettingsToRequestData]() {
+		// Create a thread to send the request to prevent the UI from hanging
+		std::thread request_data_handler_thread([this, saveSettingsToRequestData]() {
 			// Get an interim request_data struct with the current settings
 			url_source_request_data request_data_test;
 			saveSettingsToRequestData(&request_data_test);
@@ -416,22 +460,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				request_data_handler(&request_data_test);
 
 			if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
-				// Show the error message label
-				this->ui->errorMessageLabel->setText(
-					QString::fromStdString(response.error_message));
-				this->ui->errorMessageLabel->setVisible(true);
-				// enable the send button
-				this->ui->sendButton->setEnabled(true);
-				this->ui->sendButton->setText("Test Request");
-				return;
+				emit show_error_message_signal(response.error_message);
+			} else {
+				// Show the response dialog
+				emit show_response_dialog_signal(response);
 			}
-
-			// Show the response dialog
-			emit show_response_dialog_signal(response);
-		};
-
-		// Create a thread to send the request to prevent the UI from hanging
-		std::thread request_data_handler_thread(request_data_handler_ex);
+		});
 		request_data_handler_thread.detach();
 	});
 
@@ -450,6 +484,20 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	});
 
 	adjustSize();
+}
+
+void RequestBuilder::show_error_message(const std::string &error_message)
+{
+	if (!error_message.empty()) {
+		// Show the error message label
+		this->ui->errorMessageLabel->setText(QString::fromStdString(error_message));
+		this->ui->errorMessageLabel->setVisible(true);
+	} else {
+		this->ui->errorMessageLabel->setVisible(false);
+	}
+	// enable the send button
+	this->ui->sendButton->setEnabled(true);
+	this->ui->sendButton->setText("Test Request");
 }
 
 void RequestBuilder::show_response_dialog(const request_data_handler_response &response)

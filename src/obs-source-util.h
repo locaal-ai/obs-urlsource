@@ -8,6 +8,9 @@
 
 inline bool is_obs_source_text(obs_source_t *source)
 {
+	if (source == nullptr) {
+		return false;
+	}
 	const auto source_id = obs_source_get_id(source);
 	return strcmp(source_id, "text_ft2_source_v2") == 0 ||
 	       strcmp(source_id, "text_gdiplus_v2") == 0;
@@ -16,9 +19,12 @@ inline bool is_obs_source_text(obs_source_t *source)
 inline bool is_obs_source_text(const std::string &source_name)
 {
 	obs_source_t *source = obs_get_source_by_name(source_name.c_str());
-	const bool is_text = is_obs_source_text(source);
-	obs_source_release(source);
-	return is_text;
+	if (source != nullptr) {
+		const bool is_text = is_obs_source_text(source);
+		obs_source_release(source);
+		return is_text;
+	}
+	return false;
 }
 
 struct source_render_data {

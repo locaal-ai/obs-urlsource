@@ -43,6 +43,13 @@ std::size_t writeFunctionUint8Vector(void *ptr, std::size_t size, size_t nmemb,
 	return size * nmemb;
 }
 
+bool hasOnlyValidURLCharacters(const std::string &url)
+{
+	// This pattern allows typical URL characters including percent encoding
+	const std::regex pattern(R"(^[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$)");
+	return std::regex_match(url, pattern);
+}
+
 size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
 	std::map<std::string, std::string> *headers =
@@ -193,6 +200,15 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
+		// validate the url
+		if (!hasOnlyValidURLCharacters(request_data->url)) {
+			obs_log(LOG_INFO, "URL is invalid");
+			// Return an error response
+			response.error_message = "URL is invalid";
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+			return response;
+		}
+
 		// Build the request with libcurl
 		CURL *curl = curl_easy_init();
 		if (!curl) {
@@ -279,6 +295,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					json["input"] = textStr;
 				}
 				if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
+					curl_easy_cleanup(curl);
 					return response;
 				}
 			} else {
@@ -292,6 +309,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 					response.error_message = "Failed to get source by name";
 					response.status_code =
 						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+					curl_easy_cleanup(curl);
 					return response;
 				}
 
@@ -320,6 +338,7 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 						"Failed to get RGBA from source render";
 					response.status_code =
 						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+					curl_easy_cleanup(curl);
 					return response;
 				}
 				destroy_source_render_data(&tf);
