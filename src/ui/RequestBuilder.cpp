@@ -82,7 +82,8 @@ void set_widgets_enabled_in_layout(QLayout *layout, bool enabled,
 	}
 }
 
-void addHeaders(const std::vector<std::pair<std::string, std::string>> &headers, QTableView *tableView)
+void addHeaders(const std::vector<std::pair<std::string, std::string>> &headers,
+		QTableView *tableView)
 {
 	QStandardItemModel *model = new QStandardItemModel;
 	for (auto &pair : headers) {
