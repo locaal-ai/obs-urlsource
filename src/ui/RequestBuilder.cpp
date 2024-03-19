@@ -250,6 +250,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			/* ----------------------------------------------- */
 			/* --------------- DeepL Translate --------------- */
 			/* ----------------------------------------------- */
+			ui->methodComboBox->setCurrentIndex(1);
 			ui->urlLineEdit->setText("https://api-free.deepl.com/v2/translate");
 			addHeaders(
 				{

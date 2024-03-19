@@ -45,7 +45,7 @@
         }
     },
     "name": "obs-urlsource",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "author": "Roy Shilkrot",
     "website": "https://github.com/occ-ai/obs-urlsource",
     "email": "roy.shil@gmail.com",
