@@ -214,10 +214,52 @@
           </spacer>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButton_polyglot">
-           <property name="text">
-            <string>PolyGlot</string>
-           </property>
+          <widget class="QComboBox" name="comboBox_presets">
+           <item>
+            <property name="text">
+             <string>Select Preset</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>OpenAI Chat</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>OpenAI TTS</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>OpenAI GPT4Vision</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ElevenLabs TTS</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Google Sheets API</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>DeepL Translate</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Polyglot Translate</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>YouTube POST caption</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

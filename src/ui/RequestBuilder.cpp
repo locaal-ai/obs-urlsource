@@ -82,6 +82,17 @@ void set_widgets_enabled_in_layout(QLayout *layout, bool enabled,
 	}
 }
 
+void addHeaders(const std::vector<std::pair<std::string, std::string>> &headers, QTableView *tableView)
+{
+	QStandardItemModel *model = new QStandardItemModel;
+	for (auto &pair : headers) {
+		// add a new row
+		model->appendRow({new QStandardItem(QString::fromStdString(pair.first)),
+				  new QStandardItem(QString::fromStdString(pair.second))});
+	}
+	tableView->setModel(model);
+}
+
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			       std::function<void()> update_handler, QWidget *parent)
 	: QDialog(parent), ui(new Ui::RequestBuilder)
@@ -128,31 +139,169 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// show file selector button if file is selected
 	connect(ui->fileRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
 	connect(ui->urlRadioButton, &QRadioButton::toggled, this, toggleFileUrlButtons);
-	connect(ui->toolButton_polyglot, &QToolButton::clicked, this, [=]() {
+
+	connect(ui->comboBox_presets, &QComboBox::currentIndexChanged, this, [=](int index) {
 		ui->urlRadioButton->setChecked(true);
 		toggleFileUrlButtons();
-		ui->methodComboBox->setCurrentIndex(1);
-		ui->urlLineEdit->setText("http://localhost:18080/translate");
-		ui->bodyTextEdit->setText(
-			"{\"text\":\"{{input}}\", \"source_lang\":\"eng_Latn\", \"target_lang\":\"spa_Latn\"}");
-		ui->obsTextSourceEnabledCheckBox->setChecked(true);
-		ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 		ui->sslOptionsCheckbox->setChecked(false);
-		ui->outputTypeComboBox->setCurrentIndex(0);
-		ui->outputRegexLineEdit->setText("");
+		if (index == 1 || index == 2 || index == 3) {
+			//OpenAI
+			ui->methodComboBox->setCurrentIndex(1);
+			addHeaders({{"Content-Type", "application/json "},
+				    {"Authorization", "Bearer $OPENAI_API_KEY"}},
+				   ui->tableView_headers);
+		}
+		if (index == 1) {
+			/* ------------------------------------------- */
+			/* --------------- OpenAI Chat --------------- */
+			/* ------------------------------------------- */
+			ui->urlLineEdit->setText("https://api.openai.com/v1/chat/completions");
+			ui->bodyTextEdit->setText(R"({
+	"model": "gpt-3.5-turbo",
+	"messages": [
+		{
+			"role": "system",
+			"content": "You are a helpful assistant."
+		},
+		{
+			"role": "user",
+			"content": "{{input}}"
+		}
+	]
+})");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
+		} else if (index == 2) {
+			/* ------------------------------------------- */
+			/* --------------- OpenAI TTS  --------------- */
+			/* ------------------------------------------- */
+			ui->urlLineEdit->setText("https://api.openai.com/v1/audio/speech");
+			ui->bodyTextEdit->setText(R"({
+    "model": "tts-1",
+    "input": "{{input}}",
+    "voice": "alloy"
+  })");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->sslOptionsCheckbox->setChecked(false);
+			ui->outputTypeComboBox->setCurrentIndex(2);
+		} else if (index == 3) {
+			/* --------------------------------------------- */
+			/* --------------- OpenAI Vision --------------- */
+			/* --------------------------------------------- */
+			ui->urlLineEdit->setText("https://api.openai.com/v1/chat/completions");
+			ui->bodyTextEdit->setText(R"({
+  "model": "gpt-4-vision-preview",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What's happening in the image?"
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "data:image/png;base64,{{imageb64}}"
+          }
+        }
+      ]
+    }
+  ],
+  "max_tokens": 50
+})");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
+		} else if (index == 4) {
+			/* ------------------------------------------- */
+			/* --------------- 11Labs  TTS --------------- */
+			/* ------------------------------------------- */
+			ui->methodComboBox->setCurrentIndex(1);
+			addHeaders({{"Content-Type", "application/json "},
+				    {"Accept", "application/json"},
+				    {"xi-api-key", "$XI_API_KEY"}},
+				   ui->tableView_headers);
+			ui->urlLineEdit->setText(
+				"https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM");
+			ui->bodyTextEdit->setText(R"({
+  "model_id": "eleven_monolingual_v1",
+  "text": "{{input}}"
+})");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->outputTypeComboBox->setCurrentIndex(2);
+		} else if (index == 5) {
+			/* --------------------------------------------- */
+			/* --------------- Google Sheets --------------- */
+			/* --------------------------------------------- */
+			ui->methodComboBox->setCurrentIndex(0);
+			addHeaders({}, ui->tableView_headers);
+			ui->urlLineEdit->setText(
+				"https://sheets.googleapis.com/v4/spreadsheets/$SHEET_ID$/values/$CELL_OR_RANGE$?key=$API_KEY$");
+			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputJSONPathLineEdit->setText("$.values.0.0");
+		} else if (index == 6) {
+			/* ----------------------------------------------- */
+			/* --------------- DeepL Translate --------------- */
+			/* ----------------------------------------------- */
+			ui->urlLineEdit->setText("https://api-free.deepl.com/v2/translate");
+			addHeaders(
+				{
+					{"Content-Type", "application/json "},
+					{"Authorization", "DeepL-Auth-Key $yourAuthKey"},
+				},
+				ui->tableView_headers);
+			ui->bodyTextEdit->setText(R"({
+  "text": [
+    "{{input}}"
+  ],
+  "target_lang": "DE"
+})");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputJSONPathLineEdit->setText("$.translations.0.text");
+		} else if (index == 7) {
+			// Polyglot Translate
+			ui->methodComboBox->setCurrentIndex(1);
+			ui->urlLineEdit->setText("http://localhost:18080/translate");
+			ui->bodyTextEdit->setText(
+				"{\"text\":\"{{input}}\", \"source_lang\":\"eng_Latn\", \"target_lang\":\"spa_Latn\"}");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->sslOptionsCheckbox->setChecked(false);
+			ui->outputTypeComboBox->setCurrentIndex(0);
+			ui->outputRegexLineEdit->setText("");
+		} else if (index == 8) {
+			// YouTube POST captions
+			ui->methodComboBox->setCurrentIndex(1);
+			addHeaders(
+				{
+					{"Content-Type", "text/plain"},
+				},
+				ui->tableView_headers);
+			ui->urlLineEdit->setText(
+				"http://upload.youtube.com/closedcaption?cid=xxxx-xxxx-xxxx-xxxx-xxxx&seq={{seq}}");
+			ui->bodyTextEdit->setText(R"({{strftime("%Y-%m-%dT%H:%M:%S.000", true)}}
+{{input}})");
+			ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			ui->sslOptionsCheckbox->setChecked(false);
+			ui->outputTypeComboBox->setCurrentIndex(0);
+			ui->outputRegexLineEdit->setText("");
+		}
 	});
 
 	ui->methodComboBox->setCurrentText(QString::fromStdString(request_data->method));
 	ui->checkBox_failonhttperrorcodes->setChecked(request_data->fail_on_http_error);
 
 	// populate headers in ui->tableView_headers from request_data->headers
-	QStandardItemModel *model = new QStandardItemModel;
-	for (auto &pair : request_data->headers) {
-		// add a new row
-		model->appendRow({new QStandardItem(QString::fromStdString(pair.first)),
-				  new QStandardItem(QString::fromStdString(pair.second))});
-	}
-	ui->tableView_headers->setModel(model);
+	addHeaders(request_data->headers, ui->tableView_headers);
 	connect(ui->pushButton_addHeader, &QPushButton::clicked, this, [=]() {
 		// add a new row
 		((QStandardItemModel *)ui->tableView_headers->model())
