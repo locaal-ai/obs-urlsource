@@ -276,11 +276,10 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 							     textStr.c_str());
 
 					// if one of the headers is Content-Type application/json, make sure the text is JSONified
+					std::regex header_regex("content-type",
+								std::regex_constants::icase);
 					for (auto header : request_data->headers) {
 						// check if the header is Content-Type case insensitive using regex
-						std::regex header_regex(
-							"content-type",
-							std::regex_constants::icase);
 						if (std::regex_search(header.first, header_regex) &&
 						    header.second == "application/json") {
 							nlohmann::json tmp = text;

@@ -148,7 +148,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		if (index == 1 || index == 2 || index == 3) {
 			//OpenAI
 			ui->methodComboBox->setCurrentIndex(1);
-			addHeaders({{"Content-Type", "application/json "},
+			addHeaders({{"Content-Type", "application/json"},
 				    {"Authorization", "Bearer $OPENAI_API_KEY"}},
 				   ui->tableView_headers);
 		}
@@ -223,7 +223,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			/* --------------- 11Labs  TTS --------------- */
 			/* ------------------------------------------- */
 			ui->methodComboBox->setCurrentIndex(1);
-			addHeaders({{"Content-Type", "application/json "},
+			addHeaders({{"Content-Type", "application/json"},
 				    {"Accept", "application/json"},
 				    {"xi-api-key", "$XI_API_KEY"}},
 				   ui->tableView_headers);
@@ -254,7 +254,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->urlLineEdit->setText("https://api-free.deepl.com/v2/translate");
 			addHeaders(
 				{
-					{"Content-Type", "application/json "},
+					{"Content-Type", "application/json"},
 					{"Authorization", "DeepL-Auth-Key $yourAuthKey"},
 				},
 				ui->tableView_headers);
