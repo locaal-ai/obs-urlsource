@@ -34,7 +34,7 @@ static inline std::string &trim(std::string &s)
 	return ltrim(rtrim(s));
 }
 
-}
+} // namespace
 
 #endif
 
