@@ -51,11 +51,11 @@ runs:
         }
 
         if (( ${changes[(I)(*.c|*.h|*.cpp|*.hpp|*.m|*.mm)]} )) {
-          echo ::group::Install clang-format-13
+          echo ::group::Install clang-format-16
           brew install --quiet obsproject/tools/clang-format@13
           echo ::endgroup::
 
-          echo ::group::Run clang-format-13
+          echo ::group::Run clang-format-16
           ./build-aux/run-clang-format --fail-${{ inputs.failCondition }} --check
           echo ::endgroup::
         }
