@@ -41,4 +41,10 @@ std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_re
 std::string convert_rgba_buffer_to_png_base64(const std::vector<uint8_t> &rgba, uint32_t width,
 					      uint32_t height);
 
+inline bool is_valid_output_source_name(const char *output_source_name)
+{
+	return output_source_name != nullptr && strcmp(output_source_name, "none") != 0 &&
+	       strcmp(output_source_name, "(null)") != 0 && strcmp(output_source_name, "") != 0;
+}
+
 #endif // OBS_SOURCE_UTIL_H
