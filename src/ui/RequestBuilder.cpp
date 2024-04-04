@@ -96,7 +96,8 @@ void addHeaders(const std::vector<std::pair<std::string, std::string>> &headers,
 
 RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			       std::function<void()> update_handler, QWidget *parent)
-	: QDialog(parent), ui(new Ui::RequestBuilder)
+	: QDialog(parent),
+	  ui(new Ui::RequestBuilder)
 {
 	ui->setupUi(this);
 
