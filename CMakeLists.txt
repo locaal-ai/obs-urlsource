@@ -78,7 +78,9 @@ target_sources(
           src/request-data.cpp
           src/ui/text-render-helper.cpp
           src/url-source-info.c
-          src/obs-source-util.cpp)
+          src/obs-source-util.cpp
+          src/url-source-callbacks.cpp
+          src/url-source-thread.cpp)
 add_subdirectory(src/parsers)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
