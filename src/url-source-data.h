@@ -17,17 +17,12 @@ struct url_source_data {
 	struct output_mapping_data output_mapping_data;
 	uint32_t update_timer_ms = 1000;
 	bool run_while_not_visible = false;
-	// std::string css_props;
-	// std::string output_text_template;
 	bool output_is_image_url = false;
 	struct obs_source_frame frame;
 	bool send_to_stream = false;
 	uint32_t render_width = 640;
-	// bool unhide_output_source = false;
 
 	// Text source to output the text to
-	// obs_weak_source_t *output_source = nullptr;
-	// char *output_source_name = nullptr;
 	std::mutex output_mapping_mutex;
 
 	// Use std for thread and mutex

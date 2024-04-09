@@ -13,7 +13,7 @@
 void acquire_output_source_ref_by_name(const char *output_source_name, obs_source_t **output_source)
 {
 	if (!is_valid_output_source_name(output_source_name)) {
-		obs_log(LOG_ERROR, "output_source_name is invalid");
+		obs_log(LOG_ERROR, "Output Source Name '%s' is invalid", output_source_name);
 		// text source is not selected
 		return;
 	}
@@ -23,7 +23,7 @@ void acquire_output_source_ref_by_name(const char *output_source_name, obs_sourc
 	if (source) {
 		*output_source = source;
 	} else {
-		obs_log(LOG_ERROR, "text source '%s' not found", output_source_name);
+		obs_log(LOG_ERROR, "Source '%s' not found", output_source_name);
 	}
 }
 
@@ -32,7 +32,7 @@ void setTextCallback(const std::string &str, const output_mapping &mapping)
 	obs_source_t *target;
 	acquire_output_source_ref_by_name(mapping.output_source.c_str(), &target);
 	if (!target) {
-		obs_log(LOG_ERROR, "text_source target is null");
+		obs_log(LOG_ERROR, "Source target is null");
 		return;
 	}
 
@@ -75,33 +75,16 @@ void setTextCallback(const std::string &str, const output_mapping &mapping)
 
 void setAudioCallback(const std::string &str, const output_mapping &mapping)
 {
-	// if (!usd->output_source_mutex) {
-	// 	obs_log(LOG_ERROR, "output_source_mutex is null");
-	// 	return;
-	// }
-
-	// if (!usd->output_source) {
-	// 	// attempt to acquire a weak ref to the output source if it's yet available
-	// 	acquire_weak_output_source_ref(usd);
-	// }
-
-	// std::lock_guard<std::mutex> lock(*usd->output_source_mutex);
-
-	// obs_weak_source_t *media_source = usd->output_source;
-	// if (!media_source) {
-	// 	obs_log(LOG_ERROR, "output_source is null");
-	// 	return;
-	// }
 	obs_source_t *target;
 	acquire_output_source_ref_by_name(mapping.output_source.c_str(), &target);
 	if (!target) {
-		obs_log(LOG_ERROR, "output_source target is null");
+		obs_log(LOG_ERROR, "Output source target is null");
 		return;
 	}
 	// assert the source is a media source
 	if (strcmp(obs_source_get_id(target), "ffmpeg_source") != 0) {
 		obs_source_release(target);
-		obs_log(LOG_ERROR, "output_source is not a media source");
+		obs_log(LOG_ERROR, "Output source is not a media source");
 		return;
 	}
 	obs_data_t *media_settings = obs_source_get_settings(target);

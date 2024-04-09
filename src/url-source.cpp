@@ -112,17 +112,11 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->run_while_not_visible = obs_data_get_bool(settings, "run_while_not_visible");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
-	// usd->css_props = std::string(obs_data_get_string(settings, "css_props"));
-	// usd->output_text_template = std::string(obs_data_get_string(settings, "template"));
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
-	// usd->unhide_output_source = obs_data_get_bool(settings, "unhide_output_source");
 
 	// initialize the mutex
-	// usd->output_source_mutex = new std::mutex();
 	usd->curl_mutex = new std::mutex();
 	usd->curl_thread_cv = new std::condition_variable();
-	// usd->output_source_name = bstrdup(obs_data_get_string(settings, "text_sources"));
-	// usd->output_source = nullptr;
 
 	if (obs_source_active(source) && obs_source_showing(source)) {
 		// start the thread
@@ -144,11 +138,8 @@ void url_source_update(void *data, obs_data_t *settings)
 	usd->update_timer_ms = (uint32_t)obs_data_get_int(settings, "update_timer");
 	usd->run_while_not_visible = obs_data_get_bool(settings, "run_while_not_visible");
 	usd->output_is_image_url = obs_data_get_bool(settings, "is_image_url");
-	// usd->css_props = obs_data_get_string(settings, "css_props");
-	// usd->output_text_template = obs_data_get_string(settings, "template");
 	usd->send_to_stream = obs_data_get_bool(settings, "send_to_stream");
 	usd->render_width = (uint32_t)obs_data_get_int(settings, "render_width");
-	// usd->unhide_output_source = obs_data_get_bool(settings, "unhide_output_source");
 	usd->output_mapping_data = deserialize_output_mapping_data(
 		obs_data_get_string(settings, "output_mapping_data"));
 	usd->request_data = unserialize_request_data(obs_data_get_string(settings, "request_data"));
