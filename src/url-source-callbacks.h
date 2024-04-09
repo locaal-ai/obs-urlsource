@@ -7,11 +7,9 @@
 #include <nlohmann/json.hpp>
 #include <inja/inja.hpp>
 
-std::string renderOutputTemplate(inja::Environment &env, const std::string &input,
-				 const std::vector<std::string> &outputs,
-				 const nlohmann::json &body);
+#include "request-data.h"
 
-void setAudioCallback(const std::string &str, struct url_source_data *usd);
-void setTextCallback(const std::string &str, struct url_source_data *usd);
+void output_with_mapping(const request_data_handler_response &response,
+			 struct url_source_data *usd);
 
 #endif

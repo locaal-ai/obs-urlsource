@@ -7,61 +7,37 @@
 #include <obs-module.h>
 
 #include <mutex>
+#include "ui/text-render-helper.h"
+#include <obs-frontend-api.h>
 
-void acquire_weak_output_source_ref(struct url_source_data *usd)
+void acquire_output_source_ref_by_name(const char *output_source_name, obs_source_t **output_source)
 {
-	if (!is_valid_output_source_name(usd->output_source_name)) {
-		obs_log(LOG_ERROR, "output_source_name is invalid");
+	if (!is_valid_output_source_name(output_source_name)) {
+		obs_log(LOG_ERROR, "Output Source Name '%s' is invalid", output_source_name);
 		// text source is not selected
 		return;
 	}
 
-	if (!usd->output_source_mutex) {
-		obs_log(LOG_ERROR, "output_source_mutex is null");
-		return;
-	}
-
-	std::lock_guard<std::mutex> lock(*usd->output_source_mutex);
-
 	// acquire a weak ref to the new text source
-	obs_source_t *source = obs_get_source_by_name(usd->output_source_name);
+	obs_source_t *source = obs_get_source_by_name(output_source_name);
 	if (source) {
-		usd->output_source = obs_source_get_weak_source(source);
-		obs_source_release(source);
-		if (!usd->output_source) {
-			obs_log(LOG_ERROR, "failed to get weak source for text source %s",
-				usd->output_source_name);
-		}
+		*output_source = source;
 	} else {
-		obs_log(LOG_ERROR, "text source '%s' not found", usd->output_source_name);
+		obs_log(LOG_ERROR, "Source '%s' not found", output_source_name);
 	}
 }
 
-void setTextCallback(const std::string &str, struct url_source_data *usd)
+void setTextCallback(const std::string &str, const output_mapping &mapping)
 {
-	if (!usd->output_source_mutex) {
-		obs_log(LOG_ERROR, "output_source_mutex is null");
-		return;
-	}
-
-	if (!usd->output_source) {
-		// attempt to acquire a weak ref to the text source if it's yet available
-		acquire_weak_output_source_ref(usd);
-	}
-
-	std::lock_guard<std::mutex> lock(*usd->output_source_mutex);
-
-	obs_weak_source_t *text_source = usd->output_source;
-	if (!text_source) {
-		obs_log(LOG_ERROR, "text_source is null");
-		return;
-	}
-	auto target = obs_weak_source_get_source(text_source);
+	obs_source_t *target;
+	acquire_output_source_ref_by_name(mapping.output_source.c_str(), &target);
 	if (!target) {
-		obs_log(LOG_ERROR, "text_source target is null");
+		obs_log(LOG_ERROR, "Source target is null");
 		return;
 	}
+
 	auto target_settings = obs_source_get_settings(target);
+
 	if (strcmp(obs_source_get_id(target), "ffmpeg_source") == 0) {
 		// if the target source is a media source - set the input field to the text and disable the local file
 		obs_data_set_bool(target_settings, "is_local_file", false);
@@ -74,7 +50,7 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 		obs_data_set_string(target_settings, "text", str.c_str());
 	}
 	obs_source_update(target, target_settings);
-	if (usd->unhide_output_source) {
+	if (mapping.unhide_output_source) {
 		// unhide the output source
 		obs_source_set_enabled(target, true);
 		obs_enum_scenes(
@@ -97,34 +73,18 @@ void setTextCallback(const std::string &str, struct url_source_data *usd)
 	obs_source_release(target);
 };
 
-void setAudioCallback(const std::string &str, struct url_source_data *usd)
+void setAudioCallback(const std::string &str, const output_mapping &mapping)
 {
-	if (!usd->output_source_mutex) {
-		obs_log(LOG_ERROR, "output_source_mutex is null");
-		return;
-	}
-
-	if (!usd->output_source) {
-		// attempt to acquire a weak ref to the output source if it's yet available
-		acquire_weak_output_source_ref(usd);
-	}
-
-	std::lock_guard<std::mutex> lock(*usd->output_source_mutex);
-
-	obs_weak_source_t *media_source = usd->output_source;
-	if (!media_source) {
-		obs_log(LOG_ERROR, "output_source is null");
-		return;
-	}
-	auto target = obs_weak_source_get_source(media_source);
+	obs_source_t *target;
+	acquire_output_source_ref_by_name(mapping.output_source.c_str(), &target);
 	if (!target) {
-		obs_log(LOG_ERROR, "output_source target is null");
+		obs_log(LOG_ERROR, "Output source target is null");
 		return;
 	}
 	// assert the source is a media source
 	if (strcmp(obs_source_get_id(target), "ffmpeg_source") != 0) {
 		obs_source_release(target);
-		obs_log(LOG_ERROR, "output_source is not a media source");
+		obs_log(LOG_ERROR, "Output source is not a media source");
 		return;
 	}
 	obs_data_t *media_settings = obs_source_get_settings(target);
@@ -159,4 +119,128 @@ try {
 } catch (std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to parse template: %s", e.what());
 	return "";
+}
+
+void render_internal(const std::string &text, struct url_source_data *usd,
+		     const output_mapping &mapping)
+{
+	uint8_t *renderBuffer = nullptr;
+	uint32_t width = usd->render_width;
+	uint32_t height = 0;
+
+	// render the text with QTextDocument
+	render_text_with_qtextdocument(text, width, height, &renderBuffer, mapping.css_props);
+	// Update the frame
+	usd->frame.data[0] = renderBuffer;
+	usd->frame.linesize[0] = width * 4;
+	usd->frame.width = width;
+	usd->frame.height = height;
+
+	// Send the frame
+	obs_source_output_video(usd->source, &usd->frame);
+}
+
+std::string prepare_text_from_template(const output_mapping &mapping,
+				       const request_data_handler_response &response,
+				       const url_source_request_data &request,
+				       bool output_is_image_url)
+{
+	// prepare the text from the template
+	std::string text = mapping.template_string;
+	// if the template is empty use the response body
+	if (text.empty()) {
+		return response.body_parts_parsed[0];
+	}
+
+	inja::Environment env;
+
+	// if output is image or image-URL - fetch the image and convert it to base64
+	if (output_is_image_url || request.output_type == "Image (data)") {
+		std::vector<uint8_t> image_data;
+		std::string mime_type = "image/png";
+		if (request.output_type == "Image (data)") {
+			// if the output type is image data - use the response body bytes
+			image_data = response.body_bytes;
+			// get the mime type from the response headers if available
+			if (response.headers.find("content-type") != response.headers.end()) {
+				mime_type = response.headers.at("content-type");
+			}
+		} else {
+			text = renderOutputTemplate(env, text, response.body_parts_parsed,
+						    response.body_json);
+			// use fetch_image to get the image
+			image_data = fetch_image(text.c_str(), mime_type);
+		}
+		// convert the image to base64
+		const std::string base64_image = base64_encode(image_data);
+		// build an image tag with the base64 image
+		text = "<img src=\"data:" + mime_type + ";base64," + base64_image + "\" />";
+	} else {
+		text = renderOutputTemplate(env, text, response.body_parts_parsed,
+					    response.body_json);
+	}
+	return text;
+}
+
+void output_with_mapping(const request_data_handler_response &response, struct url_source_data *usd)
+{
+	if (usd->output_mapping_data.mappings.empty()) {
+		// if there are no mappings - log
+		obs_log(LOG_WARNING, "No mappings found");
+		return;
+	}
+
+	obs_log(LOG_INFO, "Output with mapping");
+
+	// iterate over the mappings and output the text with each one
+	for (const auto &mapping : usd->output_mapping_data.mappings) {
+		obs_log(LOG_INFO, "Output with mapping: %s %s", mapping.name.c_str(),
+			mapping.output_source.c_str());
+
+		if (usd->request_data.output_type == "Audio (data)") {
+			if (!is_valid_output_source_name(mapping.output_source.c_str())) {
+				obs_log(LOG_ERROR, "Must select an output source for audio output");
+			} else {
+				setAudioCallback(response.body, mapping);
+			}
+			continue;
+		}
+
+		std::string text = prepare_text_from_template(mapping, response, usd->request_data,
+							      usd->output_is_image_url);
+
+		if (usd->send_to_stream && !usd->output_is_image_url) {
+			// Send the output to the current stream as caption, if it's not an image and a stream is open
+			obs_output_t *streaming_output = obs_frontend_get_streaming_output();
+			if (streaming_output) {
+				obs_output_output_caption_text1(streaming_output, text.c_str());
+				obs_output_release(streaming_output);
+			}
+		}
+
+		if (usd->frame.data[0] != nullptr) {
+			// Free the old render buffer
+			bfree(usd->frame.data[0]);
+			usd->frame.data[0] = nullptr;
+		}
+
+		if (is_valid_output_source_name(mapping.output_source.c_str()) &&
+		    mapping.output_source != none_internal_rendering) {
+			obs_log(LOG_INFO, "Output to text source: %s",
+				mapping.output_source.c_str());
+			// If an output source is selected - use it for rendering
+			setTextCallback(text, mapping);
+
+			// Update the frame with an empty buffer of 1x1 pixels
+			usd->frame.data[0] = (uint8_t *)bzalloc(4);
+			usd->frame.linesize[0] = 4;
+			usd->frame.width = 1;
+			usd->frame.height = 1;
+
+			// Send the frame
+			obs_source_output_video(usd->source, &usd->frame);
+		} else {
+			render_internal(text, usd, mapping);
+		} // end if not text source
+	}
 }
