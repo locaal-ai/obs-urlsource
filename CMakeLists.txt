@@ -73,14 +73,16 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 target_sources(
   ${CMAKE_PROJECT_NAME}
   PRIVATE src/plugin-main.c
-          src/url-source.cpp
-          src/ui/RequestBuilder.cpp
-          src/request-data.cpp
-          src/ui/text-render-helper.cpp
-          src/url-source-info.c
           src/obs-source-util.cpp
+          src/mapping-data.cpp
+          src/request-data.cpp
+          src/ui/RequestBuilder.cpp
+          src/ui/text-render-helper.cpp
+          src/ui/outputmapping.cpp
           src/url-source-callbacks.cpp
-          src/url-source-thread.cpp)
+          src/url-source-info.c
+          src/url-source-thread.cpp
+          src/url-source.cpp)
 add_subdirectory(src/parsers)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
