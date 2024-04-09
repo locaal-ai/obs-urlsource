@@ -14,8 +14,6 @@
 void curl_loop(struct url_source_data *usd)
 {
 	obs_log(LOG_INFO, "Starting URL Source thread, update timer: %d", usd->update_timer_ms);
-	uint64_t cur_time = get_time_ns();
-	uint64_t start_time = cur_time;
 
 	usd->frame.format = VIDEO_FORMAT_BGRA;
 
