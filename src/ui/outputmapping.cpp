@@ -1,3 +1,4 @@
+#include "plugin-support.h"
 #include "outputmapping.h"
 #include "ui_outputmapping.h"
 
@@ -10,7 +11,7 @@
 
 namespace {
 // add_sources_to_list is a helper function that adds all text and media sources to the list
-bool add_sources_to_list(void *list_property, obs_source_t *source)
+bool add_sources_to_combobox(void *list_property, obs_source_t *source)
 {
 	// add all text and media sources to the list
 	auto source_id = obs_source_get_id(source);
@@ -119,9 +120,18 @@ OutputMapping::OutputMapping(output_mapping_data *mapping_data_in,
 							 << new QStandardItem(""));
 		QComboBox *comboBox = createSourcesComboBox();
 		if (!mapping.output_source.empty()) {
+			// find the index of the output_source in the comboBox, use EndsWith to match the prefix
+			const auto index = comboBox->findText(mapping.output_source.c_str(),
+							      Qt::MatchEndsWith);
+			if (index == -1) {
+				obs_log(LOG_WARNING, "Output source '%s' not found in combo box",
+					mapping.output_source.c_str());
+				continue;
+			}
+
 			// select the output_source of the mapping in the comboBox
 			comboBox->blockSignals(true);
-			comboBox->setCurrentText(mapping.output_source.c_str());
+			comboBox->setCurrentIndex(index);
 			comboBox->blockSignals(false);
 		}
 		// add a row to the model with the data and output_source of the mapping
@@ -152,7 +162,7 @@ QComboBox *OutputMapping::createSourcesComboBox()
 	// add "Internal Renderer" to the comboBox
 	comboBox->addItem(QString::fromStdString(none_internal_rendering));
 	// add all text and media sources to the comboBox
-	obs_enum_sources(add_sources_to_list, comboBox);
+	obs_enum_sources(add_sources_to_combobox, comboBox);
 	// connect comboBox to update_handler
 	connect(comboBox, &QComboBox::currentIndexChanged, [this, comboBox]() {
 		// get the selected row

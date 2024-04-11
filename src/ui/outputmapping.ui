@@ -123,7 +123,7 @@ Use {{body}} variable for unparsed object/array representation of the entire res
          <bool>false</bool>
         </property>
         <property name="plainText">
-         <string>{{output}}</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -133,9 +133,7 @@ Use {{body}} variable for unparsed object/array representation of the entire res
          <bool>false</bool>
         </property>
         <property name="plainText">
-         <string>background-color: transparent;
-color: #FFFFFF;
-font-size: 48px;</string>
+         <string/>
         </property>
        </widget>
       </item>

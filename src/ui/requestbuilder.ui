@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>602</width>
-    <height>971</height>
+    <width>493</width>
+    <height>809</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
@@ -121,7 +127,7 @@
           <widget class="QLineEdit" name="urlLineEdit"/>
          </item>
          <item>
-          <widget class="QPushButton" name="urlOrFileButton">
+          <widget class="QToolButton" name="urlOrFileButton">
            <property name="text">
             <string>...</string>
            </property>
@@ -136,7 +142,7 @@
    <item>
     <widget class="QGroupBox" name="urlRequestOptionsGroup">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -150,6 +156,9 @@
       </property>
       <property name="verticalSpacing">
        <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
       </property>
       <item row="4" column="0">
        <widget class="QLabel" name="label_3">
@@ -290,7 +299,7 @@
          <item>
           <widget class="QTableView" name="tableView_headers">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -331,16 +340,16 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QPushButton" name="pushButton_addHeader">
+             <widget class="QToolButton" name="toolButton_addHeader">
               <property name="text">
-               <string>+</string>
+               <string>➕</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_removeHeader">
+             <widget class="QToolButton" name="toolButton_removeHeader">
               <property name="text">
-               <string>-</string>
+               <string>➖</string>
               </property>
              </widget>
             </item>
@@ -395,12 +404,6 @@
             </property>
             <item>
              <widget class="QComboBox" name="obsTextSourceComboBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="toolTip">
                <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}` or `{{imageb64}}`.&quot;</string>
               </property>
@@ -495,6 +498,19 @@
              </widget>
             </item>
             <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
              <widget class="QCheckBox" name="aggToTarget">
               <property name="toolTip">
                <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
@@ -559,12 +575,6 @@
       </item>
       <item row="9" column="1">
        <widget class="QTextEdit" name="bodyTextEdit">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
         <property name="acceptRichText">
          <bool>false</bool>
         </property>
@@ -640,7 +650,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="sslCertFileButton">
+             <widget class="QToolButton" name="sslCertFileButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -687,7 +697,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="sslKeyFileButton">
+             <widget class="QToolButton" name="sslKeyFileButton">
               <property name="text">
                <string>...</string>
               </property>
@@ -719,7 +729,7 @@
    <item>
     <widget class="QGroupBox" name="outputGroupBox">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -743,12 +753,6 @@
       </item>
       <item row="0" column="1">
        <widget class="QComboBox" name="outputTypeComboBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
         <item>
          <property name="text">
           <string>Text</string>
@@ -917,12 +921,6 @@
    </item>
    <item>
     <widget class="QLabel" name="errorMessageLabel">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
      <property name="styleSheet">
       <string notr="true">QLabel { color : red; }</string>
      </property>

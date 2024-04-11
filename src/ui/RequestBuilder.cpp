@@ -106,7 +106,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	setModal(true);
 
 	// set a minimum width for the dialog
-	setMinimumWidth(500);
+	setMinimumWidth(400);
 
 	if (request_data->url_or_file == "url") {
 		ui->urlRadioButton->setChecked(true);
@@ -305,12 +305,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 	// populate headers in ui->tableView_headers from request_data->headers
 	addHeaders(request_data->headers, ui->tableView_headers);
-	connect(ui->pushButton_addHeader, &QPushButton::clicked, this, [=]() {
+	connect(ui->toolButton_addHeader, &QPushButton::clicked, this, [=]() {
 		// add a new row
 		((QStandardItemModel *)ui->tableView_headers->model())
 			->appendRow({new QStandardItem(""), new QStandardItem("")});
 	});
-	connect(ui->pushButton_removeHeader, &QPushButton::clicked, this, [=]() {
+	connect(ui->toolButton_removeHeader, &QPushButton::clicked, this, [=]() {
 		// remove the selected row
 		ui->tableView_headers->model()->removeRow(
 			ui->tableView_headers->selectionModel()->currentIndex().row());

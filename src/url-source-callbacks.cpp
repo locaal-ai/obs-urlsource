@@ -128,6 +128,12 @@ void render_internal(const std::string &text, struct url_source_data *usd,
 	uint32_t width = usd->render_width;
 	uint32_t height = 0;
 
+	if (usd->frame.data[0] != nullptr) {
+		// Free the old render buffer
+		bfree(usd->frame.data[0]);
+		usd->frame.data[0] = nullptr;
+	}
+
 	// render the text with QTextDocument
 	render_text_with_qtextdocument(text, width, height, &renderBuffer, mapping.css_props);
 	// Update the frame
@@ -190,13 +196,9 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 		return;
 	}
 
-	obs_log(LOG_INFO, "Output with mapping");
-
+	bool any_internal_rendering = false;
 	// iterate over the mappings and output the text with each one
 	for (const auto &mapping : usd->output_mapping_data.mappings) {
-		obs_log(LOG_INFO, "Output with mapping: %s %s", mapping.name.c_str(),
-			mapping.output_source.c_str());
-
 		if (usd->request_data.output_type == "Audio (data)") {
 			if (!is_valid_output_source_name(mapping.output_source.c_str())) {
 				obs_log(LOG_ERROR, "Must select an output source for audio output");
@@ -218,29 +220,18 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 			}
 		}
 
-		if (usd->frame.data[0] != nullptr) {
-			// Free the old render buffer
-			bfree(usd->frame.data[0]);
-			usd->frame.data[0] = nullptr;
-		}
-
 		if (is_valid_output_source_name(mapping.output_source.c_str()) &&
 		    mapping.output_source != none_internal_rendering) {
-			obs_log(LOG_INFO, "Output to text source: %s",
-				mapping.output_source.c_str());
 			// If an output source is selected - use it for rendering
 			setTextCallback(text, mapping);
-
-			// Update the frame with an empty buffer of 1x1 pixels
-			usd->frame.data[0] = (uint8_t *)bzalloc(4);
-			usd->frame.linesize[0] = 4;
-			usd->frame.width = 1;
-			usd->frame.height = 1;
-
-			// Send the frame
-			obs_source_output_video(usd->source, &usd->frame);
 		} else {
+			any_internal_rendering = true;
 			render_internal(text, usd, mapping);
 		} // end if not text source
+	}
+
+	if (!any_internal_rendering) {
+		// Send a null frame to hide the source
+		obs_source_output_video(usd->source, nullptr);
 	}
 }
