@@ -80,14 +80,17 @@ Features:
 - HTTP request types: GET, POST
 - Request headers (for e.g. API Key or Auth token)
 - Request body for POST
+- Dynamic input from a Text or Image source (base64)
 - Output parsing: JSON via JSONPointer & JSONPath, XML/HTML via XPath & XQuery, Regex and CSS selectors
-- Update timer for live streaming data
+- Update timer for live updating data
 - Test of the request to find the right parsing
 - Output styling (font, color, etc.) and formatting (via regex post processing)
-- Image output (via URL)
-- Output to external Text Source
+- Output Image (via image URL or image data on the response)
+- Output text to external Text Source
+- Output audio to external Media Source
+- Output to multiple sources with one request (Output Mapping)
 - Multi-value (array, union) parsed output capture, object unpacking (via Inja)
-- Support binary output (Image, Audio)
+- Dynamic input aggregations (time-based, "empty"-based)
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
@@ -95,13 +98,13 @@ Coming soon:
 - More parsing options (CSV, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
 - More output formats (Markdown, slim, reStructured, HAML, etc.)
-- Output to more built-in OBS sources (Image, etc.)
 
 Check out our other plugins:
 - [Background Removal](https://github.com/occ-ai/obs-backgroundremoval) removes background from webcam without a green screen.
-- 🚧 Experimental 🚧 [CleanStream](https://github.com/occ-ai/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
+- [Detect](https://github.com/occ-ai/obs-detect) will find and track >80 types of objects in any source that provides an image in real-time
 - [LocalVocal](https://github.com/occ-ai/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
 - [Polyglot](https://github.com/occ-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
+- 🚧 Experimental 🚧 [CleanStream](https://github.com/occ-ai/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 
