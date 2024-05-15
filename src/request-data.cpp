@@ -200,14 +200,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
-		// validate the url
-		if (!hasOnlyValidURLCharacters(request_data->url)) {
-			obs_log(LOG_INFO, "URL is invalid");
-			// Return an error response
-			response.error_message = "URL is invalid";
-			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-			return response;
-		}
 
 		// Build the request with libcurl
 		CURL *curl = curl_easy_init();
@@ -218,7 +210,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
 		}
-		curl_easy_setopt(curl, CURLOPT_URL, request_data->url.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
 		if (request_data->fail_on_http_error) {
 			curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
@@ -386,9 +377,16 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 		response.request_url = url;
 
-		if (request_data->url != url) { // If the url was changed
-			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		// validate the url
+		if (!hasOnlyValidURLCharacters(url)) {
+			obs_log(LOG_INFO, "URL '%s' is invalid", url.c_str());
+			// Return an error response
+			response.error_message = "URL is invalid";
+			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+			return response;
 		}
+
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 		// this is needed here, out of the `if` scope below
 		std::string request_body_allocated;
