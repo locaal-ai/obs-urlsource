@@ -1,4 +1,4 @@
-#include <QtWidgets>
+#include "CustomTextDocument.h"
 #include <util/bmem.h>
 
 const QString template_text = R"(
@@ -108,7 +108,7 @@ void render_text_with_qtextdocument(const std::string &text, uint32_t &width, ui
 	QString html = QString(template_text)
 			       .replace("{{text}}", QString::fromStdString(text))
 			       .replace("{{css_props}}", QString::fromStdString(css_props));
-	QTextDocument textDocument;
+	CustomTextDocument textDocument;
 	textDocument.setHtml(html);
 	textDocument.setTextWidth(width);
 
