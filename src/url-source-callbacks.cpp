@@ -100,21 +100,25 @@ void setAudioCallback(const std::string &str, const output_mapping &mapping)
 };
 
 std::string renderOutputTemplate(inja::Environment &env, const std::string &input,
-				 const std::vector<std::string> &outputs,
-				 const nlohmann::json &body)
+				 const request_data_handler_response &response)
 try {
 	// Use Inja to render the template
 	nlohmann::json data;
-	if (outputs.size() > 1) {
-		for (size_t i = 0; i < outputs.size(); i++) {
-			data["output" + std::to_string(i)] = outputs[i];
+	if (response.body_parts_parsed.size() > 1) {
+		for (size_t i = 0; i < response.body_parts_parsed.size(); i++) {
+			data["output" + std::to_string(i)] = response.body_parts_parsed[i];
 		}
 		// in "output" add an array of all the outputs
-		data["output"] = outputs;
+		data["output"] = response.body_parts_parsed;
 	} else {
-		data["output"] = outputs[0];
+		data["output"] = response.body_parts_parsed[0];
 	}
-	data["body"] = body;
+	if (response.key_value_pairs.size() > 0) {
+		for (const auto &pair : response.key_value_pairs) {
+			data[pair.first] = pair.second;
+		}
+	}
+	data["body"] = response.body_json;
 	return env.render(input, data);
 } catch (std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to parse template: %s", e.what());
@@ -172,8 +176,7 @@ std::string prepare_text_from_template(const output_mapping &mapping,
 				mime_type = response.headers.at("content-type");
 			}
 		} else {
-			text = renderOutputTemplate(env, text, response.body_parts_parsed,
-						    response.body_json);
+			text = renderOutputTemplate(env, text, response);
 			// use fetch_image to get the image
 			image_data = fetch_image(text.c_str(), mime_type);
 		}
@@ -182,8 +185,7 @@ std::string prepare_text_from_template(const output_mapping &mapping,
 		// build an image tag with the base64 image
 		text = "<img src=\"data:" + mime_type + ";base64," + base64_image + "\" />";
 	} else {
-		text = renderOutputTemplate(env, text, response.body_parts_parsed,
-					    response.body_json);
+		text = renderOutputTemplate(env, text, response);
 	}
 	return text;
 }

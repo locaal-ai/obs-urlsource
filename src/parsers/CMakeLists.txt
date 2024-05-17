@@ -1,12 +1,13 @@
 target_sources(
   ${CMAKE_PROJECT_NAME}
-  PRIVATE jsonpointer.cpp
-          jsonpath.cpp
-          regex.cpp
-          xml.cpp
+  PRIVATE binary-data.cpp
           errors.cpp
           html.cpp
-          binary-data.cpp)
+          jsonpath.cpp
+          jsonpointer.cpp
+          key-value.cpp
+          regex.cpp
+          xml.cpp)
 
 # on linux, disable conversion errors
 if(UNIX AND NOT APPLE)

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>493</width>
-    <height>809</height>
+    <height>931</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -747,7 +747,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>Content-Type</string>
+         <string>Parsing Type</string>
         </property>
        </widget>
       </item>
@@ -756,6 +756,11 @@
         <item>
          <property name="text">
           <string>Text</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Key-Value</string>
          </property>
         </item>
         <item>
@@ -790,102 +795,102 @@
         </item>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
          <string>JSON Pointer</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="outputJSONPointerLineEdit">
         <property name="placeholderText">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>JSON Path</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QLineEdit" name="outputJSONPathLineEdit"/>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>XPath</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLineEdit" name="outputXPathLineEdit"/>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
          <string>XQuery</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QLineEdit" name="outputXQueryLineEdit"/>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="label_12">
         <property name="text">
          <string>Regex</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="QLineEdit" name="outputRegexLineEdit"/>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="label_13">
         <property name="text">
          <string>Regex Flags</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+      <item row="7" column="1">
        <widget class="QLineEdit" name="outputRegexFlagsLineEdit"/>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="label_14">
         <property name="text">
          <string>Regex Group</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1">
        <widget class="QLineEdit" name="outputRegexGroupLineEdit">
         <property name="text">
          <string>0</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
+      <item row="9" column="0">
        <widget class="QLabel" name="label_17">
         <property name="text">
          <string>CSS Selector</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
+      <item row="9" column="1">
        <widget class="QLineEdit" name="cssSelectorLineEdit"/>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
        <widget class="QLabel" name="label_15">
         <property name="text">
          <string>Postprocess Regex</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
        <widget class="QWidget" name="widget_9" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_7">
          <property name="leftMargin">
@@ -914,6 +919,20 @@
           <widget class="QLineEdit" name="postProcessRegexReplaceLineEdit"/>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEdit_delimiter">
+        <property name="text">
+         <string>=</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_18">
+        <property name="text">
+         <string>Delimiter</string>
+        </property>
        </widget>
       </item>
      </layout>

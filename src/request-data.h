@@ -119,6 +119,7 @@ struct url_source_request_data {
 	std::string post_process_regex;
 	bool post_process_regex_is_replace;
 	std::string post_process_regex_replace;
+	std::string kv_delimiter;
 
 	// default constructor
 	url_source_request_data()
@@ -149,6 +150,10 @@ struct url_source_request_data {
 		output_regex_flags = std::string("");
 		output_regex_group = std::string("0");
 		output_cssselector = std::string("");
+		post_process_regex = std::string("");
+		post_process_regex_is_replace = false;
+		post_process_regex_replace = std::string("");
+		kv_delimiter = std::string("=");
 	}
 };
 
@@ -158,6 +163,7 @@ struct request_data_handler_response {
 	nlohmann::json body_json;
 	std::string content_type;
 	std::vector<std::string> body_parts_parsed;
+	std::map<std::string, std::string> key_value_pairs;
 	std::map<std::string, std::string> headers;
 	int status_code = URL_SOURCE_REQUEST_SUCCESS;
 	long http_status_code;
