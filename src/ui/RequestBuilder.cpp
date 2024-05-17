@@ -434,18 +434,23 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	ui->outputRegexGroupLineEdit->setText(
 		QString::fromStdString(request_data->output_regex_group));
 	ui->cssSelectorLineEdit->setText(QString::fromStdString(request_data->output_cssselector));
+	ui->lineEdit_delimiter->setText(QString::fromStdString(request_data->kv_delimiter));
 	auto setVisibilityOfOutputParsingOptions = [=]() {
 		// Hide all output parsing options
 		for (const auto &widget :
 		     {ui->outputJSONPathLineEdit, ui->outputXPathLineEdit, ui->outputXQueryLineEdit,
 		      ui->outputRegexLineEdit, ui->outputRegexFlagsLineEdit,
 		      ui->outputRegexGroupLineEdit, ui->outputJSONPointerLineEdit,
-		      ui->cssSelectorLineEdit, ui->postProcessRegexLineEdit}) {
+		      ui->cssSelectorLineEdit, ui->postProcessRegexLineEdit,
+		      ui->lineEdit_delimiter}) {
 			set_form_row_visibility(ui->formOutputParsing, widget, false);
 		}
 
 		// Show the output parsing options for the selected output type
-		if (ui->outputTypeComboBox->currentText() == "JSON") {
+		if (ui->outputTypeComboBox->currentText() == "Key-Value") {
+			set_form_row_visibility(ui->formOutputParsing, ui->lineEdit_delimiter,
+						true);
+		} else if (ui->outputTypeComboBox->currentText() == "JSON") {
 			set_form_row_visibility(ui->formOutputParsing, ui->outputJSONPathLineEdit,
 						true);
 			set_form_row_visibility(ui->formOutputParsing,
@@ -577,6 +582,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->outputRegexGroupLineEdit->text().toStdString();
 		request_data_for_saving->output_cssselector =
 			ui->cssSelectorLineEdit->text().toStdString();
+		request_data_for_saving->kv_delimiter =
+			ui->lineEdit_delimiter->text().toStdString();
 
 		// Save the postprocess regex options
 		request_data_for_saving->post_process_regex =

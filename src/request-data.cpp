@@ -464,6 +464,8 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			// attempt to parse as json and return the whole object
 			response = parse_json(response, request_data);
 		}
+	} else if (request_data->output_type == "Key-Value") {
+		response = parse_key_value(response, request_data);
 	} else if (request_data->output_type == "XML (XPath)") {
 		response = parse_xml(response, request_data);
 	} else if (request_data->output_type == "XML (XQuery)") {
@@ -545,6 +547,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["output_regex_flags"] = request_data->output_regex_flags;
 	json["output_regex_group"] = request_data->output_regex_group;
 	json["output_cssselector"] = request_data->output_cssselector;
+	json["kv_delimiter"] = request_data->kv_delimiter;
 	// postprocess options
 	json["post_process_regex"] = request_data->post_process_regex;
 	json["post_process_regex_is_replace"] = request_data->post_process_regex_is_replace;
@@ -622,6 +625,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		request_data.output_regex_flags = json["output_regex_flags"].get<std::string>();
 		request_data.output_regex_group = json["output_regex_group"].get<std::string>();
 		request_data.output_cssselector = json.value("output_cssselector", "");
+		request_data.kv_delimiter = json.value("kv_delimiter", "=");
 
 		// postprocess options
 		request_data.post_process_regex = json.value("post_process_regex", "");
