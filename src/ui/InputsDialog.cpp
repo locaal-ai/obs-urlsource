@@ -53,3 +53,45 @@ void InputsDialog::removeInput()
 		ui->toolButton_removeinput->setEnabled(false);
 	}
 }
+
+void InputsDialog::setInputsData(const inputs_data &data)
+{
+	for (const auto &input : data) {
+		addInput();
+		QWidget *widget = ui->listWidget->itemWidget(
+			ui->listWidget->item(ui->listWidget->count() - 1));
+		Ui::InputWidget *inputWidget = (Ui::InputWidget *)widget;
+
+		inputWidget->obsTextSourceComboBox->setCurrentText(input.source.c_str());
+		inputWidget->comboBox_aggTarget->setCurrentText(input.agg_method.c_str());
+		inputWidget->aggToTarget->setChecked(input.aggregate);
+		inputWidget->comboBox_resizeInput->setCurrentText(input.resize_method.c_str());
+		inputWidget->obsTextSourceEnabledCheckBox->setChecked(input.no_empty);
+		inputWidget->obsTextSourceSkipSameCheckBox->setChecked(input.no_same);
+	}
+}
+
+inputs_data InputsDialog::getInputsData()
+{
+	inputs_data data;
+
+	for (int i = 0; i < ui->listWidget->count(); i++) {
+		QListWidgetItem *item = ui->listWidget->item(i);
+		QWidget *widget = ui->listWidget->itemWidget(item);
+		Ui::InputWidget *inputWidget = (Ui::InputWidget *)widget;
+
+		input_data input;
+		input.source =
+			inputWidget->obsTextSourceComboBox->currentText().toUtf8().constData();
+		input.agg_method =
+			inputWidget->comboBox_aggTarget->currentText().toUtf8().constData();
+		input.aggregate = inputWidget->aggToTarget->isChecked();
+		input.resize_method =
+			inputWidget->comboBox_resizeInput->currentText().toUtf8().constData();
+		input.no_empty = inputWidget->obsTextSourceEnabledCheckBox->isChecked();
+		input.no_same = inputWidget->obsTextSourceSkipSameCheckBox->isChecked();
+		data.push_back(input);
+	}
+
+	return data;
+}

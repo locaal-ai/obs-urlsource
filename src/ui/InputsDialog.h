@@ -18,6 +18,11 @@ public:
 	InputsDialog(const InputsDialog &) = delete;
 	InputsDialog &operator=(const InputsDialog &) = delete;
 
+	inputs_data getInputsData();
+
+	// populate the listWidget with the inputs_data
+	void setInputsData(const inputs_data &data);
+
 private:
 	Ui::InputsDialog *ui;
 

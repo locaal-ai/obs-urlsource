@@ -321,6 +321,13 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// open the inputs modal
 		InputsDialog inputsDialog(this);
 		inputsDialog.exec();
+
+		if (inputsDialog.result() == QDialog::Accepted) {
+			// get the inputs data from the inputs modal
+			inputs_data inputs = inputsDialog.getInputsData();
+			// add the inputs to the request_data
+			request_data->inputs = inputs;
+		}
 	});
 
 	ui->sslCertFileLineEdit->setText(
@@ -364,13 +371,13 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	// populate list of OBS text sources
 	obs_enum_sources(add_sources_to_qcombobox, ui->obsTextSourceComboBox);
 	// Select the current OBS text source, if any
-	int itemIdx = ui->obsTextSourceComboBox->findData(
-		QVariant(QString::fromStdString(request_data->obs_text_source)));
-	if (itemIdx != -1) {
-		ui->obsTextSourceComboBox->setCurrentIndex(itemIdx);
-	} else {
-		ui->obsTextSourceComboBox->setCurrentIndex(0);
-	}
+	// int itemIdx = ui->obsTextSourceComboBox->findData(
+	// 	QVariant(QString::fromStdString(request_data->obs_text_source)));
+	// if (itemIdx != -1) {
+	// 	ui->obsTextSourceComboBox->setCurrentIndex(itemIdx);
+	// } else {
+	// 	ui->obsTextSourceComboBox->setCurrentIndex(0);
+	// }
 	auto setObsTextSourceValueOptionsVisibility = [=]() {
 		// Hide the options if no OBS text source is selected
 		ui->widget_inputValueOptions->setEnabled(
@@ -382,13 +389,13 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
 		setObsTextSourceValueOptionsVisibility);
 
-	ui->obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
-	ui->obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
-	ui->aggToTarget->setChecked(request_data->aggregate_to_target !=
-				    URL_SOURCE_AGG_TARGET_NONE);
-	ui->comboBox_aggTarget->setCurrentIndex(
-		ui->comboBox_aggTarget->findText(QString::fromStdString(
-			url_source_agg_target_to_string(request_data->aggregate_to_target))));
+	// ui->obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
+	// ui->obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
+	// ui->aggToTarget->setChecked(request_data->aggregate_to_target !=
+	// 			    URL_SOURCE_AGG_TARGET_NONE);
+	// ui->comboBox_aggTarget->setCurrentIndex(
+	// 	ui->comboBox_aggTarget->findText(QString::fromStdString(
+	// 		url_source_agg_target_to_string(request_data->aggregate_to_target))));
 
 	auto setAggTargetEnabled = [=]() {
 		ui->comboBox_aggTarget->setEnabled(ui->aggToTarget->isChecked());
@@ -527,23 +534,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		request_data_for_saving->fail_on_http_error =
 			ui->checkBox_failonhttperrorcodes->isChecked();
 		request_data_for_saving->body = ui->bodyTextEdit->toPlainText().toStdString();
-		if (ui->obsTextSourceComboBox->currentData().toString().toStdString() != "None") {
-			request_data_for_saving->obs_text_source =
-				ui->obsTextSourceComboBox->currentData().toString().toStdString();
-		} else {
-			request_data_for_saving->obs_text_source = "";
-		}
-		request_data_for_saving->obs_text_source_skip_if_empty =
-			ui->obsTextSourceEnabledCheckBox->isChecked();
-		request_data_for_saving->obs_text_source_skip_if_same =
-			ui->obsTextSourceSkipSameCheckBox->isChecked();
-		request_data_for_saving->aggregate_to_target =
-			ui->aggToTarget->isChecked()
-				? url_source_agg_target_string_to_enum(
-					  ui->comboBox_aggTarget->currentText().toStdString())
-				: URL_SOURCE_AGG_TARGET_NONE;
-		request_data_for_saving->obs_input_source_resize_option =
-			ui->comboBox_resizeInput->currentText().toStdString();
 
 		// Save the SSL certificate file
 		request_data_for_saving->ssl_client_cert_file =
