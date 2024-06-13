@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
-    <height>931</height>
+    <width>622</width>
+    <height>1134</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Request Builder</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -402,6 +402,13 @@
             <property name="bottomMargin">
              <number>0</number>
             </property>
+            <item>
+             <widget class="QPushButton" name="pushButton_addInputs">
+              <property name="text">
+               <string>Add Inputs</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QComboBox" name="obsTextSourceComboBox">
               <property name="toolTip">

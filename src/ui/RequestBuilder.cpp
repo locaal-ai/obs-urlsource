@@ -3,6 +3,7 @@
 #include "ui_requestbuilder.h"
 #include "CollapseButton.h"
 #include "plugin-support.h"
+#include "InputsDialog.h"
 
 #include <obs-module.h>
 
@@ -314,6 +315,12 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		// remove the selected row
 		ui->tableView_headers->model()->removeRow(
 			ui->tableView_headers->selectionModel()->currentIndex().row());
+	});
+
+	connect(ui->pushButton_addInputs, &QPushButton::clicked, this, [=]() {
+		// open the inputs modal
+		InputsDialog inputsDialog(this);
+		inputsDialog.exec();
 	});
 
 	ui->sslCertFileLineEdit->setText(
