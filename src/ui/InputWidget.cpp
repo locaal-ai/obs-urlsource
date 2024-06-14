@@ -1,7 +1,7 @@
 
 #include "InputWidget.h"
 #include "plugin-support.h"
-#include "ui_InputWidget.h"
+#include "ui_inputwidget.h"
 #include "obs-ui-utils.h"
 #include "obs-source-util.h"
 #include "request-data.h"

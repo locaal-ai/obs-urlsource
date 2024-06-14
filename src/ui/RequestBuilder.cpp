@@ -173,9 +173,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		}
 	]
 })");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
-			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputTypeComboBox->setCurrentIndex(4);
 			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
 		} else if (index == 2) {
 			/* ------------------------------------------- */
@@ -187,10 +185,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
     "input": "{{input}}",
     "voice": "alloy"
   })");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
-			ui->outputTypeComboBox->setCurrentIndex(2);
+			ui->outputTypeComboBox->setCurrentIndex(3);
 		} else if (index == 3) {
 			/* --------------------------------------------- */
 			/* --------------- OpenAI Vision --------------- */
@@ -217,9 +213,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   ],
   "max_tokens": 50
 })");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
-			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputTypeComboBox->setCurrentIndex(4);
 			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
 		} else if (index == 4) {
 			/* ------------------------------------------- */
@@ -236,9 +230,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   "model_id": "eleven_monolingual_v1",
   "text": "{{input}}"
 })");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
-			ui->outputTypeComboBox->setCurrentIndex(2);
+			ui->outputTypeComboBox->setCurrentIndex(3);
 		} else if (index == 5) {
 			/* --------------------------------------------- */
 			/* --------------- Google Sheets --------------- */
@@ -247,7 +239,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			addHeaders({}, ui->tableView_headers);
 			ui->urlLineEdit->setText(
 				"https://sheets.googleapis.com/v4/spreadsheets/$SHEET_ID$/values/$CELL_OR_RANGE$?key=$API_KEY$");
-			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputTypeComboBox->setCurrentIndex(4);
 			ui->outputJSONPathLineEdit->setText("$.values.0.0");
 		} else if (index == 6) {
 			/* ----------------------------------------------- */
@@ -267,9 +259,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   ],
   "target_lang": "DE"
 })");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
-			ui->outputTypeComboBox->setCurrentIndex(3);
+			ui->outputTypeComboBox->setCurrentIndex(4);
 			ui->outputJSONPathLineEdit->setText("$.translations.0.text");
 		} else if (index == 7) {
 			// Polyglot Translate
@@ -277,8 +267,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->urlLineEdit->setText("http://localhost:18080/translate");
 			ui->bodyTextEdit->setText(
 				"{\"text\":\"{{input}}\", \"source_lang\":\"eng_Latn\", \"target_lang\":\"spa_Latn\"}");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
 			ui->outputTypeComboBox->setCurrentIndex(0);
 			ui->outputRegexLineEdit->setText("");
@@ -294,8 +282,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				"http://upload.youtube.com/closedcaption?cid=xxxx-xxxx-xxxx-xxxx-xxxx&seq={{seq}}");
 			ui->bodyTextEdit->setText(R"({{strftime("%Y-%m-%dT%H:%M:%S.000", true)}}
 {{input}})");
-			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
 			ui->outputTypeComboBox->setCurrentIndex(0);
 			ui->outputRegexLineEdit->setText("");

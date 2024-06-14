@@ -1,7 +1,7 @@
 #include "InputsDialog.h"
 
 #include "plugin-support.h"
-#include "ui_InputsDialog.h"
+#include "ui_inputsdialog.h"
 #include "mapping-data.h"
 #include "obs-ui-utils.h"
 #include "request-data.h"
