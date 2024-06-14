@@ -321,14 +321,16 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 	connect(ui->pushButton_addInputs, &QPushButton::clicked, this, [=]() {
 		// open the inputs modal
 		InputsDialog inputsDialog(this);
+		inputsDialog.setInputsData(this->inputs_data_);
 		inputsDialog.exec();
 
 		if (inputsDialog.result() == QDialog::Accepted) {
 			// get the inputs data from the inputs modal
 			// add the inputs to the request_data
-			request_data->inputs = inputsDialog.getInputsDataFromUI();
+			this->inputs_data_ = inputsDialog.getInputsDataFromUI();
 		}
 	});
+	this->inputs_data_ = request_data->inputs;
 
 	ui->sslCertFileLineEdit->setText(
 		QString::fromStdString(request_data->ssl_client_cert_file));
@@ -506,6 +508,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				std::make_pair(itemModel->item(i, 0)->text().toStdString(),
 					       itemModel->item(i, 1)->text().toStdString()));
 		}
+
+		request_data_for_saving->inputs = this->inputs_data_;
 
 		// Save the output parsing options
 		request_data_for_saving->output_type =

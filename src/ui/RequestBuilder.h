@@ -1,6 +1,7 @@
 #include <QtWidgets>
 
 #include "request-data.h"
+#include "mapping-data.h"
 
 namespace Ui {
 class RequestBuilder;
@@ -23,4 +24,5 @@ signals:
 
 private:
 	Ui::RequestBuilder *ui;
+	inputs_data inputs_data_;
 };

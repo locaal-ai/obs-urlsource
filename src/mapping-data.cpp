@@ -33,12 +33,11 @@ output_mapping_data deserialize_output_mapping_data(const std::string &data)
 	return result;
 }
 
-std::string serialize_input_mapping_data(const inputs_data &data)
+nlohmann::json serialize_input_mapping_data(const inputs_data &data)
 {
 	nlohmann::json j;
 	for (const auto &input : data) {
 		nlohmann::json j_input;
-		j_input["name"] = input.name;
 		j_input["source"] = input.source;
 		j_input["no_empty"] = input.no_empty;
 		j_input["no_same"] = input.no_same;
@@ -47,7 +46,7 @@ std::string serialize_input_mapping_data(const inputs_data &data)
 		j_input["resize_method"] = input.resize_method;
 		j.push_back(j_input);
 	}
-	return j.dump();
+	return j;
 }
 
 inputs_data deserialize_input_mapping_data(const std::string &data)
@@ -56,12 +55,11 @@ inputs_data deserialize_input_mapping_data(const std::string &data)
 	nlohmann::json j = nlohmann::json::parse(data);
 	for (const auto &j_input : j) {
 		input_data input;
-		input.name = j_input.value("name", "");
 		input.source = j_input.value("source", "");
 		input.no_empty = j_input.value("no_empty", false);
 		input.no_same = j_input.value("no_same", false);
 		input.aggregate = j_input.value("aggregate", false);
-		input.agg_method = j_input.value("agg_method", 0);
+		input.agg_method = j_input.value("agg_method", -1);
 		input.resize_method = j_input.value("resize_method", "");
 		result.push_back(input);
 	}

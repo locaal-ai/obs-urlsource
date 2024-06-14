@@ -538,11 +538,6 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["method"] = request_data->method;
 	json["fail_on_http_error"] = request_data->fail_on_http_error;
 	json["body"] = request_data->body;
-	// json["obs_text_source"] = request_data->obs_text_source;
-	// json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
-	// json["obs_text_source_skip_if_same"] = request_data->obs_text_source_skip_if_same;
-	// json["aggregate_to_target"] = request_data->aggregate_to_target;
-	// json["obs_input_source_resize_option"] = request_data->obs_input_source_resize_option;
 	json["inputs"] = serialize_input_mapping_data(request_data->inputs);
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
@@ -589,15 +584,6 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		request_data.method = json["method"].get<std::string>();
 		request_data.fail_on_http_error = json.value("fail_on_http_error", false);
 		request_data.body = json["body"].get<std::string>();
-		// request_data.obs_text_source = json.value("obs_text_source", "");
-		// request_data.obs_text_source_skip_if_empty =
-		// 	json.value("obs_text_source_skip_if_empty", false);
-		// request_data.obs_text_source_skip_if_same =
-		// 	json.value("obs_text_source_skip_if_same", false);
-		// request_data.aggregate_to_target =
-		// 	json.value("aggregate_to_target", URL_SOURCE_AGG_TARGET_NONE);
-		// request_data.obs_input_source_resize_option =
-		// 	json.value("obs_input_source_resize_option", "100%");
 		request_data.inputs = deserialize_input_mapping_data(json["inputs"].dump());
 
 		// SSL options

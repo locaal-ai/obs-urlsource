@@ -12,41 +12,21 @@ InputWidget::InputWidget(QWidget *parent) : QWidget(parent), ui(new Ui::InputWid
 
 	// populate list of OBS text sources
 	obs_enum_sources(add_sources_to_combobox, ui->obsTextSourceComboBox);
-	// Select the current OBS text source, if any
-	// int itemIdx = ui->obsTextSourceComboBox->findData(
-	// 	QVariant(QString::fromStdString(request_data->obs_text_source)));
-	// if (itemIdx != -1) {
-	// 	ui->obsTextSourceComboBox->setCurrentIndex(itemIdx);
-	// } else {
-	// 	ui->obsTextSourceComboBox->setCurrentIndex(0);
-	// }
-	// auto setObsTextSourceValueOptionsVisibility = [=]() {
-	// 	// Hide the options if no OBS text source is selected
-	// 	ui->widget_inputValueOptions->setEnabled(
-	// 		ui->obsTextSourceComboBox->currentIndex() != 0);
-	// 	// adjust the size of the dialog to fit the content
-	// 	this->adjustSize();
-	// };
-	// setObsTextSourceValueOptionsVisibility();
-	// connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
-	// 	setObsTextSourceValueOptionsVisibility);
 
-	// ui->obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
-	// ui->obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
-	// ui->aggToTarget->setChecked(request_data->aggregate_to_target !=
-	// 			    URL_SOURCE_AGG_TARGET_NONE);
-	// ui->comboBox_aggTarget->setCurrentIndex(
-	// 	ui->comboBox_aggTarget->findText(QString::fromStdString(
-	// 		url_source_agg_target_to_string(request_data->aggregate_to_target))));
+	auto setObsTextSourceValueOptionsVisibility = [=]() {
+		// Hide the options if no OBS text source is selected
+		ui->widget_inputValueOptions->setEnabled(
+			ui->obsTextSourceComboBox->currentIndex() != 0);
+		// adjust the size of the dialog to fit the content
+		this->adjustSize();
+	};
+	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
+		setObsTextSourceValueOptionsVisibility);
 
 	auto setAggTargetEnabled = [=]() {
 		ui->comboBox_aggTarget->setEnabled(ui->aggToTarget->isChecked());
 	};
-	// setAggTargetEnabled();
 	connect(ui->aggToTarget, &QCheckBox::toggled, this, setAggTargetEnabled);
-
-	// ui->comboBox_resizeInput->setCurrentText(
-	// 	QString::fromStdString(input.resize_method));
 
 	auto inputSourceSelected = [=]() {
 		// if the source is a media source, show the resize option, otherwise hide it
@@ -61,7 +41,6 @@ InputWidget::InputWidget(QWidget *parent) : QWidget(parent), ui(new Ui::InputWid
 	};
 	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
 		inputSourceSelected);
-	// inputSourceSelected();
 }
 
 InputWidget::~InputWidget()
