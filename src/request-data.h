@@ -93,11 +93,7 @@ struct url_source_request_data {
 
 	inputs_data inputs;
 
-	// agg buffer begin timestamp
-	uint64_t agg_buffer_begin_ts;
 	uint64_t sequence_number;
-	std::string last_obs_text_source_value;
-	std::string obs_input_source_resize_option;
 	// SSL options
 	std::string ssl_client_cert_file;
 	std::string ssl_client_key_file;
@@ -131,10 +127,7 @@ struct url_source_request_data {
 		fail_on_http_error = false;
 		body = std::string("");
 		inputs = {};
-		agg_buffer_begin_ts = 0;
 		sequence_number = 0;
-		last_obs_text_source_value = std::string("");
-		obs_input_source_resize_option = std::string("100%");
 		ssl_verify_peer = false;
 		headers = {};
 		output_type = std::string("text");

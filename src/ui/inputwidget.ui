@@ -161,6 +161,9 @@
          </item>
          <item>
           <widget class="QComboBox" name="comboBox_aggTarget">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="currentText">
             <string>to Empty</string>
            </property>

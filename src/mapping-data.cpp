@@ -61,7 +61,7 @@ inputs_data deserialize_input_mapping_data(const std::string &data)
 		input.no_empty = j_input.value("no_empty", false);
 		input.no_same = j_input.value("no_same", false);
 		input.aggregate = j_input.value("aggregate", false);
-		input.agg_method = j_input.value("agg_method", "");
+		input.agg_method = j_input.value("agg_method", 0);
 		input.resize_method = j_input.value("resize_method", "");
 		result.push_back(input);
 	}

@@ -27,8 +27,11 @@ struct input_data {
 	bool no_empty;
 	bool no_same;
 	bool aggregate;
-	std::string agg_method;
+	int agg_method;
 	std::string resize_method;
+	std::string last_obs_text_source_value;
+	std::string aggregate_to_empty_buffer;
+	uint64_t agg_buffer_begin_ts;
 };
 
 typedef std::vector<input_data> inputs_data;

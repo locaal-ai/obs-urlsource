@@ -4,6 +4,7 @@
 #include "CollapseButton.h"
 #include "plugin-support.h"
 #include "InputsDialog.h"
+#include "mapping-data.h"
 
 #include <obs-module.h>
 
@@ -172,8 +173,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		}
 	]
 })");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->outputTypeComboBox->setCurrentIndex(3);
 			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
 		} else if (index == 2) {
@@ -186,8 +187,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
     "input": "{{input}}",
     "voice": "alloy"
   })");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
 			ui->outputTypeComboBox->setCurrentIndex(2);
 		} else if (index == 3) {
@@ -216,8 +217,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   ],
   "max_tokens": 50
 })");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->outputTypeComboBox->setCurrentIndex(3);
 			ui->outputJSONPathLineEdit->setText("$.choices.0.message.content");
 		} else if (index == 4) {
@@ -235,8 +236,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   "model_id": "eleven_monolingual_v1",
   "text": "{{input}}"
 })");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->outputTypeComboBox->setCurrentIndex(2);
 		} else if (index == 5) {
 			/* --------------------------------------------- */
@@ -266,8 +267,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
   ],
   "target_lang": "DE"
 })");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->outputTypeComboBox->setCurrentIndex(3);
 			ui->outputJSONPathLineEdit->setText("$.translations.0.text");
 		} else if (index == 7) {
@@ -276,8 +277,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			ui->urlLineEdit->setText("http://localhost:18080/translate");
 			ui->bodyTextEdit->setText(
 				"{\"text\":\"{{input}}\", \"source_lang\":\"eng_Latn\", \"target_lang\":\"spa_Latn\"}");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
 			ui->outputTypeComboBox->setCurrentIndex(0);
 			ui->outputRegexLineEdit->setText("");
@@ -293,8 +294,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 				"http://upload.youtube.com/closedcaption?cid=xxxx-xxxx-xxxx-xxxx-xxxx&seq={{seq}}");
 			ui->bodyTextEdit->setText(R"({{strftime("%Y-%m-%dT%H:%M:%S.000", true)}}
 {{input}})");
-			ui->obsTextSourceEnabledCheckBox->setChecked(true);
-			ui->obsTextSourceSkipSameCheckBox->setChecked(true);
+			// ui->obsTextSourceEnabledCheckBox->setChecked(true);
+			// ui->obsTextSourceSkipSameCheckBox->setChecked(true);
 			ui->sslOptionsCheckbox->setChecked(false);
 			ui->outputTypeComboBox->setCurrentIndex(0);
 			ui->outputRegexLineEdit->setText("");
@@ -324,9 +325,8 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 
 		if (inputsDialog.result() == QDialog::Accepted) {
 			// get the inputs data from the inputs modal
-			inputs_data inputs = inputsDialog.getInputsData();
 			// add the inputs to the request_data
-			request_data->inputs = inputs;
+			request_data->inputs = inputsDialog.getInputsDataFromUI();
 		}
 	});
 
@@ -367,59 +367,6 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 		ui->sslOptionsCheckbox->setChecked(true);
 	}
 	ui->sslOptionsGroup->setVisible(ui->sslOptionsCheckbox->isChecked());
-
-	// populate list of OBS text sources
-	obs_enum_sources(add_sources_to_qcombobox, ui->obsTextSourceComboBox);
-	// Select the current OBS text source, if any
-	// int itemIdx = ui->obsTextSourceComboBox->findData(
-	// 	QVariant(QString::fromStdString(request_data->obs_text_source)));
-	// if (itemIdx != -1) {
-	// 	ui->obsTextSourceComboBox->setCurrentIndex(itemIdx);
-	// } else {
-	// 	ui->obsTextSourceComboBox->setCurrentIndex(0);
-	// }
-	auto setObsTextSourceValueOptionsVisibility = [=]() {
-		// Hide the options if no OBS text source is selected
-		ui->widget_inputValueOptions->setEnabled(
-			ui->obsTextSourceComboBox->currentIndex() != 0);
-		// adjust the size of the dialog to fit the content
-		this->adjustSize();
-	};
-	setObsTextSourceValueOptionsVisibility();
-	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
-		setObsTextSourceValueOptionsVisibility);
-
-	// ui->obsTextSourceEnabledCheckBox->setChecked(request_data->obs_text_source_skip_if_empty);
-	// ui->obsTextSourceSkipSameCheckBox->setChecked(request_data->obs_text_source_skip_if_same);
-	// ui->aggToTarget->setChecked(request_data->aggregate_to_target !=
-	// 			    URL_SOURCE_AGG_TARGET_NONE);
-	// ui->comboBox_aggTarget->setCurrentIndex(
-	// 	ui->comboBox_aggTarget->findText(QString::fromStdString(
-	// 		url_source_agg_target_to_string(request_data->aggregate_to_target))));
-
-	auto setAggTargetEnabled = [=]() {
-		ui->comboBox_aggTarget->setEnabled(ui->aggToTarget->isChecked());
-	};
-	setAggTargetEnabled();
-	connect(ui->aggToTarget, &QCheckBox::toggled, this, setAggTargetEnabled);
-
-	ui->comboBox_resizeInput->setCurrentText(
-		QString::fromStdString(request_data->obs_input_source_resize_option));
-
-	auto inputSourceSelected = [=]() {
-		// if the source is a media source, show the resize option, otherwise hide it
-		auto current_data = ui->obsTextSourceComboBox->currentData();
-		bool hide_resize_option = true;
-		if (current_data.isValid()) {
-			const std::string source_name = current_data.toString().toStdString();
-			hide_resize_option = is_obs_source_text(source_name);
-		}
-		ui->comboBox_resizeInput->setVisible(!hide_resize_option);
-		ui->label_resizeInput->setVisible(!hide_resize_option);
-	};
-	connect(ui->obsTextSourceComboBox, &QComboBox::currentTextChanged, this,
-		inputSourceSelected);
-	inputSourceSelected();
 
 	ui->bodyTextEdit->setText(QString::fromStdString(request_data->body));
 
