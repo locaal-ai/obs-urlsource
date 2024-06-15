@@ -80,6 +80,9 @@ target_sources(
           src/ui/RequestBuilder.cpp
           src/ui/text-render-helper.cpp
           src/ui/outputmapping.cpp
+          src/ui/InputsDialog.cpp
+          src/ui/InputWidget.cpp
+          src/ui/obs-ui-utils.cpp
           src/url-source-callbacks.cpp
           src/url-source-info.c
           src/url-source-thread.cpp

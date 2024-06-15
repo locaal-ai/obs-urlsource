@@ -8,6 +8,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mapping-data.h"
+
 #define URL_SOURCE_REQUEST_STANDARD_ERROR_CODE -1
 #define URL_SOURCE_REQUEST_BENIGN_ERROR_CODE -2
 #define URL_SOURCE_REQUEST_PARSING_ERROR_CODE -3
@@ -88,16 +90,10 @@ struct url_source_request_data {
 	std::string method;
 	bool fail_on_http_error;
 	std::string body;
-	std::string obs_text_source;
-	bool obs_text_source_skip_if_empty;
-	bool obs_text_source_skip_if_same;
-	int aggregate_to_target;
-	std::string aggregate_to_empty_buffer;
-	// agg buffer begin timestamp
-	uint64_t agg_buffer_begin_ts;
+
+	inputs_data inputs;
+
 	uint64_t sequence_number;
-	std::string last_obs_text_source_value;
-	std::string obs_input_source_resize_option;
 	// SSL options
 	std::string ssl_client_cert_file;
 	std::string ssl_client_key_file;
@@ -130,15 +126,8 @@ struct url_source_request_data {
 		method = std::string("GET");
 		fail_on_http_error = false;
 		body = std::string("");
-		obs_text_source = std::string("");
-		obs_text_source_skip_if_empty = false;
-		obs_text_source_skip_if_same = false;
-		aggregate_to_target = URL_SOURCE_AGG_TARGET_NONE;
-		aggregate_to_empty_buffer = std::string("");
-		agg_buffer_begin_ts = 0;
+		inputs = {};
 		sequence_number = 0;
-		last_obs_text_source_value = std::string("");
-		obs_input_source_resize_option = std::string("100%");
 		ssl_verify_peer = false;
 		headers = {};
 		output_type = std::string("text");

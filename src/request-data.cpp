@@ -79,63 +79,60 @@ size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
 	return real_size;
 }
 
-void handle_nonempty_text(url_source_request_data *request_data,
-			  request_data_handler_response &response, nlohmann::json &json,
-			  const char *text)
+void handle_nonempty_text(input_data &input, request_data_handler_response &response,
+			  nlohmann::json &json, const char *text)
 {
-	if (request_data->obs_text_source_skip_if_same) {
-		if (request_data->last_obs_text_source_value == text) {
+	if (input.no_same) {
+		if (input.last_obs_text_source_value == text) {
 			// Return an error response
 			response.error_message =
 				"OBS text source value is the same as last time, skipping was requested";
 			response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
 			return;
 		}
-		request_data->last_obs_text_source_value = text;
+		input.last_obs_text_source_value = text;
 	}
-	if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_NONE) {
+	if (input.aggregate) {
 		// aggregate to target is requested and the text is not empty
 
 		// if the buffer ends with a punctuation mark, remove it
-		if (request_data->aggregate_to_empty_buffer.size() > 0) {
-			char lastChar = request_data->aggregate_to_empty_buffer.back();
+		if (input.aggregate_to_empty_buffer.size() > 0) {
+			char lastChar = input.aggregate_to_empty_buffer.back();
 			if (lastChar == '.' || lastChar == ',' || lastChar == '!' ||
 			    lastChar == '?') {
-				request_data->aggregate_to_empty_buffer.pop_back();
+				input.aggregate_to_empty_buffer.pop_back();
 				// insert a space where the punctuation mark was
-				request_data->aggregate_to_empty_buffer += " ";
+				input.aggregate_to_empty_buffer += " ";
 			}
 		}
 
 		// trim the text and add it to the aggregate buffer
 		std::string textStr = text;
-		request_data->aggregate_to_empty_buffer += trim(textStr);
+		input.aggregate_to_empty_buffer += trim(textStr);
 		// if the buffer is larger than the limit, remove the first part
-		if (request_data->aggregate_to_empty_buffer.size() >
-		    URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
-			request_data->aggregate_to_empty_buffer.erase(
-				0, request_data->aggregate_to_empty_buffer.size() -
+		if (input.aggregate_to_empty_buffer.size() > URL_SOURCE_AGG_BUFFER_MAX_SIZE) {
+			input.aggregate_to_empty_buffer.erase(
+				0, input.aggregate_to_empty_buffer.size() -
 					   URL_SOURCE_AGG_BUFFER_MAX_SIZE);
 		}
 
-		if (request_data->aggregate_to_target != URL_SOURCE_AGG_TARGET_EMPTY) {
+		if (input.agg_method != URL_SOURCE_AGG_TARGET_EMPTY) {
 			// this is a non-empty aggregate *timed* target
-			if (request_data->agg_buffer_begin_ts == 0) {
+			if (input.agg_buffer_begin_ts == 0) {
 				// this is the first time we aggregate, set the timer
-				request_data->agg_buffer_begin_ts = get_time_ns();
+				input.agg_buffer_begin_ts = get_time_ns();
 			}
 			// check if the agg timer has expired
-			const uint64_t timer_interval_ns = url_source_agg_target_to_nanoseconds(
-				request_data->aggregate_to_target);
-			if ((get_time_ns() - request_data->agg_buffer_begin_ts) >=
-			    timer_interval_ns) {
+			const uint64_t timer_interval_ns =
+				url_source_agg_target_to_nanoseconds(input.agg_method);
+			if ((get_time_ns() - input.agg_buffer_begin_ts) >= timer_interval_ns) {
 				// aggregate timer has expired, use the aggregate buffer
 				obs_log(LOG_INFO,
 					"Aggregate timer expired, using aggregate buffer (len %d)",
-					request_data->aggregate_to_empty_buffer.size());
-				json["input"] = request_data->aggregate_to_empty_buffer;
-				request_data->aggregate_to_empty_buffer = "";
-				request_data->agg_buffer_begin_ts = get_time_ns();
+					input.aggregate_to_empty_buffer.size());
+				json["input"] = input.aggregate_to_empty_buffer;
+				input.aggregate_to_empty_buffer = "";
+				input.agg_buffer_begin_ts = get_time_ns();
 			} else {
 				// aggregate timer has not expired, return an error response
 				response.error_message =
@@ -149,21 +146,130 @@ void handle_nonempty_text(url_source_request_data *request_data,
 	}
 }
 
-void handle_empty_text(url_source_request_data *request_data,
-		       request_data_handler_response &response, nlohmann::json &json)
+void handle_empty_text(input_data &input, request_data_handler_response &response,
+		       nlohmann::json &json)
 {
-	if (request_data->aggregate_to_target == URL_SOURCE_AGG_TARGET_EMPTY &&
-	    !request_data->aggregate_to_empty_buffer.empty()) {
+	if (input.agg_method == URL_SOURCE_AGG_TARGET_EMPTY &&
+	    !input.aggregate_to_empty_buffer.empty()) {
 		// empty input found, use the aggregate buffer if it's not empty
 		obs_log(LOG_INFO, "OBS text source is empty, using aggregate buffer (len %d)",
-			request_data->aggregate_to_empty_buffer.size());
-		json["input"] = request_data->aggregate_to_empty_buffer;
-		request_data->aggregate_to_empty_buffer = "";
-		request_data->agg_buffer_begin_ts = get_time_ns();
-	} else if (request_data->obs_text_source_skip_if_empty) {
+			input.aggregate_to_empty_buffer.size());
+		json["input"] = input.aggregate_to_empty_buffer;
+		input.aggregate_to_empty_buffer = "";
+		input.agg_buffer_begin_ts = get_time_ns();
+	} else if (input.no_empty) {
 		// Return an error response
 		response.error_message = "OBS text source is empty, skipping was requested";
 		response.status_code = URL_SOURCE_REQUEST_BENIGN_ERROR_CODE;
+	}
+}
+
+void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
+			request_data_handler_response &response, nlohmann::json &json)
+{
+	for (size_t i = 0; i < request_data->inputs.size(); i++) {
+		// Add the input to the json object
+		input_data &input = request_data->inputs[i];
+
+		if (input.source == "") {
+			// no dynamic data source is set
+			continue;
+		}
+
+		// remove the prefix from the source name
+		std::string source_name = get_source_name_without_prefix(input.source);
+		// Check if the source is a text source
+		if (is_obs_source_text(source_name)) {
+			// Get text from OBS text source
+			obs_data_t *sourceSettings = obs_source_get_settings(
+				obs_get_source_by_name(source_name.c_str()));
+			const char *text = obs_data_get_string(sourceSettings, "text");
+			obs_data_release(sourceSettings);
+			std::string textStr;
+			if (text != NULL) {
+				textStr = text;
+			}
+
+			if (textStr.empty()) {
+				handle_empty_text(input, response, json);
+			} else {
+				// trim the text for whistespace
+				textStr = trim(textStr);
+
+				handle_nonempty_text(input, response, json, textStr.c_str());
+
+				// if one of the headers is Content-Type application/json, make sure the text is JSONified
+				std::regex header_regex("content-type",
+							std::regex_constants::icase);
+				std::regex header_value_regex("application/json",
+							      std::regex_constants::icase);
+				for (auto header : request_data->headers) {
+					// check if the header is Content-Type case insensitive using regex
+					if (std::regex_search(header.first, header_regex) &&
+					    std::regex_search(header.second, header_value_regex)) {
+						nlohmann::json tmp = text;
+						textStr = tmp.dump();
+						// remove '"' from the beginning and end of the string
+						textStr = textStr.substr(1, textStr.size() - 2);
+						break;
+					}
+				}
+
+				json["input" + std::to_string(i)] = textStr;
+				if (i == 0) {
+					// also add the 0'th input to the "input" key
+					json["input"] = textStr;
+				}
+			}
+			if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
+				curl_easy_cleanup(curl);
+				return;
+			}
+		} else {
+			// this is not a text source.
+			// we should grab an image of its output, encode it to base64 and use it as input
+			obs_source_t *source = obs_get_source_by_name(source_name.c_str());
+			if (source == NULL) {
+				obs_log(LOG_INFO, "Failed to get source by name");
+				// Return an error response
+				response.error_message = "Failed to get source by name";
+				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+				curl_easy_cleanup(curl);
+				return;
+			}
+
+			// render the source to an image using get_rgba_from_source_render
+			source_render_data tf;
+			init_source_render_data(&tf);
+			// get the scale factor from the request_data->obs_input_source_resize_option
+			float scale = 1.0;
+			if (input.resize_method != "100%") {
+				// parse the scale from the string
+				std::string scaleStr = input.resize_method;
+				scaleStr.erase(std::remove(scaleStr.begin(), scaleStr.end(), '%'),
+					       scaleStr.end());
+				scale = (float)(std::stof(scaleStr) / 100.0f);
+			}
+
+			uint32_t width, height;
+			std::vector<uint8_t> rgba =
+				get_rgba_from_source_render(source, &tf, width, height, scale);
+			if (rgba.empty()) {
+				obs_log(LOG_INFO, "Failed to get RGBA from source render");
+				// Return an error response
+				response.error_message = "Failed to get RGBA from source render";
+				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+				curl_easy_cleanup(curl);
+				return;
+			}
+			destroy_source_render_data(&tf);
+
+			// encode the image to base64
+			std::string base64 = convert_rgba_buffer_to_png_base64(rgba, width, height);
+
+			// set the input to the base64 encoded image
+			json["imageb64"] = base64;
+		} // end of non-text source
 	}
 }
 
@@ -242,107 +348,15 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 
 		nlohmann::json json; // json object or variables for inja
 
-		// If dynamic data source is set, replace the {input} placeholder with the source text
-		if (request_data->obs_text_source != "") {
-			// Check if the source is a text source
-			if (is_obs_source_text(request_data->obs_text_source)) {
-				// Get text from OBS text source
-				obs_data_t *sourceSettings =
-					obs_source_get_settings(obs_get_source_by_name(
-						request_data->obs_text_source.c_str()));
-				const char *text = obs_data_get_string(sourceSettings, "text");
-				obs_data_release(sourceSettings);
-				std::string textStr;
-				if (text != NULL) {
-					textStr = text;
-				}
+		// Put the request inputs on the json object
+		put_inputs_on_json(request_data, curl, response, json);
 
-				if (textStr.empty()) {
-					handle_empty_text(request_data, response, json);
-				} else {
-					// trim the text for whistespace
-					textStr = trim(textStr);
+		if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
+			curl_easy_cleanup(curl);
+			return response;
+		}
 
-					handle_nonempty_text(request_data, response, json,
-							     textStr.c_str());
-
-					// if one of the headers is Content-Type application/json, make sure the text is JSONified
-					std::regex header_regex("content-type",
-								std::regex_constants::icase);
-					for (auto header : request_data->headers) {
-						// check if the header is Content-Type case insensitive using regex
-						if (std::regex_search(header.first, header_regex) &&
-						    header.second == "application/json") {
-							nlohmann::json tmp = text;
-							textStr = tmp.dump();
-							// remove '"' from the beginning and end of the string
-							textStr = textStr.substr(1, textStr.size() -
-											    2);
-							break;
-						}
-					}
-
-					json["input"] = textStr;
-				}
-				if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
-					curl_easy_cleanup(curl);
-					return response;
-				}
-			} else {
-				// this is not a text source.
-				// we should grab an image of its output, encode it to base64 and use it as input
-				obs_source_t *source = obs_get_source_by_name(
-					request_data->obs_text_source.c_str());
-				if (source == NULL) {
-					obs_log(LOG_INFO, "Failed to get source by name");
-					// Return an error response
-					response.error_message = "Failed to get source by name";
-					response.status_code =
-						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-					curl_easy_cleanup(curl);
-					return response;
-				}
-
-				// render the source to an image using get_rgba_from_source_render
-				source_render_data tf;
-				init_source_render_data(&tf);
-				// get the scale factor from the request_data->obs_input_source_resize_option
-				float scale = 1.0;
-				if (request_data->obs_input_source_resize_option != "100%") {
-					// parse the scale from the string
-					std::string scaleStr =
-						request_data->obs_input_source_resize_option;
-					scaleStr.erase(std::remove(scaleStr.begin(), scaleStr.end(),
-								   '%'),
-						       scaleStr.end());
-					scale = (float)(std::stof(scaleStr) / 100.0f);
-				}
-
-				uint32_t width, height;
-				std::vector<uint8_t> rgba = get_rgba_from_source_render(
-					source, &tf, width, height, scale);
-				if (rgba.empty()) {
-					obs_log(LOG_INFO, "Failed to get RGBA from source render");
-					// Return an error response
-					response.error_message =
-						"Failed to get RGBA from source render";
-					response.status_code =
-						URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-					curl_easy_cleanup(curl);
-					return response;
-				}
-				destroy_source_render_data(&tf);
-
-				// encode the image to base64
-				std::string base64 =
-					convert_rgba_buffer_to_png_base64(rgba, width, height);
-
-				// set the input to the base64 encoded image
-				json["imageb64"] = base64;
-			} // end of non-text source
-		}         // end of dynamic data source != ""
-
-		// Replace the {input} placeholder with the source text
+		// Replace placeholders in the URL and body with the input values
 		inja::Environment env;
 		// Add an inja callback for time formatting
 		env.add_callback("strftime", 2, [](inja::Arguments &args) {
@@ -528,11 +542,7 @@ std::string serialize_request_data(url_source_request_data *request_data)
 	json["method"] = request_data->method;
 	json["fail_on_http_error"] = request_data->fail_on_http_error;
 	json["body"] = request_data->body;
-	json["obs_text_source"] = request_data->obs_text_source;
-	json["obs_text_source_skip_if_empty"] = request_data->obs_text_source_skip_if_empty;
-	json["obs_text_source_skip_if_same"] = request_data->obs_text_source_skip_if_same;
-	json["aggregate_to_target"] = request_data->aggregate_to_target;
-	json["obs_input_source_resize_option"] = request_data->obs_input_source_resize_option;
+	json["inputs"] = serialize_input_mapping_data(request_data->inputs);
 	// SSL options
 	json["ssl_client_cert_file"] = request_data->ssl_client_cert_file;
 	json["ssl_client_key_file"] = request_data->ssl_client_key_file;
@@ -578,15 +588,7 @@ url_source_request_data unserialize_request_data(std::string serialized_request_
 		request_data.method = json["method"].get<std::string>();
 		request_data.fail_on_http_error = json.value("fail_on_http_error", false);
 		request_data.body = json["body"].get<std::string>();
-		request_data.obs_text_source = json.value("obs_text_source", "");
-		request_data.obs_text_source_skip_if_empty =
-			json.value("obs_text_source_skip_if_empty", false);
-		request_data.obs_text_source_skip_if_same =
-			json.value("obs_text_source_skip_if_same", false);
-		request_data.aggregate_to_target =
-			json.value("aggregate_to_target", URL_SOURCE_AGG_TARGET_NONE);
-		request_data.obs_input_source_resize_option =
-			json.value("obs_input_source_resize_option", "100%");
+		request_data.inputs = deserialize_input_mapping_data(json["inputs"].dump());
 
 		// SSL options
 		request_data.ssl_client_cert_file = json.value("ssl_client_cert_file", "");

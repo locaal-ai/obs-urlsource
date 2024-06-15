@@ -47,4 +47,6 @@ inline bool is_valid_output_source_name(const char *output_source_name)
 	       strcmp(output_source_name, "(null)") != 0 && strcmp(output_source_name, "") != 0;
 }
 
+std::string get_source_name_without_prefix(const std::string &source_name);
+
 #endif // OBS_SOURCE_UTIL_H

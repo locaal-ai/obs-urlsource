@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
-    <height>931</height>
+    <width>622</width>
+    <height>1134</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Request Builder</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -367,203 +367,13 @@
        </widget>
       </item>
       <item row="7" column="1">
-       <widget class="QWidget" name="widget_6" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QWidget" name="widget_8" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <property name="spacing">
-             <number>3</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QComboBox" name="obsTextSourceComboBox">
-              <property name="toolTip">
-               <string>&quot;Select a OBS text source to use its current text in the querystring or request body as `{{input}}` or `{{imageb64}}`.&quot;</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>None</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_resizeInput">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Resize</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="comboBox_resizeInput">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>100%</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>50%</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>25%</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>10%</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>5%</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QWidget" name="widget_inputValueOptions" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="spacing">
-             <number>2</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QCheckBox" name="obsTextSourceEnabledCheckBox">
-              <property name="text">
-               <string>No empty</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="obsTextSourceSkipSameCheckBox">
-              <property name="text">
-               <string>No same</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="aggToTarget">
-              <property name="toolTip">
-               <string>Aggregate the input until empty is found, then use the aggregate value for the request.</string>
-              </property>
-              <property name="text">
-               <string>Agg</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="comboBox_aggTarget">
-              <property name="currentText">
-               <string>to Empty</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>to Empty</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>for 30s</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>for 1m</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>for 2m</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>for 5m</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>for 10m</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QPushButton" name="pushButton_addInputs">
+        <property name="text">
+         <string>Add Inputs</string>
+        </property>
        </widget>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
        <widget class="QLabel" name="label_16">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available functions: (for URL field above as well)&lt;/p&gt;&lt;p&gt;- {{input}} : The dynamic input&lt;/p&gt;&lt;p&gt;- {{strftime(&amp;lt;format&amp;gt;, &amp;lt;utc? true/false&amp;gt;)}} : Add a formatted time&lt;/p&gt;&lt;p&gt;- {{urlencode(var)}} : URL Encoded input&lt;/p&gt;&lt;p&gt;- {{imageb64}} : Base64 encoded image input&lt;/p&gt;&lt;p&gt;- {{seq}} : Sequential counter for requests&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -573,7 +383,7 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
        <widget class="QTextEdit" name="bodyTextEdit">
         <property name="acceptRichText">
          <bool>false</bool>
@@ -583,21 +393,21 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="11" column="0">
        <widget class="QCheckBox" name="sslOptionsCheckbox">
         <property name="text">
          <string>SSL Options</string>
         </property>
        </widget>
       </item>
-      <item row="11" column="0">
+      <item row="12" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="11" column="1">
+      <item row="12" column="1">
        <widget class="QGroupBox" name="sslOptionsGroup">
         <property name="title">
          <string/>

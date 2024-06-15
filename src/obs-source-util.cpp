@@ -131,3 +131,14 @@ std::string convert_rgba_buffer_to_png_base64(const std::vector<uint8_t> &rgba, 
 
 	return escaped;
 }
+
+std::string get_source_name_without_prefix(const std::string &source_name)
+{
+	if (source_name.size() > 0 && source_name[0] == '(') {
+		size_t end = source_name.find(')');
+		if (end != std::string::npos && end + 2 < source_name.size()) {
+			return source_name.substr(end + 2);
+		}
+	}
+	return source_name;
+}
