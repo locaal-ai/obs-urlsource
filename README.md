@@ -1,4 +1,4 @@
-# URL/API Source - OBS Plugin
+# URL/API Source - Connect Anything to OBS
 
 <div align="center">
 
@@ -12,7 +12,7 @@
 
 ## Introduction
 
-The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows users to add a media source that fetches data from a URL or API endpoint and displays it as text. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
+The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
 
 If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work: https://github.com/sponsors/royshil
 
@@ -32,7 +32,7 @@ Watch quick tutorials on how to use and setup the URL/API source on your OBS sce
   https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtu.be/kgAOCijJ51Q" target="_blank">HTML Scraping Tutorial (18 min)</a>
 </div>
 
-#### AI on OBS Tutorials
+#### AI on OBS Using URL/API Source
 Bring AI to your OBS! Be a x10 streamer and content creator with AI tools:
 <div align="center">
   <a href="https://youtu.be/4BTmoKr0YMw" target="_blank">
