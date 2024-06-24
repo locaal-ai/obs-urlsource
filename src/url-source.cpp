@@ -281,6 +281,9 @@ void url_source_activate(void *data)
 		return;
 	}
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
+	if (usd == nullptr) {
+		return;
+	}
 	// Start the thread
 	{
 		std::lock_guard<std::mutex> lock(usd->curl_mutex);
@@ -290,7 +293,8 @@ void url_source_activate(void *data)
 		}
 		usd->curl_thread_run = true;
 	}
-	usd->curl_thread = std::thread(curl_loop, usd);
+	std::thread new_curl_thread(curl_loop, usd);
+	usd->curl_thread.swap(new_curl_thread);
 }
 
 void url_source_deactivate(void *data)
