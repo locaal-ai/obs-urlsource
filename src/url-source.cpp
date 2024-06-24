@@ -207,24 +207,29 @@ bool output_mapping_and_template_button_click(obs_properties_t *, obs_property_t
 	std::unique_ptr<OutputMapping> output_mapping(new OutputMapping(
 		button_usd->output_mapping_data,
 		[button_usd](const output_mapping_data &new_mapping_data) {
-			// lock the mapping data mutex
-			std::lock_guard<std::mutex> lock(button_usd->output_mapping_mutex);
-
 			if (button_usd->source == nullptr) {
 				obs_log(LOG_ERROR, "Source is null");
 				return;
 			}
+
 			// Update the output mapping data from the settings
 			obs_data_t *settings = obs_source_get_settings(button_usd->source);
 			if (settings == nullptr) {
 				obs_log(LOG_ERROR, "Failed to get settings for source");
 				return;
 			}
+
 			std::string serialized_mapping_data =
 				serialize_output_mapping_data(new_mapping_data);
 			obs_data_set_string(settings, "output_mapping_data",
 					    serialized_mapping_data.c_str());
-			button_usd->output_mapping_data = new_mapping_data;
+
+			{
+				// lock the mapping data mutex
+				std::lock_guard<std::mutex> lock(button_usd->output_mapping_mutex);
+				button_usd->output_mapping_data = new_mapping_data;
+			}
+
 			obs_source_update(button_usd->source, settings);
 			obs_data_release(settings);
 		},

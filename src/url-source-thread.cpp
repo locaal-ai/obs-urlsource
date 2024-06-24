@@ -17,11 +17,7 @@ void curl_loop(struct url_source_data *usd)
 
 	inja::Environment env;
 
-	while (true) {
-		if (!usd->curl_thread_run) {
-			break;
-		}
-
+	while (usd->curl_thread_run) {
 		// time the request
 		uint64_t request_start_time_ns = get_time_ns();
 
@@ -38,8 +34,6 @@ void curl_loop(struct url_source_data *usd)
 				response.body_parts_parsed.push_back(response.body);
 			}
 
-			// lock the mapping mutex
-			std::lock_guard<std::mutex> lock(usd->output_mapping_mutex);
 			output_with_mapping(response, usd);
 		}
 

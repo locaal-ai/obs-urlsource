@@ -23,10 +23,7 @@ struct url_source_data {
 	bool send_to_stream = false;
 	uint32_t render_width = 640;
 
-	// Text source to output the text to
 	std::mutex output_mapping_mutex;
-
-	// Use std for thread and mutex
 	std::mutex curl_mutex;
 	std::thread curl_thread;
 	std::condition_variable curl_thread_cv;
