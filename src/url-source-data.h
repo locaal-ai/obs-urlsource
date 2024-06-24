@@ -9,6 +9,7 @@
 #include <mutex>
 #include <thread>
 #include <condition_variable>
+#include <atomic>
 
 struct url_source_data {
 	obs_source_t *source = nullptr;
@@ -29,7 +30,7 @@ struct url_source_data {
 	std::mutex curl_mutex;
 	std::thread curl_thread;
 	std::condition_variable curl_thread_cv;
-	bool curl_thread_run = false;
+	std::atomic<bool> curl_thread_run = false;
 
 	// ctor must initialize mutex
 	url_source_data() : output_mapping_mutex(), curl_mutex(), curl_thread_cv() {}

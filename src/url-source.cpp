@@ -284,15 +284,11 @@ void url_source_activate(void *data)
 	if (usd == nullptr) {
 		return;
 	}
-	// Start the thread
-	{
-		std::lock_guard<std::mutex> lock(usd->curl_mutex);
-		if (usd->curl_thread_run) {
-			// Thread is already running
-			return;
-		}
-		usd->curl_thread_run = true;
+	if (usd->curl_thread_run) {
+		// Thread is already running
+		return;
 	}
+	usd->curl_thread_run = true;
 	std::thread new_curl_thread(curl_loop, usd);
 	usd->curl_thread.swap(new_curl_thread);
 }

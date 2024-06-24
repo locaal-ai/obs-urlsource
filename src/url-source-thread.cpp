@@ -18,11 +18,8 @@ void curl_loop(struct url_source_data *usd)
 	inja::Environment env;
 
 	while (true) {
-		{
-			std::lock_guard<std::mutex> lock(usd->curl_mutex);
-			if (!usd->curl_thread_run) {
-				break;
-			}
+		if (!usd->curl_thread_run) {
+			break;
 		}
 
 		// time the request
@@ -63,14 +60,11 @@ void curl_loop(struct url_source_data *usd)
 
 void stop_and_join_curl_thread(struct url_source_data *usd)
 {
-	{
-		std::lock_guard<std::mutex> lock(usd->curl_mutex);
-		if (!usd->curl_thread_run) {
-			// Thread is already stopped
-			return;
-		}
-		usd->curl_thread_run = false;
+	if (!usd->curl_thread_run) {
+		// Thread is already stopped
+		return;
 	}
+	usd->curl_thread_run = false;
 	usd->curl_thread_cv.notify_all();
 	if (usd->curl_thread.joinable()) {
 		usd->curl_thread.join();
