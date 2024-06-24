@@ -26,10 +26,13 @@ struct url_source_data {
 	std::mutex output_mapping_mutex;
 
 	// Use std for thread and mutex
-	std::mutex *curl_mutex = nullptr;
+	std::mutex curl_mutex;
 	std::thread curl_thread;
-	std::condition_variable *curl_thread_cv = nullptr;
+	std::condition_variable curl_thread_cv;
 	bool curl_thread_run = false;
+
+	// ctor must initialize mutex
+	url_source_data() : output_mapping_mutex(), curl_mutex(), curl_thread_cv() {}
 };
 
 #endif
