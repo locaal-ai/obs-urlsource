@@ -79,6 +79,7 @@ void *url_source_create(obs_data_t *settings, obs_source_t *source)
 	usd->request_data = url_source_request_data();
 
 	usd->frame.data[0] = nullptr;
+	usd->frame.format = VIDEO_FORMAT_BGRA;
 
 	// get request data from settings
 	std::string serialized_request_data = obs_data_get_string(settings, "request_data");
@@ -276,6 +277,9 @@ obs_properties_t *url_source_properties(void *data)
 
 void url_source_activate(void *data)
 {
+	if (data == nullptr) {
+		return;
+	}
 	struct url_source_data *usd = reinterpret_cast<struct url_source_data *>(data);
 	// Start the thread
 	{

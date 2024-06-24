@@ -15,8 +15,6 @@ void curl_loop(struct url_source_data *usd)
 {
 	obs_log(LOG_INFO, "Starting URL Source thread, update timer: %d", usd->update_timer_ms);
 
-	usd->frame.format = VIDEO_FORMAT_BGRA;
-
 	inja::Environment env;
 
 	while (true) {

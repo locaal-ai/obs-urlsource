@@ -132,12 +132,6 @@ void render_internal(const std::string &text, struct url_source_data *usd,
 	uint32_t width = usd->render_width;
 	uint32_t height = 0;
 
-	if (usd->frame.data[0] != nullptr) {
-		// Free the old render buffer
-		bfree(usd->frame.data[0]);
-		usd->frame.data[0] = nullptr;
-	}
-
 	// render the text with QTextDocument
 	render_text_with_qtextdocument(text, width, height, &renderBuffer, mapping.css_props);
 	// Update the frame
@@ -148,6 +142,9 @@ void render_internal(const std::string &text, struct url_source_data *usd,
 
 	// Send the frame
 	obs_source_output_video(usd->source, &usd->frame);
+
+	bfree(usd->frame.data[0]);
+	usd->frame.data[0] = nullptr;
 }
 
 std::string prepare_text_from_template(const output_mapping &mapping,

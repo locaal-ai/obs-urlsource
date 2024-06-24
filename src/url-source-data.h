@@ -11,7 +11,7 @@
 #include <condition_variable>
 
 struct url_source_data {
-	obs_source_t *source;
+	obs_source_t *source = nullptr;
 	struct url_source_request_data request_data;
 	struct request_data_handler_response response;
 	struct output_mapping_data output_mapping_data;
