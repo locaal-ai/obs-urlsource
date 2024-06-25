@@ -193,7 +193,7 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 
 	{
 		// lock the mapping mutex to get a local copy of the mappings
-		std::lock_guard<std::mutex> lock(usd->output_mapping_mutex);
+		std::unique_lock<std::mutex> lock(usd->output_mapping_mutex);
 		mappings = usd->output_mapping_data.mappings;
 	}
 

@@ -228,7 +228,7 @@ bool output_mapping_and_template_button_click(obs_properties_t *, obs_property_t
 
 			{
 				// lock the mapping data mutex
-				std::lock_guard<std::mutex> lock(button_usd->output_mapping_mutex);
+				std::unique_lock<std::mutex> lock(button_usd->output_mapping_mutex);
 				button_usd->output_mapping_data = new_mapping_data;
 			}
 
