@@ -30,7 +30,7 @@ struct url_source_data {
 	std::atomic<bool> curl_thread_run = false;
 
 	// ctor must initialize mutex
-	url_source_data() : output_mapping_mutex(), curl_mutex(), curl_thread_cv() {}
+	explicit url_source_data();
 };
 
 #endif

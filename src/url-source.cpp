@@ -40,6 +40,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <memory>
 #include <regex>
 
+url_source_data::url_source_data() : output_mapping_mutex(), curl_mutex(), curl_thread_cv() {}
+
 const char *url_source_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);
@@ -74,7 +76,7 @@ void save_request_info_on_settings(obs_data_t *settings,
 void *url_source_create(obs_data_t *settings, obs_source_t *source)
 {
 	void *p = bzalloc(sizeof(struct url_source_data));
-	struct url_source_data *usd = new (p) url_source_data;
+	struct url_source_data *usd = new (p) url_source_data();
 	usd->source = source;
 	usd->request_data = url_source_request_data();
 
