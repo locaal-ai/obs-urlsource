@@ -14,7 +14,7 @@
 
 The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
 
-If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work: https://github.com/sponsors/royshil
+If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work on [GitHub](https://github.com/sponsors/royshil), [Patreon](https://www.patreon.com/RoyShilkrot) or [OpenCollective](https://opencollective.com/occ-ai)
 
 ### Usage Tutorials
 Watch quick tutorials on how to use and setup the URL/API source on your OBS scene.
@@ -28,28 +28,22 @@ Watch quick tutorials on how to use and setup the URL/API source on your OBS sce
   <a href="https://youtu.be/kgAOCijJ51Q" target="_blank">
     <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/280917569-fba369e7-b91f-4e76-90ff-09e8cbb75ffc.jpeg" />
   </a>
-  <br/>
-  https://youtu.be/E_UMNIfgR5w &amp; https://youtu.be/hwHgNcPJEfM &amp; <a href="https://youtu.be/kgAOCijJ51Q" target="_blank">HTML Scraping Tutorial (18 min)</a>
 </div>
 
-#### AI on OBS Using URL/API Source
-Bring AI to your OBS! Be a x10 streamer and content creator with AI tools:
-<div align="center">
-  <a href="https://youtu.be/4BTmoKr0YMw" target="_blank">
-    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/283315931-70c0c583-d1dc-4bd6-9ace-86c8e47f1229.jpg" />
-  </a>
-  <a href="https://youtu.be/2wJ72DcgBew" target="_blank">
-    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/284642194-6c97a6e7-3ba3-4e57-b0b6-612615266ae6.jpeg" />
-  </a>
-  <a href="https://youtu.be/kltJbg9hH4s" target="_blank">
-    <img width="27%" src="https://github-production-user-asset-6210df.s3.amazonaws.com/441170/284643465-a7aa2d13-c968-404d-8300-827fe069832d.jpg" />
-  </a>
-</div>
+Additional things to do with URL/API source to upgrade your content:
+
+- [HTML live website Scraping (18 min)](https://youtu.be/kgAOCijJ51Q)
+- [Use ChatGPT](https://youtu.be/4BTmoKr0YMw)
+- [Live Narration of your content with GPT](https://youtu.be/2wJ72DcgBew)
+- [Text-to-Speech with Coqui](https://youtu.be/kltJbg9hH4s)
+- [Live data from Google Sheets with API](https://www.youtube.com/watch?v=Y4ND9Y7IUJE)
+- [Send captions to YouTube API](https://www.youtube.com/watch?v=E7HKbO6CP_c)
+- [Get VSCode live data with API](https://www.youtube.com/watch?v=GqaIbSZe69o)
 
 #### Inspiration
 Out of ideas on what to do with URL/API Source? Here's a repo with 1,000s of public APIs https://github.com/public-apis/public-apis
 
-#### Dynamic Templating
+### Dynamic Templating
 The URL source supports both input and output templating using the [Inja](https://github.com/pantor/inja) engine.
 
 Output templates include `{{output}}` in case of a singular extraction from the response or `{{output1}},{{output2}},...` in case of multiple extracted value. In addition the `{{body}}` variable contains the entire body of the response in case of JSON. Advanced output templating functions can be achieved through [Inja](https://github.com/pantor/inja) like looping over arrays, etc.
@@ -80,14 +74,13 @@ Features:
 - HTTP request types: GET, POST
 - Request headers (for e.g. API Key or Auth token)
 - Request body for POST
-- Dynamic input from a Text or Image source (base64)
-- Output parsing: JSON via JSONPointer & JSONPath, XML/HTML via XPath & XQuery, Regex and CSS selectors
+- Multiple dynamic inputs from several Text or Image sources (base64)
+- Output parsing: JSON (JSONPointer & JSONPath), XML/HTML (XPath & XQuery), Key-Value, Regex and CSS selectors
 - Update timer for live updating data
 - Test of the request to find the right parsing
 - Output styling (font, color, etc.) and formatting (via regex post processing)
 - Output Image (via image URL or image data on the response)
-- Output text to external Text Source
-- Output audio to external Media Source
+- Output text to external Text Source and audio to external Media Source
 - Output to multiple sources with one request (Output Mapping)
 - Multi-value (array, union) parsed output capture, object unpacking (via Inja)
 - Dynamic input aggregations (time-based, "empty"-based)
