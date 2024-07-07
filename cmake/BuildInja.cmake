@@ -6,5 +6,5 @@ set(INJA_BUILD_TESTS OFF)
 set(BUILD_BENCHMARK OFF)
 set(COVERALLS OFF)
 # inja uses a lot of shadowing
-add_compile_options(-Wno-shadow)
+add_compile_options(-Wno-shadow -Wno-error=shadow -Wno-shadow-field -Wno-error=shadow-field)
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/inja ${CMAKE_BINARY_DIR}/inja EXCLUDE_FROM_ALL)
