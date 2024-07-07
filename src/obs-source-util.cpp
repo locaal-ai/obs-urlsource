@@ -51,8 +51,8 @@ std::vector<uint8_t> get_rgba_from_source_render(obs_source_t *source, source_re
 		return std::vector<uint8_t>();
 	}
 	// scale the width and height
-	width *= scale;
-	height *= scale;
+	width = (uint32_t)((float)width * scale);
+	height = (uint32_t)((float)height * scale);
 
 	// enter graphics context
 	obs_enter_graphics();
