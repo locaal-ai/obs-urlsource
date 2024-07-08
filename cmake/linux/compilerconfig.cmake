@@ -41,9 +41,8 @@ set(_obs_gcc_c_options
     -Wvla)
 
 # gcc options for C++
-set(_obs_gcc_cxx_options
-    # cmake-format: sortable
-    ${_obs_gcc_c_options} -Winvalid-offsetof -Wno-overloaded-virtual)
+set(_obs_gcc_cxx_options # cmake-format: sortable
+                         ${_obs_gcc_c_options} -Winvalid-offsetof -Wno-overloaded-virtual)
 
 add_compile_options(
   -fopenmp-simd
