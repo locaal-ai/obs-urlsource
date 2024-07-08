@@ -39,6 +39,7 @@ Additional things to do with URL/API source to upgrade your content:
 - [Live data from Google Sheets with API](https://www.youtube.com/watch?v=Y4ND9Y7IUJE)
 - [Send captions to YouTube API](https://www.youtube.com/watch?v=E7HKbO6CP_c)
 - [Get VSCode live data with API](https://www.youtube.com/watch?v=GqaIbSZe69o)
+- [Translate with DeepL API](https://youtu.be/ryWBIEmVka4)
 
 #### Inspiration
 Out of ideas on what to do with URL/API Source? Here's a repo with 1,000s of public APIs https://github.com/public-apis/public-apis
