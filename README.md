@@ -62,6 +62,13 @@ The input template works for the URL (querystring or REST path) or the POST body
 Use the `{{input}}` variable to insert the output from a Text source. Inja advanced templates are available too.
 A special function `strftime` is available for formatting the current time using conventions from C++ STL ([strftime](https://en.cppreference.com/w/cpp/chrono/c/strftime)), as well as `urlencode` which is useful for dynamic input in the querystring.
 
+#### HTML Subset
+
+The internal template renderer supports HTML4 and CSS with a [reduced subset of feautures](https://doc.qt.io/qt-6/richtext-html-subset.html).
+It is quite powerful and can render tables and apply various styling to the text.
+
+Image render is supported with the `<img />` tag, and external URLs are supported as well. For example `<img src="{{output}}" />` could be used to dynamically render an image URL coming from the response.
+
 ### Code Walkthrough
 Watch an explanation of the major parts of the code and how they work together.
 <div align="center">
