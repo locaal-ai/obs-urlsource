@@ -24,19 +24,26 @@ void acquire_output_source_ref_by_name(const char *output_source_name, obs_sourc
 		*output_source = source;
 	} else {
 		obs_log(LOG_ERROR, "Source '%s' not found", output_source_name);
+		*output_source = nullptr;
 	}
 }
 
 void setTextCallback(const std::string &str, const output_mapping &mapping)
 {
-	obs_source_t *target;
+	obs_source_t *target = nullptr;
 	acquire_output_source_ref_by_name(mapping.output_source.c_str(), &target);
-	if (!target) {
+	if (target == nullptr) {
 		obs_log(LOG_ERROR, "Source target is null");
 		return;
 	}
 
-	auto target_settings = obs_source_get_settings(target);
+	obs_data_t *target_settings = obs_source_get_settings(target);
+	if (target_settings == nullptr) {
+		obs_log(LOG_ERROR, "Failed to get settings for source '%s'",
+			mapping.output_source.c_str());
+		obs_source_release(target);
+		return;
+	}
 
 	if (strcmp(obs_source_get_id(target), "ffmpeg_source") == 0) {
 		// if the target source is a media source - set the input field to the text and disable the local file
