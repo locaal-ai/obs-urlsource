@@ -236,12 +236,27 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 		}
 
 		if (is_valid_output_source_name(mapping.output_source.c_str()) &&
-		    mapping.output_source != none_internal_rendering) {
+		    mapping.output_source != none_internal_rendering &&
+		    mapping.output_source != save_to_setting) {
 			// If an output source is selected - use it for rendering
 			setTextCallback(text, mapping);
 		} else {
-			any_internal_rendering = true;
-			render_internal(text, usd, mapping);
+			if (mapping.output_source == save_to_setting) {
+				// If the output source is set to save to settings - save the text to the source settings
+				obs_data_t *source_settings = obs_source_get_settings(usd->source);
+				if (source_settings == nullptr) {
+					obs_log(LOG_ERROR, "Failed to get settings for source");
+				} else {
+					obs_data_set_string(source_settings, "output",
+							    text.c_str());
+					obs_source_update(usd->source, source_settings);
+					obs_data_release(source_settings);
+				}
+			} else {
+				// render the text internally
+				any_internal_rendering = true;
+				render_internal(text, usd, mapping);
+			}
 		} // end if not text source
 	}
 

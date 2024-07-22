@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>515</width>
-    <height>398</height>
+    <width>457</width>
+    <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -144,6 +144,19 @@ Use {{body}} variable for unparsed object/array representation of the entire res
     <widget class="QCheckBox" name="checkBox_unhide_Source">
      <property name="text">
       <string>Unhide output source on update</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Learn More about &lt;a href=&quot;https://doc.qt.io/qt-6/richtext-html-subset.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;supported HTML and CSS&lt;/span&gt;&lt;/a&gt;, and &lt;a href=&quot;https://github.com/pantor/inja&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;advanced templating&lt;/span&gt;&lt;/a&gt; functions like loops.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

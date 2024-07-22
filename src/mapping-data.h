@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 const std::string none_internal_rendering = "None / Internal rendering";
+const std::string save_to_setting = "Save to source settings";
 
 struct output_mapping {
 	std::string name;

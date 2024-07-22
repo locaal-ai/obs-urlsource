@@ -133,6 +133,8 @@ QComboBox *OutputMapping::createSourcesComboBox()
 	QComboBox *comboBox = new QComboBox(this);
 	// add "Internal Renderer" to the comboBox
 	comboBox->addItem(QString::fromStdString(none_internal_rendering));
+	// add "Save to source settings" to the comboBox
+	comboBox->addItem(QString::fromStdString(save_to_setting));
 	// add all text and media sources to the comboBox
 	obs_enum_sources(add_sources_to_combobox, comboBox);
 	// connect comboBox to update_handler
