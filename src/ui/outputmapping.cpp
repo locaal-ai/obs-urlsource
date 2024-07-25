@@ -37,6 +37,7 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 			ui->toolButton_removeMapping->setEnabled(enable);
 			ui->plainTextEdit_template->setEnabled(enable);
 			ui->plainTextEdit_cssProps->setEnabled(enable);
+			ui->checkBox_unhide_Source->setEnabled(enable);
 
 			if (enable) {
 				// get the selected row
@@ -82,6 +83,15 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 		// set the css_props of the selected row to the plainTextEdit_cssProps text
 		this->mapping_data.mappings[row].css_props =
 			ui->plainTextEdit_cssProps->toPlainText().toStdString();
+		// call update_handler
+		this->update_handler(this->mapping_data);
+	});
+	connect(ui->checkBox_unhide_Source, &QCheckBox::stateChanged, [this]() {
+		// get the selected row
+		const auto row = ui->tableView->currentIndex().row();
+		// set the unhide_output_source of the selected row to the checkBox_unhide_Source state
+		this->mapping_data.mappings[row].unhide_output_source =
+			ui->checkBox_unhide_Source->isChecked();
 		// call update_handler
 		this->update_handler(this->mapping_data);
 	});

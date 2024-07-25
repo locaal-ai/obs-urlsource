@@ -125,6 +125,9 @@ Use {{body}} variable for unparsed object/array representation of the entire res
         <property name="plainText">
          <string/>
         </property>
+        <property name="placeholderText">
+         <string>Select a mapping above</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -135,6 +138,9 @@ Use {{body}} variable for unparsed object/array representation of the entire res
         <property name="plainText">
          <string/>
         </property>
+        <property name="placeholderText">
+         <string>Select a mapping above</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -142,6 +148,9 @@ Use {{body}} variable for unparsed object/array representation of the entire res
    </item>
    <item>
     <widget class="QCheckBox" name="checkBox_unhide_Source">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
       <string>Unhide output source on update</string>
      </property>
