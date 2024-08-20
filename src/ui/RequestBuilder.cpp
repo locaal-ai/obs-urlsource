@@ -37,7 +37,6 @@ void set_form_row_visibility(QFormLayout *layout, QWidget *widget, bool visible)
 
 bool add_sources_to_qcombobox(void *list, obs_source_t *source)
 {
-	const auto source_id = obs_source_get_id(source);
 	// add all text sources and sources that produce an image (by checking source.output_flags = OBS_SOURCE_VIDEO)
 	if (!is_obs_source_text(source) &&
 	    ((obs_source_get_output_flags(source) & OBS_SOURCE_VIDEO) == 0)) {
@@ -46,8 +45,9 @@ bool add_sources_to_qcombobox(void *list, obs_source_t *source)
 
 	std::string name = obs_source_get_name(source);
 	std::string prefix = "";
-	if (strcmp(source_id, "text_ft2_source_v2") == 0 ||
-	    strcmp(source_id, "text_gdiplus_v2") == 0)
+	const auto source_id = obs_source_get_id(source);
+	if (strncmp(source_id, "text_ft2_source", 15) == 0 ||
+	    strncmp(source_id, "text_gdiplus", 12) == 0)
 		prefix = "(Text) ";
 	else
 		prefix = "(Image) ";
