@@ -8,6 +8,7 @@
 
 const std::string none_internal_rendering = "None / Internal rendering";
 const std::string save_to_setting = "Save to source settings";
+const std::string file_output_rendering = "File output";
 
 struct output_mapping {
 	std::string name;
@@ -15,6 +16,7 @@ struct output_mapping {
 	std::string template_string;
 	std::string css_props;
 	bool unhide_output_source = false;
+	std::string file_path;
 };
 
 struct output_mapping_data {

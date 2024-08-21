@@ -6,6 +6,11 @@
 #include <QComboBox>
 #include <QHeaderView>
 #include <QStandardItem>
+#include <QStandardItemModel>
+#include <QFileDialog>
+#include <QCheckBox>
+#include <QPlainTextEdit>
+#include <QToolButton>
 
 namespace {
 
@@ -39,6 +44,7 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 			ui->plainTextEdit_cssProps->setEnabled(enable);
 			ui->checkBox_unhide_Source->setEnabled(enable);
 
+			// populate the props with the data of the selected row
 			if (enable) {
 				// get the selected row
 				const auto row = selected.indexes().first().row();
@@ -48,6 +54,7 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 				ui->plainTextEdit_template->blockSignals(true);
 				ui->plainTextEdit_cssProps->blockSignals(true);
 				ui->checkBox_unhide_Source->blockSignals(true);
+				ui->lineEdit_file_output->blockSignals(true);
 				// set the plainTextEdit_template and plainTextEdit_cssProps to the template_string and css_props of the selected row
 				ui->plainTextEdit_template->setPlainText(
 					this->mapping_data.mappings[row].template_string.c_str());
@@ -55,9 +62,12 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 					this->mapping_data.mappings[row].css_props.c_str());
 				ui->checkBox_unhide_Source->setChecked(
 					this->mapping_data.mappings[row].unhide_output_source);
+				ui->lineEdit_file_output->setText(
+					this->mapping_data.mappings[row].file_path.c_str());
 				ui->plainTextEdit_template->blockSignals(false);
 				ui->plainTextEdit_cssProps->blockSignals(false);
 				ui->checkBox_unhide_Source->blockSignals(false);
+				ui->lineEdit_file_output->blockSignals(false);
 			}
 		});
 
@@ -92,6 +102,21 @@ OutputMapping::OutputMapping(const output_mapping_data &mapping_data_in,
 		// set the unhide_output_source of the selected row to the checkBox_unhide_Source state
 		this->mapping_data.mappings[row].unhide_output_source =
 			ui->checkBox_unhide_Source->isChecked();
+		// call update_handler
+		this->update_handler(this->mapping_data);
+	});
+
+	// connect toolButton_selectFile to open a file dialog to select a file and update lineEdit_file_output
+	connect(ui->toolButton_selectFile, &QToolButton::clicked, [this]() {
+		// open a file dialog to select a file
+		const auto file =
+			QFileDialog::getSaveFileName(this, "Select file", "", "All files (*.*)");
+		// set the lineEdit_file_output to the selected file
+		ui->lineEdit_file_output->setText(file);
+		// get the selected row
+		const auto row = ui->tableView->currentIndex().row();
+		// set the output_source of the selected row to the selected file
+		this->mapping_data.mappings[row].file_path = file.toStdString();
 		// call update_handler
 		this->update_handler(this->mapping_data);
 	});
@@ -143,6 +168,8 @@ QComboBox *OutputMapping::createSourcesComboBox()
 	QComboBox *comboBox = new QComboBox(this);
 	// add "Internal Renderer" to the comboBox
 	comboBox->addItem(QString::fromStdString(none_internal_rendering));
+	// add "File output" to the comboBox
+	comboBox->addItem(QString::fromStdString(file_output_rendering));
 	// add "Save to source settings" to the comboBox
 	comboBox->addItem(QString::fromStdString(save_to_setting));
 	// add all text and media sources to the comboBox
@@ -153,6 +180,12 @@ QComboBox *OutputMapping::createSourcesComboBox()
 		const auto row = ui->tableView->currentIndex().row();
 		// get the output_name of the selected item in the comboBox
 		const auto output_name = comboBox->currentText().toStdString();
+		// if output is file, enable the group box groupBox_outputFile
+		if (output_name == file_output_rendering) {
+			ui->widget_file_output->setEnabled(true);
+		} else {
+			ui->widget_file_output->setEnabled(false);
+		}
 		// remove the prefix from the output_name if it exists
 		std::string output_name_without_prefix = output_name;
 		if (output_name.find("(Text) ") == 0) {
