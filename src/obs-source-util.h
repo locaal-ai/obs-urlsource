@@ -12,8 +12,8 @@ inline bool is_obs_source_text(obs_source_t *source)
 		return false;
 	}
 	const auto source_id = obs_source_get_id(source);
-	return strcmp(source_id, "text_ft2_source_v2") == 0 ||
-	       strcmp(source_id, "text_gdiplus_v2") == 0;
+	return strncmp(source_id, "text_ft2_source", 15) == 0 ||
+	       strncmp(source_id, "text_gdiplus", 12) == 0;
 }
 
 inline bool is_obs_source_text(const std::string &source_name)
