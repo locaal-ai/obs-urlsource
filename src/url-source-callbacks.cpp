@@ -194,6 +194,22 @@ std::string prepare_text_from_template(const output_mapping &mapping,
 	return text;
 }
 
+void save_text_to_file(const std::string &text, const std::string &file_path)
+{
+	// save the text to a file
+	if (file_path.empty()) {
+		obs_log(LOG_ERROR, "No file path specified");
+		return;
+	}
+	std::ofstream file(file_path);
+	if (!file.is_open()) {
+		obs_log(LOG_ERROR, "Failed to open file '%s'", file_path.c_str());
+		return;
+	}
+	file << text;
+	file.close();
+}
+
 void output_with_mapping(const request_data_handler_response &response, struct url_source_data *usd)
 {
 	std::vector<output_mapping> mappings;
@@ -237,6 +253,7 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 
 		if (is_valid_output_source_name(mapping.output_source.c_str()) &&
 		    mapping.output_source != none_internal_rendering &&
+		    mapping.output_source != file_output_rendering &&
 		    mapping.output_source != save_to_setting) {
 			// If an output source is selected - use it for rendering
 			setTextCallback(text, mapping);
@@ -252,6 +269,9 @@ void output_with_mapping(const request_data_handler_response &response, struct u
 					obs_source_update(usd->source, source_settings);
 					obs_data_release(source_settings);
 				}
+			} else if (mapping.output_source == file_output_rendering) {
+				// If the output source is set to file output - save the text to a file
+				save_text_to_file(text, mapping.file_path);
 			} else {
 				// render the text internally
 				any_internal_rendering = true;
