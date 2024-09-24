@@ -32,6 +32,8 @@ extern const char *PLUGIN_VERSION;
 
 void obs_log(int log_level, const char *format, ...);
 
+#define MT_ obs_module_text
+
 #ifdef __cplusplus
 }
 #endif
