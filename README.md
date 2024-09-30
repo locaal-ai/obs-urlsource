@@ -120,6 +120,15 @@ The plugin was built and tested on Mac OSX  (Intel & Apple silicon), Windows and
 
 Start by cloning this repo to a directory of your choice.
 
+### Getting Submodules
+Before compiling, you need to fetch all the submodules. After cloning the repository, run the following command in the root directory of the project:
+
+```sh
+git submodule update --init --recursive
+```
+
+This will initialize and fetch all the necessary submodules for the project.
+
 ### Mac OSX
 
 Using the CI pipeline scripts, locally you would just call the zsh script. By default this builds a universal binary for both Intel and Apple Silicon. To build for a specific architecture please see `.github/scripts/.build.zsh` for the `-arch` options.
