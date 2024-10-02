@@ -247,31 +247,30 @@ obs_properties_t *url_source_properties(void *data)
 	obs_properties_t *ppts = obs_properties_create();
 	// URL input string
 	obs_property_t *urlprop =
-		obs_properties_add_text(ppts, "url", "URL / File", OBS_TEXT_DEFAULT);
+		obs_properties_add_text(ppts, "url", MT_("url_file"), OBS_TEXT_DEFAULT);
 	// Disable the URL input since it's setup via the Request Builder dialog
 	obs_property_set_enabled(urlprop, false);
 
 	// Add button to open the Request Builder dialog
-	obs_properties_add_button2(ppts, "setup_request_button", "Setup Data Source",
+	obs_properties_add_button2(ppts, "setup_request_button", MT_("setup_data_source"),
 				   setup_request_button_click, usd);
 
 	obs_properties_add_button2(ppts, "output_mapping_and_template",
-				   "Setup Outputs and Templates",
+				   MT_("setup_outputs_and_templates"),
 				   output_mapping_and_template_button_click, usd);
 
 	// Update timer setting in milliseconds
-	obs_properties_add_int(ppts, "update_timer", "Update Timer (ms)", 100, 1000000, 100);
+	obs_properties_add_int(ppts, "update_timer", MT_("update_timer_ms"), 100, 1000000, 100);
 
 	// Run timer while not visible
-	obs_properties_add_bool(ppts, "run_while_not_visible", "Run while not visible?");
+	obs_properties_add_bool(ppts, "run_while_not_visible", MT_("run_while_not_visible"));
 
-	obs_properties_add_bool(ppts, "send_to_stream",
-				"Send output to current stream as captions");
+	obs_properties_add_bool(ppts, "send_to_stream", MT_("send_output_to_stream"));
 
 	// Is Image URL boolean checkbox
-	obs_properties_add_bool(ppts, "is_image_url", "Output is image URL (fetch and show image)");
+	obs_properties_add_bool(ppts, "is_image_url", MT_("output_is_image_url"));
 
-	obs_properties_add_int(ppts, "render_width", "Render Width (px)", 100, 10000, 1);
+	obs_properties_add_int(ppts, "render_width", MT_("render_width"), 100, 10000, 1);
 
 	// Add a informative text about the plugin
 	obs_properties_add_text(
