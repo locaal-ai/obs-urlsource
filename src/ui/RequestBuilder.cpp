@@ -193,7 +193,7 @@ RequestBuilder::RequestBuilder(url_source_request_data *request_data,
 			/* --------------------------------------------- */
 			ui->urlLineEdit->setText("https://api.openai.com/v1/chat/completions");
 			ui->bodyTextEdit->setText(R"({
-  "model": "gpt-4-vision-preview",
+  "model": "gpt-4o-mini",
   "messages": [
     {
       "role": "user",
