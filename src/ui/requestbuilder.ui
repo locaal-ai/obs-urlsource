@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>622</width>
-    <height>1134</height>
+    <height>875</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -142,7 +142,7 @@
    <item>
     <widget class="QGroupBox" name="urlRequestOptionsGroup">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -195,6 +195,11 @@
            <item>
             <property name="text">
              <string>POST</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>WebSocket</string>
             </property>
            </item>
           </widget>
@@ -539,7 +544,7 @@
    <item>
     <widget class="QGroupBox" name="outputGroupBox">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>

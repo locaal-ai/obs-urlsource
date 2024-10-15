@@ -68,6 +68,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE inja)
 include(cmake/BuildLexbor.cmake)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE liblexbor_internal)
 
+include(cmake/FetchWebsocketpp.cmake)
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE vendor/nlohmann-json)
 
 target_sources(
@@ -76,6 +78,7 @@ target_sources(
           src/obs-source-util.cpp
           src/mapping-data.cpp
           src/request-data.cpp
+          src/websocket-client.cpp
           src/ui/CustomTextDocument.cpp
           src/ui/RequestBuilder.cpp
           src/ui/text-render-helper.cpp

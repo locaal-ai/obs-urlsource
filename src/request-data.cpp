@@ -24,6 +24,7 @@
 #include <obs-module.h>
 
 #include "obs-source-util.h"
+#include "websocket-client.h"
 
 #define URL_SOURCE_AGG_BUFFER_MAX_SIZE 1024
 
@@ -164,7 +165,7 @@ void handle_empty_text(input_data &input, request_data_handler_response &respons
 	}
 }
 
-void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
+void put_inputs_on_json(url_source_request_data *request_data,
 			request_data_handler_response &response, nlohmann::json &json)
 {
 	for (size_t i = 0; i < request_data->inputs.size(); i++) {
@@ -225,7 +226,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				}
 			}
 			if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
-				curl_easy_cleanup(curl);
 				return;
 			}
 		} else {
@@ -237,7 +237,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				// Return an error response
 				response.error_message = "Failed to get source by name";
 				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-				curl_easy_cleanup(curl);
 				return;
 			}
 
@@ -262,7 +261,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				// Return an error response
 				response.error_message = "Failed to get RGBA from source render";
 				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-				curl_easy_cleanup(curl);
 				return;
 			}
 			destroy_source_render_data(&tf);
@@ -274,6 +272,33 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 			json["imageb64"] = base64;
 		} // end of non-text source
 	}
+}
+
+void prepare_inja_env(inja::Environment *env, url_source_request_data *request_data,
+		      request_data_handler_response &response, nlohmann::json &json)
+{
+	// Put the request inputs on the json object
+	put_inputs_on_json(request_data, response, json);
+
+	if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
+		return;
+	}
+
+	// Add an inja callback for time formatting
+	env->add_callback("strftime", 2, [](inja::Arguments &args) {
+		std::string format = args.at(0)->get<std::string>();
+		std::time_t t = std::time(nullptr);
+		std::tm *tm = std::localtime(&t);
+		if (args.at(1)->get<bool>()) {
+			// if the second argument is true, use UTC time
+			tm = std::gmtime(&t);
+		}
+		char buffer[256];
+		std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
+		return std::string(buffer);
+	});
+
+	json["seq"] = request_data->sequence_number;
 }
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
@@ -308,6 +333,11 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			response.error_message = "URL is empty";
 			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
 			return response;
+		}
+
+		if (request_data->method == "Websocket") {
+			// This is a websocket request
+			response = websocket_request_handler(request_data);
 		}
 
 		// Build the request with libcurl
@@ -350,30 +380,14 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		}
 
 		nlohmann::json json; // json object or variables for inja
-
-		// Put the request inputs on the json object
-		put_inputs_on_json(request_data, curl, response, json);
+		inja::Environment env;
+		prepare_inja_env(&env, request_data, response, json);
 
 		if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
 			curl_easy_cleanup(curl);
 			return response;
 		}
 
-		// Replace placeholders in the URL and body with the input values
-		inja::Environment env;
-		// Add an inja callback for time formatting
-		env.add_callback("strftime", 2, [](inja::Arguments &args) {
-			std::string format = args.at(0)->get<std::string>();
-			std::time_t t = std::time(nullptr);
-			std::tm *tm = std::localtime(&t);
-			if (args.at(1)->get<bool>()) {
-				// if the second argument is true, use UTC time
-				tm = std::gmtime(&t);
-			}
-			char buffer[256];
-			std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
-			return std::string(buffer);
-		});
 		// add a callback for escaping strings in the querystring
 		env.add_callback("urlencode", 1, [&curl](inja::Arguments &args) {
 			std::string input = args.at(0)->get<std::string>();
@@ -382,8 +396,6 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 			curl_free(escaped);
 			return input;
 		});
-
-		json["seq"] = request_data->sequence_number;
 
 		// Replace the {input} placeholder in the querystring as well
 		std::string url = request_data->url;
