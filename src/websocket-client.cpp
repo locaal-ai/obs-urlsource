@@ -1,3 +1,6 @@
+
+#pragma warning(disable : 4267)
+
 #define ASIO_STANDALONE
 #define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
 

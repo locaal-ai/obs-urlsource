@@ -83,11 +83,6 @@ inline int url_source_agg_target_string_to_enum(const std::string &agg_target)
 	}
 }
 
-// Forward declare WebSocket-related types
-namespace websocketpp {
-class connection_hdl;
-}
-
 struct WebSocketClientWrapper; // Forward declaration
 
 struct url_source_request_data {
