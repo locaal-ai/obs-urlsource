@@ -2,10 +2,10 @@
 
 <div align="center">
 
-[![GitHub](https://img.shields.io/github/license/occ-ai/obs-urlsource)](https://github.com/occ-ai/obs-urlsource/blob/main/LICENSE)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/occ-ai/obs-urlsource/push.yaml)](https://github.com/occ-ai/obs-urlsource/actions/workflows/push.yaml)
-[![Total downloads](https://img.shields.io/github/downloads/occ-ai/obs-urlsource/total)](https://github.com/occ-ai/obs-urlsource/releases)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/occ-ai/obs-urlsource)](https://github.com/occ-ai/obs-urlsource/releases)
+[![GitHub](https://img.shields.io/github/license/locaal-ai/obs-urlsource)](https://github.com/locaal-ai/obs-urlsource/blob/main/LICENSE)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/locaal-ai/obs-urlsource/push.yaml)](https://github.com/locaal-ai/obs-urlsource/actions/workflows/push.yaml)
+[![Total downloads](https://img.shields.io/github/downloads/locaal-ai/obs-urlsource/total)](https://github.com/locaal-ai/obs-urlsource/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/locaal-ai/obs-urlsource)](https://github.com/locaal-ai/obs-urlsource/releases)
 [![Discord](https://img.shields.io/discord/1200229425141252116)](https://discord.gg/KbjGU2vvUz)
 
 </div>
@@ -14,7 +14,7 @@
 
 The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
 
-If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work on [GitHub](https://github.com/sponsors/royshil), [Patreon](https://www.patreon.com/RoyShilkrot) or [OpenCollective](https://opencollective.com/occ-ai)
+If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work on [GitHub](https://github.com/sponsors/royshil), [Patreon](https://www.patreon.com/RoyShilkrot) or [OpenCollective](https://opencollective.com/locaal-ai)
 
 ### Usage Tutorials
 Watch quick tutorials on how to use and setup the URL/API source on your OBS scene.
@@ -50,13 +50,13 @@ The URL source supports both input and output templating using the [Inja](https:
 Output templates include `{{output}}` in case of a singular extraction from the response or `{{output1}},{{output2}},...` in case of multiple extracted value. In addition the `{{body}}` variable contains the entire body of the response in case of JSON. Advanced output templating functions can be achieved through [Inja](https://github.com/pantor/inja) like looping over arrays, etc.
 
 <div align="center">
-<img width="50%" src="https://github.com/occ-ai/obs-urlsource/assets/441170/2b7a4ceb-3c38-4afd-82b3-675c0fa8c5fe" />
+<img width="50%" src="https://github.com/locaal-ai/obs-urlsource/assets/441170/2b7a4ceb-3c38-4afd-82b3-675c0fa8c5fe" />
 </div>
 
 The input template works for the URL (querystring or REST path) or the POST body
 
 <div align="center">
-<img width="50%" src="https://github.com/occ-ai/obs-urlsource/assets/441170/ae6b9e04-ff5a-441b-a94c-427b1e7c76b3" />
+<img width="50%" src="https://github.com/locaal-ai/obs-urlsource/assets/441170/ae6b9e04-ff5a-441b-a94c-427b1e7c76b3" />
 </div>
 
 Use the `{{input}}` variable to insert the output from a Text source. Inja advanced templates are available too.
@@ -102,16 +102,16 @@ Coming soon:
 - More output formats (Markdown, slim, reStructured, HAML, etc.)
 
 Check out our other plugins:
-- [Background Removal](https://github.com/occ-ai/obs-backgroundremoval) removes background from webcam without a green screen.
-- [Detect](https://github.com/occ-ai/obs-detect) will find and track >80 types of objects in any source that provides an image in real-time
-- [LocalVocal](https://github.com/occ-ai/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
-- [Polyglot](https://github.com/occ-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
-- 🚧 Experimental 🚧 [CleanStream](https://github.com/occ-ai/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
+- [Background Removal](https://github.com/locaal-ai/obs-backgroundremoval) removes background from webcam without a green screen.
+- [Detect](https://github.com/locaal-ai/obs-detect) will find and track >80 types of objects in any source that provides an image in real-time
+- [LocalVocal](https://github.com/locaal-ai/obs-localvocal) speech AI assistant plugin for real-time, local transcription (captions), translation and more language functions
+- [Polyglot](https://github.com/locaal-ai/obs-polyglot) translation AI plugin for real-time, local translation to hunderds of languages
+- 🚧 Experimental 🚧 [CleanStream](https://github.com/locaal-ai/obs-cleanstream) for real-time filler word (uh,um) and profanity removal from live audio stream
 
 If you like this work, which is given to you completely free of charge, please consider supporting it on GitHub: https://github.com/sponsors/royshil
 
 ## Download
-Check out the [latest releases](https://github.com/occ-ai/obs-urlsource/releases) for downloads and install instructions.
+Check out the [latest releases](https://github.com/locaal-ai/obs-urlsource/releases) for downloads and install instructions.
 
 
 ## Building
