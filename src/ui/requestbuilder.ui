@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>498</width>
-    <height>893</height>
+    <height>833</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -372,6 +372,9 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="tabStopDistance">
+         <double>20.000000000000000</double>
         </property>
         <property name="acceptRichText">
          <bool>false</bool>
