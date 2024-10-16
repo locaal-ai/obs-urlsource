@@ -150,6 +150,7 @@ struct url_source_request_data {
 		post_process_regex_is_replace = false;
 		post_process_regex_replace = std::string("");
 		kv_delimiter = std::string("=");
+		ws_client_wrapper = nullptr;
 	}
 };
 
