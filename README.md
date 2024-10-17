@@ -10,6 +10,13 @@
 
 </div>
 
+<div align="center">
+Download</br>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-windows-x64-Installer.exe"><img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge" /></a>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-macos-universal.pkg"><img src="https://img.shields.io/badge/Mac-000000?style=for-the-badge&logo=Apple" /></a>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-x86_64-linux-gnu.deb"><img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/></a>
+</div>
+
 ## Introduction
 
 The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
@@ -93,10 +100,10 @@ Features:
 - Output to multiple sources with one request (Output Mapping)
 - Multi-value (array, union) parsed output capture, object unpacking (via Inja)
 - Dynamic input aggregations (time-based, "empty"-based)
+- Websocket support
 
 Coming soon:
 - Authentication (Basic, Digest, OAuth)
-- Websocket support
 - More parsing options (CSV, etc.)
 - More request types (HTTP PUT / DELETE / PATCH, and GraphQL)
 - More output formats (Markdown, slim, reStructured, HAML, etc.)
