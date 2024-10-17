@@ -83,6 +83,8 @@ inline int url_source_agg_target_string_to_enum(const std::string &agg_target)
 	}
 }
 
+struct WebSocketClientWrapper; // Forward declaration
+
 struct url_source_request_data {
 	std::string source_name;
 	std::string url;
@@ -117,6 +119,11 @@ struct url_source_request_data {
 	std::string post_process_regex_replace;
 	std::string kv_delimiter;
 
+	// WebSocket-specific fields
+	bool is_websocket;
+	WebSocketClientWrapper *ws_client_wrapper;
+	bool ws_connected;
+
 	// default constructor
 	url_source_request_data()
 	{
@@ -143,6 +150,7 @@ struct url_source_request_data {
 		post_process_regex_is_replace = false;
 		post_process_regex_replace = std::string("");
 		kv_delimiter = std::string("=");
+		ws_client_wrapper = nullptr;
 	}
 };
 
@@ -161,6 +169,13 @@ struct request_data_handler_response {
 	std::string request_url;
 	std::string request_body;
 };
+
+namespace inja {
+class Environment;
+}
+
+void prepare_inja_env(inja::Environment *env, url_source_request_data *request_data,
+		      request_data_handler_response &response, nlohmann::json &json);
 
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data);
 

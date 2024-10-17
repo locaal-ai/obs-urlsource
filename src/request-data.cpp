@@ -24,6 +24,7 @@
 #include <obs-module.h>
 
 #include "obs-source-util.h"
+#include "websocket-client.h"
 
 #define URL_SOURCE_AGG_BUFFER_MAX_SIZE 1024
 
@@ -164,7 +165,7 @@ void handle_empty_text(input_data &input, request_data_handler_response &respons
 	}
 }
 
-void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
+void put_inputs_on_json(url_source_request_data *request_data,
 			request_data_handler_response &response, nlohmann::json &json)
 {
 	for (size_t i = 0; i < request_data->inputs.size(); i++) {
@@ -225,7 +226,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				}
 			}
 			if (response.status_code == URL_SOURCE_REQUEST_BENIGN_ERROR_CODE) {
-				curl_easy_cleanup(curl);
 				return;
 			}
 		} else {
@@ -237,7 +237,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				// Return an error response
 				response.error_message = "Failed to get source by name";
 				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-				curl_easy_cleanup(curl);
 				return;
 			}
 
@@ -262,7 +261,6 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 				// Return an error response
 				response.error_message = "Failed to get RGBA from source render";
 				response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-				curl_easy_cleanup(curl);
 				return;
 			}
 			destroy_source_render_data(&tf);
@@ -276,9 +274,189 @@ void put_inputs_on_json(url_source_request_data *request_data, CURL *curl,
 	}
 }
 
+void prepare_inja_env(inja::Environment *env, url_source_request_data *request_data,
+		      request_data_handler_response &response, nlohmann::json &json)
+{
+	// Put the request inputs on the json object
+	put_inputs_on_json(request_data, response, json);
+
+	if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
+		return;
+	}
+
+	// Add an inja callback for time formatting
+	env->add_callback("strftime", 2, [](inja::Arguments &args) {
+		std::string format = args.at(0)->get<std::string>();
+		std::time_t t = std::time(nullptr);
+		std::tm *tm = std::localtime(&t);
+		if (args.at(1)->get<bool>()) {
+			// if the second argument is true, use UTC time
+			tm = std::gmtime(&t);
+		}
+		char buffer[256];
+		std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
+		return std::string(buffer);
+	});
+
+	json["seq"] = request_data->sequence_number;
+}
+
+request_data_handler_response http_request_handler(url_source_request_data *request_data,
+						   request_data_handler_response &response)
+{
+	// Build the request with libcurl
+	CURL *curl = curl_easy_init();
+	if (!curl) {
+		obs_log(LOG_INFO, "Failed to initialize curl");
+		// Return an error response
+		response.error_message = "Failed to initialize curl";
+		response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+		return response;
+	}
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
+	if (request_data->fail_on_http_error) {
+		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+	}
+
+	std::string responseBody;
+	std::vector<uint8_t> responseBodyUint8;
+
+	// if the request is for textual data write to string
+	if (request_data->output_type == "JSON" || request_data->output_type == "XML (XPath)" ||
+	    request_data->output_type == "XML (XQuery)" || request_data->output_type == "HTML" ||
+	    request_data->output_type == "Text") {
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
+	} else {
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBodyUint8);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionUint8Vector);
+	}
+
+	if (request_data->headers.size() > 0) {
+		// Add request headers
+		struct curl_slist *headers = NULL;
+		for (auto header : request_data->headers) {
+			std::string header_string = header.first + ": " + header.second;
+			headers = curl_slist_append(headers, header_string.c_str());
+		}
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+	}
+
+	nlohmann::json json; // json object or variables for inja
+	inja::Environment env;
+	prepare_inja_env(&env, request_data, response, json);
+
+	if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
+		curl_easy_cleanup(curl);
+		return response;
+	}
+
+	// add a callback for escaping strings in the querystring
+	env.add_callback("urlencode", 1, [&curl](inja::Arguments &args) {
+		std::string input = args.at(0)->get<std::string>();
+		char *escaped = curl_easy_escape(curl, input.c_str(), 0);
+		input = std::string(escaped);
+		curl_free(escaped);
+		return input;
+	});
+
+	// Replace the {input} placeholder in the querystring as well
+	std::string url = request_data->url;
+	try {
+		url = env.render(url, json);
+	} catch (std::exception &e) {
+		obs_log(LOG_WARNING, "Failed to render URL template: %s", e.what());
+	}
+	response.request_url = url;
+
+	// validate the url
+	if (!hasOnlyValidURLCharacters(url)) {
+		obs_log(LOG_INFO, "URL '%s' is invalid", url.c_str());
+		// Return an error response
+		response.error_message = "URL is invalid";
+		response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+		return response;
+	}
+
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	// this is needed here, out of the `if` scope below
+	std::string request_body_allocated;
+
+	if (request_data->method == "POST") {
+		curl_easy_setopt(curl, CURLOPT_POST, 1L);
+		try {
+			request_body_allocated = env.render(request_data->body, json);
+		} catch (std::exception &e) {
+			obs_log(LOG_WARNING, "Failed to render Body template: %s", e.what());
+		}
+		response.request_body = request_body_allocated;
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body_allocated.c_str());
+	} else if (request_data->method == "GET") {
+		curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+	}
+
+	// SSL options
+	if (request_data->ssl_client_cert_file != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLCERT, request_data->ssl_client_cert_file.c_str());
+	}
+	if (request_data->ssl_client_key_file != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLKEY, request_data->ssl_client_key_file.c_str());
+	}
+	if (request_data->ssl_client_key_pass != "") {
+		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD,
+				 request_data->ssl_client_key_pass.c_str());
+	}
+	if (!request_data->ssl_verify_peer) {
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	}
+
+	std::map<std::string, std::string> headers;
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA, &headers);
+
+	// Send the request
+	CURLcode code = curl_easy_perform(curl);
+	long http_code = 0;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+	curl_easy_cleanup(curl);
+
+	response.body = responseBody;
+	response.body_bytes = responseBodyUint8;
+	response.headers = headers;
+	response.http_status_code = http_code;
+
+	if (code != CURLE_OK) {
+		obs_log(LOG_WARNING, "Failed to send request to '%s': %s", url.c_str(),
+			curl_easy_strerror(code));
+		if (responseBody.size() > 0) {
+			obs_log(LOG_WARNING, "Response body: %s", responseBody.c_str());
+		}
+		// Return a formatted error response with the message and the HTTP status code
+		response.error_message = std::string(curl_easy_strerror(code)) + " (" +
+					 std::to_string(http_code) + ")";
+
+		response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+		return response;
+	}
+
+	response.status_code = URL_SOURCE_REQUEST_SUCCESS;
+
+	return response;
+}
+
 struct request_data_handler_response request_data_handler(url_source_request_data *request_data)
 {
 	struct request_data_handler_response response;
+
+	// Check if the URL is empty
+	if (request_data->url == "") {
+		obs_log(LOG_INFO, "URL is empty");
+		// Return an error response
+		response.error_message = "URL is empty";
+		response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
+		return response;
+	}
 
 	request_data->sequence_number++;
 
@@ -301,174 +479,17 @@ struct request_data_handler_response request_data_handler(url_source_request_dat
 		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	} else {
 		// This is a URL request
-		// Check if the URL is empty
-		if (request_data->url == "") {
-			obs_log(LOG_INFO, "URL is empty");
-			// Return an error response
-			response.error_message = "URL is empty";
-			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-			return response;
-		}
-
-		// Build the request with libcurl
-		CURL *curl = curl_easy_init();
-		if (!curl) {
-			obs_log(LOG_INFO, "Failed to initialize curl");
-			// Return an error response
-			response.error_message = "Failed to initialize curl";
-			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-			return response;
-		}
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT.c_str());
-		if (request_data->fail_on_http_error) {
-			curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-		}
-
-		std::string responseBody;
-		std::vector<uint8_t> responseBodyUint8;
-
-		// if the request is for textual data write to string
-		if (request_data->output_type == "JSON" ||
-		    request_data->output_type == "XML (XPath)" ||
-		    request_data->output_type == "XML (XQuery)" ||
-		    request_data->output_type == "HTML" || request_data->output_type == "Text") {
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionStdString);
+		if (request_data->method == "WebSocket") {
+			// This is a websocket request
+			response = websocket_request_handler(request_data);
 		} else {
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBodyUint8);
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunctionUint8Vector);
+			// This is an HTTP request
+			response = http_request_handler(request_data, response);
 		}
-
-		if (request_data->headers.size() > 0) {
-			// Add request headers
-			struct curl_slist *headers = NULL;
-			for (auto header : request_data->headers) {
-				std::string header_string = header.first + ": " + header.second;
-				headers = curl_slist_append(headers, header_string.c_str());
-			}
-			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-		}
-
-		nlohmann::json json; // json object or variables for inja
-
-		// Put the request inputs on the json object
-		put_inputs_on_json(request_data, curl, response, json);
 
 		if (response.status_code != URL_SOURCE_REQUEST_SUCCESS) {
-			curl_easy_cleanup(curl);
 			return response;
 		}
-
-		// Replace placeholders in the URL and body with the input values
-		inja::Environment env;
-		// Add an inja callback for time formatting
-		env.add_callback("strftime", 2, [](inja::Arguments &args) {
-			std::string format = args.at(0)->get<std::string>();
-			std::time_t t = std::time(nullptr);
-			std::tm *tm = std::localtime(&t);
-			if (args.at(1)->get<bool>()) {
-				// if the second argument is true, use UTC time
-				tm = std::gmtime(&t);
-			}
-			char buffer[256];
-			std::strftime(buffer, sizeof(buffer), format.c_str(), tm);
-			return std::string(buffer);
-		});
-		// add a callback for escaping strings in the querystring
-		env.add_callback("urlencode", 1, [&curl](inja::Arguments &args) {
-			std::string input = args.at(0)->get<std::string>();
-			char *escaped = curl_easy_escape(curl, input.c_str(), 0);
-			input = std::string(escaped);
-			curl_free(escaped);
-			return input;
-		});
-
-		json["seq"] = request_data->sequence_number;
-
-		// Replace the {input} placeholder in the querystring as well
-		std::string url = request_data->url;
-		try {
-			url = env.render(url, json);
-		} catch (std::exception &e) {
-			obs_log(LOG_WARNING, "Failed to render URL template: %s", e.what());
-		}
-		response.request_url = url;
-
-		// validate the url
-		if (!hasOnlyValidURLCharacters(url)) {
-			obs_log(LOG_INFO, "URL '%s' is invalid", url.c_str());
-			// Return an error response
-			response.error_message = "URL is invalid";
-			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-			return response;
-		}
-
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-		// this is needed here, out of the `if` scope below
-		std::string request_body_allocated;
-
-		if (request_data->method == "POST") {
-			curl_easy_setopt(curl, CURLOPT_POST, 1L);
-			try {
-				request_body_allocated = env.render(request_data->body, json);
-			} catch (std::exception &e) {
-				obs_log(LOG_WARNING, "Failed to render Body template: %s",
-					e.what());
-			}
-			response.request_body = request_body_allocated;
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body_allocated.c_str());
-		} else if (request_data->method == "GET") {
-			curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-		}
-
-		// SSL options
-		if (request_data->ssl_client_cert_file != "") {
-			curl_easy_setopt(curl, CURLOPT_SSLCERT,
-					 request_data->ssl_client_cert_file.c_str());
-		}
-		if (request_data->ssl_client_key_file != "") {
-			curl_easy_setopt(curl, CURLOPT_SSLKEY,
-					 request_data->ssl_client_key_file.c_str());
-		}
-		if (request_data->ssl_client_key_pass != "") {
-			curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD,
-					 request_data->ssl_client_key_pass.c_str());
-		}
-		if (!request_data->ssl_verify_peer) {
-			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		}
-
-		std::map<std::string, std::string> headers;
-		curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
-		curl_easy_setopt(curl, CURLOPT_HEADERDATA, &headers);
-
-		// Send the request
-		CURLcode code = curl_easy_perform(curl);
-		long http_code = 0;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-		curl_easy_cleanup(curl);
-
-		response.body = responseBody;
-		response.body_bytes = responseBodyUint8;
-		response.headers = headers;
-		response.http_status_code = http_code;
-
-		if (code != CURLE_OK) {
-			obs_log(LOG_WARNING, "Failed to send request to '%s': %s", url.c_str(),
-				curl_easy_strerror(code));
-			if (responseBody.size() > 0) {
-				obs_log(LOG_WARNING, "Response body: %s", responseBody.c_str());
-			}
-			// Return a formatted error response with the message and the HTTP status code
-			response.error_message = std::string(curl_easy_strerror(code)) + " (" +
-						 std::to_string(http_code) + ")";
-
-			response.status_code = URL_SOURCE_REQUEST_STANDARD_ERROR_CODE;
-			return response;
-		}
-
-		response.status_code = URL_SOURCE_REQUEST_SUCCESS;
 	}
 
 	// Parse the response
