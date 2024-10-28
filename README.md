@@ -12,9 +12,9 @@
 
 <div align="center">
 Download</br>
-<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-windows-x64-Installer.exe"><img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge" /></a>
-<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-macos-universal.pkg"><img src="https://img.shields.io/badge/Mac-000000?style=for-the-badge&logo=Apple" /></a>
-<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.6/obs-urlsource-0.3.6-x86_64-linux-gnu.deb"><img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/></a>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.7/obs-urlsource-0.3.7-windows-x64-Installer.exe"><img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge" /></a>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.7/obs-urlsource-0.3.7-macos-universal.pkg"><img src="https://img.shields.io/badge/Mac-000000?style=for-the-badge&logo=Apple" /></a>
+<a href="https://github.com/locaal-ai/obs-urlsource/releases/download/0.3.7/obs-urlsource-0.3.7-x86_64-linux-gnu.deb"><img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/></a>
 </div>
 
 ## Introduction

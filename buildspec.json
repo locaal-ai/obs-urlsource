@@ -37,7 +37,7 @@
         }
     },
     "name": "obs-urlsource",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "author": "Roy Shilkrot",
     "website": "https://github.com/locaal-ai/obs-urlsource",
     "email": "roy.shil@gmail.com",

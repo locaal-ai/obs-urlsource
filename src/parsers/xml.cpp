@@ -1,4 +1,3 @@
-
 #include "request-data.h"
 #include "plugin-support.h"
 #include "errors.h"
@@ -9,69 +8,83 @@
 struct request_data_handler_response parse_xml(struct request_data_handler_response response,
 					       const url_source_request_data *request_data)
 {
-	// Parse the response as XML using pugixml
 	pugi::xml_document doc;
-	try {
-		pugi::xml_parse_result result = doc.load_string(response.body.c_str());
-		if (!result) {
 
+	try {
+		// Use load_buffer instead of load_string for better performance with known size
+		pugi::xml_parse_result result =
+			doc.load_buffer(response.body.c_str(), response.body.size(),
+					pugi::parse_default, pugi::encoding_utf8);
+
+		if (!result) {
 			obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
 			return make_fail_parse_response(result.description());
 		}
+
 		if (doc.empty()) {
-			obs_log(LOG_INFO, "Failed to parse XML response: Empty XML");
-			return make_fail_parse_response("Empty XML");
+			return make_fail_parse_response("Empty XML document");
 		}
-		std::string parsed_output = "";
-		// Get the output value
-		if (request_data->output_xpath != "") {
+
+		if (!request_data->output_xpath.empty()) {
 			obs_log(LOG_INFO, "Parsing XML with XPath: %s",
 				request_data->output_xpath.c_str());
-			pugi::xpath_node_set nodes =
-				doc.select_nodes(request_data->output_xpath.c_str());
-			if (nodes.size() > 0) {
-				parsed_output = nodes[0].node().text().get();
-			} else {
-				obs_log(LOG_INFO, "Failed to get XML value");
-				return make_fail_parse_response("Failed to get XML value");
+
+			// Compile XPath expression once for better performance
+			pugi::xpath_query query(request_data->output_xpath.c_str());
+			pugi::xpath_node_set nodes = query.evaluate_node_set(doc);
+
+			if (nodes.empty()) {
+				return make_fail_parse_response("XPath query returned no results");
+			}
+
+			// Get all matching nodes
+			for (const auto &node : nodes) {
+				response.body_parts_parsed.push_back(node.node().text().get());
 			}
 		} else {
 			// Return the whole XML object
-			parsed_output = response.body;
+			response.body_parts_parsed.push_back(response.body);
 		}
-		response.body_parts_parsed.push_back(parsed_output);
+
+		return response;
+
+	} catch (const pugi::xpath_exception &e) {
+		obs_log(LOG_INFO, "XPath evaluation failed: %s", e.what());
+		return make_fail_parse_response(e.what());
 	} catch (const std::exception &e) {
-		obs_log(LOG_INFO, "Failed to parse XML response: %s", e.what());
+		obs_log(LOG_INFO, "XML parsing failed: %s", e.what());
 		return make_fail_parse_response(e.what());
 	}
-	return response;
 }
 
 struct request_data_handler_response
 parse_xml_by_xquery(struct request_data_handler_response response,
 		    const url_source_request_data *request_data)
 {
-	// Parse the response as XML using pugixml
 	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_string(response.body.c_str());
-	if (!result) {
-		obs_log(LOG_INFO, "Failed to parse XML response: %s", result.description());
-		// Return an error response
-		struct request_data_handler_response responseFail;
-		responseFail.error_message = result.description();
-		responseFail.status_code = URL_SOURCE_REQUEST_PARSING_ERROR_CODE;
-		return responseFail;
+
+	try {
+		pugi::xml_parse_result result =
+			doc.load_buffer(response.body.c_str(), response.body.size(),
+					pugi::parse_default, pugi::encoding_utf8);
+
+		if (!result) {
+			return make_fail_parse_response(result.description());
+		}
+
+		if (!request_data->output_xquery.empty()) {
+			pugi::xpath_query query(request_data->output_xquery.c_str());
+			std::string result = query.evaluate_string(doc);
+			response.body_parts_parsed.push_back(std::move(result));
+		} else {
+			response.body_parts_parsed.push_back(response.body);
+		}
+
+		return response;
+
+	} catch (const pugi::xpath_exception &e) {
+		return make_fail_parse_response(e.what());
+	} catch (const std::exception &e) {
+		return make_fail_parse_response(e.what());
 	}
-	std::string parsed_output = "";
-	// Get the output value
-	if (request_data->output_xquery != "") {
-		pugi::xpath_query query_entity(request_data->output_xquery.c_str());
-		std::string s = query_entity.evaluate_string(doc);
-		parsed_output = s;
-	} else {
-		// Return the whole XML object
-		parsed_output = response.body;
-	}
-	response.body_parts_parsed.push_back(parsed_output);
-	return response;
 }
