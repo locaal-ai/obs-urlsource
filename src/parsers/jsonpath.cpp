@@ -4,10 +4,12 @@
 #include <jsoncons/basic_json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 #include <nlohmann/json.hpp>
+#include <util/c99defs.h>
 
 struct request_data_handler_response parse_json(struct request_data_handler_response response,
 						const url_source_request_data *request_data)
 {
+	UNUSED_PARAMETER(request_data);
 	try {
 		// Parse JSON only once and store in both formats
 		auto json_cons = jsoncons::json::parse(response.body);
