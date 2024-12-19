@@ -1,4 +1,6 @@
-# URL/API Source - Connect Anything to OBS
+# ⚠️ Stalled ⚠️ This project is not under active development
+
+## URL/API Source - Connect Anything to OBS
 
 <div align="center">
 
@@ -6,7 +8,6 @@
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/locaal-ai/obs-urlsource/push.yaml)](https://github.com/locaal-ai/obs-urlsource/actions/workflows/push.yaml)
 [![Total downloads](https://img.shields.io/github/downloads/locaal-ai/obs-urlsource/total)](https://github.com/locaal-ai/obs-urlsource/releases)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/locaal-ai/obs-urlsource)](https://github.com/locaal-ai/obs-urlsource/releases)
-[![Discord](https://img.shields.io/discord/1200229425141252116)](https://discord.gg/KbjGU2vvUz)
 
 </div>
 
@@ -19,9 +20,7 @@ Download</br>
 
 ## Introduction
 
-The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. [OBS Forums page](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/) | [Blog post](https://www.morethantechnical.com/2023/08/10/url-api-source-obs-plugin/)
-
-If this free plugin has been valuable to you consider adding a ⭐ to this GH repo, rating it [on OBS](https://obsproject.com/forum/resources/url-api-source-fetch-live-data-and-display-it-on-screen.1756/), subscribing to [my YouTube channel](https://www.youtube.com/@royshilk) where I post updates, and supporting my work on [GitHub](https://github.com/sponsors/royshil), [Patreon](https://www.patreon.com/RoyShilkrot) or [OpenCollective](https://opencollective.com/locaal-ai)
+The URL/API Source is a plugin for [OBS Studio](https://obsproject.com) that allows fetcing data from a URL, API endpoint or file and displays it as text, image or even audio. 
 
 ### Usage Tutorials
 Watch quick tutorials on how to use and setup the URL/API source on your OBS scene.
